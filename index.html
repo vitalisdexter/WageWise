@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wages Calculator Pro</title>
+
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+
+<header class="header">
+  <h1>💷 Wages Calculator</h1>
+  <p>Weekly Earnings Calculator</p>
+</header>
+
+<main>
+
+<section class="card">
+
+  <div class="input-group">
+    <label>Basic Pay (£)</label>
+    <input id="basicPay" type="number" value="549.66">
+  </div>
+
+  <div class="input-group">
+    <label>Overtime Hours</label>
+    <input id="otHours" type="number" value="0">
+  </div>
+
+  <div class="input-group">
+    <label>Overtime Rate (£)</label>
+    <input id="otRate" type="number" value="14.96">
+  </div>
+
+</section>
+
+<section class="results">
+
+  <div class="tile">
+    <span>OT Pay</span>
+    <h2 id="otPay">£0.00</h2>
+  </div>
+
+  <div class="tile">
+    <span>Total Pay</span>
+    <h2 id="totalPay">£0.00</h2>
+  </div>
+
+  <div class="tile">
+    <span>Tax</span>
+    <h2 id="tax">£0.00</h2>
+  </div>
+
+  <div class="tile">
+    <span>NI</span>
+    <h2 id="ni">£0.00</h2>
+  </div>
+
+</section>
+
+<section class="takehome">
+  <p>Take Home Pay</p>
+  <h1 id="netPay">£0.00</h1>
+</section>
+
+</main>
+
+<nav class="bottom-nav">
+  <a href="#" class="active">
+    <span>🏠</span>
+    Home
+  </a>
+
+  <a href="#">
+    <span>📈</span>
+    History
+  </a>
+
+  <a href="#">
+    <span>📅</span>
+    Monthly
+  </a>
+
+  <a href="#">
+    <span>⚙️</span>
+    Settings
+  </a>
+</nav>
+
+<script src="js/app.js"></script>
+
+</body>
+</html>
