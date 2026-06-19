@@ -58,3 +58,22 @@ net:net.toFixed(2)
 
 loadHistory();
 }
+
+const annualPay =
+weeklyGross * 52;
+
+const annualTax =
+calculateScottishTax(
+annualPay
+);
+
+const annualNI =
+calculateNI(
+annualPay
+);
+
+const weeklyTax =
+annualTax / 52;
+
+const weeklyNI =
+annualNI / 52;
