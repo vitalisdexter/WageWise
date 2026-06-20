@@ -135,3 +135,4 @@ themeToggle.checked=true;
 }
 
 loadHistory();
+loadDashboard();
