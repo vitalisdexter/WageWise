@@ -133,6 +133,76 @@ document.body.classList.add(
 );
 themeToggle.checked=true;
 }
+function loadDashboard(){
 
+const history =
+getHistory();
+
+if(history.length===0){
+return;
+}
+
+const totalNet =
+history.reduce(
+(sum,item)=>
+sum + Number(item.net),
+0
+);
+
+const monthlyAverage =
+totalNet /
+Math.max(history.length,1);
+
+const currentMonth =
+new Date().getMonth();
+
+const currentYear =
+new Date().getFullYear();
+
+let monthTotal=0;
+let yearlyTotal=0;
+
+history.forEach(item=>{
+
+const date =
+new Date(item.date);
+
+if(
+date.getMonth()===currentMonth &&
+date.getFullYear()===currentYear
+){
+monthTotal += Number(item.net);
+}
+
+if(
+date.getFullYear()===currentYear
+){
+yearlyTotal += Number(item.net);
+}
+
+});
+
+document.getElementById(
+'weeklyAverage'
+).textContent =
+`£${monthlyAverage.toFixed(2)}`;
+
+document.getElementById(
+'monthlyTotal'
+).textContent =
+`£${monthTotal.toFixed(2)}`;
+
+document.getElementById(
+'yearlyTotal'
+).textContent =
+`£${yearlyTotal.toFixed(2)}`;
+
+document.getElementById(
+'entryCount'
+).textContent =
+history.length;
+
+buildMonthlyChart();
+}
 loadHistory();
 loadDashboard();

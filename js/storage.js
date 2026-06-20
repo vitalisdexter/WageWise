@@ -2,33 +2,20 @@ function saveCalculation(record){
 
 const history =
 JSON.parse(
-localStorage.getItem(
-'payHistory'
-)
-)||[];
+localStorage.getItem('payHistory')
+) || [];
 
-history.unshift(record);
+history.unshift({
+
+date:new Date().toISOString(),
+
+gross:Number(record.gross),
+
+net:Number(record.net)
+
+});
 
 localStorage.setItem(
 'payHistory',
 JSON.stringify(history)
-);
-}
-
-function getHistory(){
-
-return JSON.parse(
-localStorage.getItem(
-'payHistory'
-)
-)||[];
-}
-
-function clearHistory(){
-
-localStorage.removeItem(
-'payHistory'
-);
-
-loadHistory();
-}
+);}

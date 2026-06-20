@@ -117,3 +117,38 @@ width:auto;
 display:block;
 font-size:12px;
 }
+
+.dashboard-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+margin-bottom:20px;
+}
+
+.stat-card{
+background:var(--card);
+padding:20px;
+border-radius:16px;
+text-align:center;
+}
+
+.stat-card h3{
+font-size:14px;
+margin-bottom:10px;
+}
+
+.stat-card p{
+font-size:22px;
+font-weight:bold;
+}
+
+.chart-card{
+background:var(--card);
+padding:20px;
+border-radius:16px;
+}
+
+canvas{
+width:100% !important;
+height:300px !important;
+}
