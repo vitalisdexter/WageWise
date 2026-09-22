@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="light" data-accent="pine">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#1f5c43"/>
+<title>WageWise</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231f5c43'/%3E%3Ctext x='32' y='45' font-family='monospace' font-size='34' font-weight='700' fill='%23fbfcf7' text-anchor='middle'%3E%C2%A3%3C/text%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens ── */
+:root,[data-theme="light"]{--paper:#fbfcf7;--page-bg:#e8ebe1;--ink:#16261d;--ink-soft:#4d6657;--rule:#cddbc8;--rule-strong:#a9c3a2;--on-accent:#fbfcf7;--shadow:0 1px 2px rgba(18,40,28,.06),0 24px 48px -28px rgba(18,40,28,.45);}
+[data-theme="dark"]{--paper:#1b2420;--page-bg:#0e1411;--ink:#eaf2ec;--ink-soft:#9bb2a4;--rule:#2b3a32;--rule-strong:#3e5448;--on-accent:#fbfcf7;--shadow:0 1px 2px rgba(0,0,0,.3),0 24px 48px -28px rgba(0,0,0,.6);}
+[data-accent="pine"]{--pine:#1f5c43;--accent-ink:#123b29;--stripe:#e2efe0;--focus:#2f7a59;--brick:#8f3e35;}
+[data-theme="dark"][data-accent="pine"]{--pine:#3f7a5d;--accent-ink:#8fd6b4;--stripe:#223830;--focus:#5fae84;--brick:#c97a68;}
+[data-accent="indigo"]{--pine:#2b3f8c;--accent-ink:#1b2a63;--stripe:#e3e7f5;--focus:#3a52b0;--brick:#9c3e3e;}
+[data-theme="dark"][data-accent="indigo"]{--pine:#5468b8;--accent-ink:#aab8ec;--stripe:#222a40;--focus:#7689d6;--brick:#cf7a7a;}
+[data-accent="plum"]{--pine:#7a2348;--accent-ink:#54142f;--stripe:#f3e3ea;--focus:#9c3464;--brick:#a3631f;}
+[data-theme="dark"][data-accent="plum"]{--pine:#a14d72;--accent-ink:#e6a8c4;--stripe:#3a2430;--focus:#c2658f;--brick:#d4954f;}
+[data-accent="slate"]{--pine:#1f4f54;--accent-ink:#143539;--stripe:#e1edee;--focus:#2c6b71;--brick:#8a4030;}
+[data-theme="dark"][data-accent="slate"]{--pine:#3f7d83;--accent-ink:#92d6dc;--stripe:#1f3336;--focus:#5fa2a8;--brick:#c97a5e;}
+:root{--mono:'JetBrains Mono','SFMono-Regular',Consolas,monospace;--sans:'IBM Plex Sans',-apple-system,'Segoe UI',Roboto,sans-serif;}
+*{box-sizing:border-box;}html,body{margin:0;height:100%;}
+body{background:var(--page-bg);font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;}
+button,input{font-family:inherit;}[hidden]{display:none !important;}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2.5px solid var(--focus);outline-offset:2px;}
+/* ── Shell ── */
+.shell{max-width:440px;margin:0 auto;background:var(--paper);height:100vh;height:100dvh;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden;}
+.topbar{flex:0 0 auto;background:var(--pine);color:var(--on-accent);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.wordmark{font-family:var(--mono);font-weight:800;font-size:17px;letter-spacing:-.01em;}
+.screen-label{font-size:11.5px;opacity:.8;margin-top:1px;}
+.icon-btn{width:38px;height:38px;border:none;border-radius:10px;background:rgba(251,252,247,.14);color:var(--on-accent);display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;}
+.icon-btn:active{background:rgba(251,252,247,.26);}
+.icon-btn svg{width:20px;height:20px;}
+.perf{flex:0 0 auto;height:14px;background-color:var(--pine);background-image:radial-gradient(circle 5px,var(--paper) 99%,transparent 100%);background-size:20px 20px;background-position:6px -2px;background-repeat:repeat-x;}
+.screens{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.screen{display:none;padding-bottom:28px;}
+.screen.active{display:block;}
+.bottomnav{flex:0 0 auto;display:flex;border-top:1px solid var(--rule);background:var(--paper);padding:4px 0;padding-bottom:max(4px,env(safe-area-inset-bottom));}
+.navbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;padding:6px 1px 4px;color:var(--ink-soft);cursor:pointer;border-radius:10px;}
+.navbtn svg{width:20px;height:20px;}
+.navbtn span{font-size:9.5px;font-weight:600;}
+.navbtn.is-active{color:var(--accent-ink);}
+.navbtn:active{background:var(--stripe);}
+/* ── Form shared ── */
+.card{padding:20px 22px 4px;}
+.card-title{margin:0 0 14px;font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-ink);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+.input-wrap{display:flex;align-items:center;border:1.5px solid var(--rule-strong);border-radius:8px;background:var(--paper);padding:0 14px;transition:border-color .15s,box-shadow .15s;}
+.input-wrap.sm{padding:0 10px;}
+.input-wrap:focus-within{border-color:var(--focus);box-shadow:0 0 0 3px rgba(47,122,89,.15);}
+.prefix,.suffix{font-family:var(--mono);color:var(--ink-soft);font-size:15px;}
+.input-wrap input{border:none;outline:none;background:transparent;font-family:var(--mono);font-size:16px;font-weight:600;color:var(--ink);padding:11px 8px;width:100%;min-width:0;}
+.input-wrap.sm input{padding:9px 4px;font-size:14px;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{appearance:textfield;-moz-appearance:textfield;}
+input[type=date],input[type=time]{border:none;outline:none;background:transparent;font-family:var(--mono);font-size:14.5px;font-weight:600;color:var(--ink);padding:10px 6px;width:100%;min-width:0;}
+input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.55;}
+[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator,[data-theme="dark"] input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(.7);}
+.link-btn{display:inline-block;margin-top:8px;border:none;background:none;color:var(--pine);font-size:13px;font-weight:600;text-decoration:underline;cursor:pointer;padding:4px 2px;}
+.link-btn.center{display:block;width:100%;margin:14px auto 0;text-align:center;}
+.primary-btn{width:100%;padding:15px;border:none;border-radius:10px;background:var(--pine);color:var(--on-accent);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.primary-btn:active{opacity:.85;}
+.secondary-btn{width:100%;padding:13px;border:1.5px solid var(--rule-strong);border-radius:10px;background:none;color:var(--ink-soft);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
+.secondary-btn:active{background:var(--stripe);}
+.ghost-btn{border:1.5px dashed var(--rule-strong);background:none;color:var(--ink-soft);font-size:13px;font-weight:600;padding:10px 18px;border-radius:8px;cursor:pointer;}
+.ghost-btn:active{background:var(--stripe);}
+/* ── Basic pay display on calculator ── */
+.basic-display{margin:0 22px 14px;background:var(--stripe);border:1px solid var(--rule-strong);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.basic-display-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:2px;}
+.basic-display-val{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--ink);}
+.basic-display-link{font-size:12px;color:var(--pine);font-weight:600;cursor:pointer;text-decoration:underline;border:none;background:none;white-space:nowrap;}
+/* ── OT cards ── */
+.ot-card{background:var(--stripe);border:1px solid var(--rule-strong);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+.ot-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ot-card-label{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);}
+.ot-card-actions{display:flex;gap:6px;}
+.ot-mode-btn{display:flex;align-items:center;gap:5px;border:1.5px solid var(--rule-strong);border-radius:7px;background:var(--paper);color:var(--ink-soft);font-size:11.5px;font-weight:700;padding:5px 9px;cursor:pointer;}
+.ot-mode-btn.shift-active{background:var(--pine);border-color:var(--pine);color:var(--on-accent);}
+.ot-mode-btn svg{width:13px;height:13px;flex-shrink:0;}
+.ot-remove{width:30px;height:30px;border:1.5px solid var(--rule-strong);background:var(--paper);color:var(--ink-soft);border-radius:7px;font-size:16px;line-height:1;cursor:pointer;}
+.ot-manual-row{display:flex;align-items:flex-end;gap:8px;}
+.ot-mini{flex:1;}
+.ot-mini label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;letter-spacing:.03em;}
+.ot-at{padding-bottom:11px;color:var(--ink-soft);font-family:var(--mono);font-size:14px;flex:0 0 auto;}
+.ot-shift{display:flex;flex-direction:column;gap:8px;}
+.ot-time-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;}
+.ot-time-sep{text-align:center;color:var(--ink-soft);font-family:var(--mono);font-size:14px;padding-top:18px;}
+.ot-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ot-chip{margin-top:4px;padding:10px 14px;border-radius:8px;background:var(--pine);color:var(--on-accent);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ot-chip.overnight{background:var(--accent-ink);}
+.ot-chip.empty{background:var(--rule-strong);color:var(--ink-soft);}
+.chip-hrs{font-family:var(--mono);font-size:17px;font-weight:800;}
+.chip-pay{font-family:var(--mono);font-size:14px;font-weight:600;opacity:.88;}
+.chip-hint{font-size:12.5px;font-weight:600;}
+.overnight-tag{font-size:10px;font-weight:700;letter-spacing:.06em;background:rgba(255,255,255,.22);border-radius:4px;padding:2px 5px;}
+/* ── Tax settings drawer ── */
+.settings{margin:4px 22px 16px;border-top:1px dashed var(--rule-strong);padding-top:14px;}
+.settings summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--accent-ink);list-style:none;display:flex;align-items:center;justify-content:space-between;}
+.settings summary::-webkit-details-marker{display:none;}
+.settings summary::after{content:'+';font-family:var(--mono);font-size:18px;color:var(--pine);}
+.settings[open] summary::after{content:'\2212';}
+.settings-body{padding-top:14px;}
+.note{font-size:12px;line-height:1.55;color:var(--ink-soft);background:var(--stripe);padding:11px 12px;border-radius:8px;margin:8px 0 0;}
+.band-table{margin-top:10px;border:1px solid var(--rule-strong);border-radius:8px;overflow:hidden;}
+.band-table table{width:100%;border-collapse:collapse;}
+.band-table th,.band-table td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--rule);font-size:11.5px;font-family:var(--mono);}
+.band-table th:last-child,.band-table td:last-child{text-align:right;}
+.band-table thead th{background:var(--stripe);color:var(--accent-ink);font-weight:700;font-family:var(--sans);font-size:11px;}
+.band-table tr:last-child td{border-bottom:none;}
+/* ── Ledger ── */
+.ledger-wrap{padding:6px 0 4px;}
+.ledger-heading{padding:0 22px;}
+.ledger{padding:2px 0;}
+.line{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:10px 22px;border-bottom:1px dotted var(--rule-strong);}
+.line:last-child{border-bottom:none;}
+.line:nth-child(even){background:var(--stripe);}
+.line-label{flex:1 1 auto;min-width:0;font-size:13.5px;color:var(--ink-soft);line-height:1.4;}
+.line-sub{display:block;font-size:11px;opacity:.8;margin-top:2px;font-family:var(--mono);}
+.line-value{flex:0 0 auto;font-family:var(--mono);font-size:15px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);}
+.line-total{border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);}
+.line-total .line-label{color:var(--ink);font-weight:700;}
+.line-total .line-value{font-size:16px;font-weight:800;}
+.line-deduction .line-value{color:var(--brick);}
+/* ── Stamp ── */
+.stamp-wrap{display:flex;justify-content:center;padding:22px 22px 6px;}
+.stamp{padding:4px;border:2px solid var(--pine);border-radius:18px;transform:rotate(-3deg);animation:stampIn .45s .15s cubic-bezier(.34,1.56,.64,1) backwards;}
+.stamp-ring{border:1.5px solid var(--pine);border-radius:14px;padding:13px 28px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.stamp-label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--pine);opacity:.85;}
+.stamp-value{font-family:var(--mono);font-size:32px;font-weight:800;color:var(--accent-ink);font-variant-numeric:tabular-nums;}
+.stamp.pulse{animation:stampPulse .4s ease;}
+@keyframes stampIn{from{opacity:0;transform:rotate(-3deg) scale(1.5);}to{opacity:1;transform:rotate(-3deg) scale(1);}}
+@keyframes stampPulse{0%{transform:rotate(-3deg) scale(1);}35%{transform:rotate(-3deg) scale(1.05);}100%{transform:rotate(-3deg) scale(1);}}
+@media(prefers-reduced-motion:reduce){.stamp{animation:none;}}
+/* ── Mini tables ── */
+.mini-table{margin:6px 22px 4px;border:1px solid var(--rule-strong);border-radius:8px;overflow:hidden;}
+.mini-table table{width:100%;border-collapse:collapse;}
+.mini-table th,.mini-table td{padding:8px;text-align:right;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;}
+.mini-table th:first-child,.mini-table td:first-child{text-align:left;color:var(--ink-soft);font-weight:600;font-family:var(--sans);font-size:11.5px;}
+.mini-table thead th{background:var(--stripe);color:var(--accent-ink);font-weight:700;}
+.mini-table tr:last-child td{border-bottom:none;}
+.mini-table-cap{margin:14px 22px 4px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);}
+.save-cta{padding:8px 22px 4px;}
+.actions{padding:10px 22px 16px;display:flex;justify-content:center;}
+.foot{padding:14px 22px 20px;}
+.foot p{margin:0;font-size:11.5px;line-height:1.55;color:var(--ink-soft);}
+/* ── Dashboard ── */
+.dash-pad{padding:18px 22px 8px;}
+.dash-section{padding:0 22px;margin-bottom:22px;}
+.dash-section .card-title{margin-bottom:10px;}
+.dash-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.stat-card{background:var(--stripe);border:1px solid var(--rule);border-radius:10px;padding:11px 8px;}
+.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:4px;}
+.stat-value{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--ink);line-height:1.15;}
+.stat-sub{font-size:10px;color:var(--ink-soft);margin-top:2px;}
+.chart-wrap{background:var(--stripe);border:1px solid var(--rule);border-radius:10px;padding:12px 8px 8px;overflow:hidden;}
+.chart-empty{padding:32px 16px;text-align:center;font-size:13px;color:var(--ink-soft);line-height:1.5;}
+.forecast-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fcard{background:var(--stripe);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;}
+.fcard.hi{background:var(--pine);border-color:var(--pine);}
+.fcard.hi .f-label,.fcard.hi .f-sub{color:rgba(251,252,247,.72);}
+.fcard.hi .f-value{color:var(--on-accent);}
+.f-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:4px;}
+.f-value{font-family:var(--mono);font-size:17px;font-weight:800;color:var(--ink);}
+.f-sub{font-size:10.5px;color:var(--ink-soft);margin-top:3px;}
+.forecast-note{font-size:11px;color:var(--ink-soft);margin:10px 0 0;line-height:1.5;}
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.history-header .card-title{margin:0;}
+.history-list{display:flex;flex-direction:column;gap:8px;}
+.hitem{background:var(--stripe);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s;}
+.hitem:active,.hitem:hover{border-color:var(--rule-strong);}
+.hitem-left{flex:1;min-width:0;}
+.hdate{font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:2px;}
+.hnet{font-family:var(--mono);font-size:20px;font-weight:800;color:var(--accent-ink);}
+.hdetail{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+.manual-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;background:var(--rule-strong);color:var(--ink-soft);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:middle;text-transform:uppercase;}
+.hdel{flex:0 0 auto;width:30px;height:30px;border:1.5px solid var(--rule-strong);background:var(--paper);color:var(--brick);border-radius:7px;font-size:16px;line-height:1;cursor:pointer;}
+.history-empty{text-align:center;padding:30px 16px;}
+.history-empty svg{width:44px;height:44px;color:var(--rule-strong);margin-bottom:12px;}
+.history-empty p{font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0;}
+.clear-wrap{display:flex;justify-content:center;margin-top:14px;}
+/* ── CALENDAR ── */
+.cal-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px 10px;gap:10px;}
+.cal-nav-row{display:flex;align-items:center;gap:6px;}
+.cal-nav-btn{width:32px;height:32px;border:1.5px solid var(--rule-strong);border-radius:8px;background:var(--paper);color:var(--ink);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cal-nav-btn:active{background:var(--stripe);}
+.cal-period-lbl{font-family:var(--mono);font-size:13px;font-weight:700;min-width:100px;text-align:center;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);padding:0 8px;margin-bottom:3px;}
+.cal-dow{text-align:center;font-size:10px;font-weight:700;color:var(--ink-soft);padding:4px 0;text-transform:uppercase;letter-spacing:.04em;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 8px;}
+.cal-cell{min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:5px 2px 3px;border-radius:8px;cursor:pointer;border:1.5px solid transparent;}
+.cal-cell:active{opacity:.75;}
+.cal-empty{cursor:default;pointer-events:none;}
+.cal-today{border-color:var(--pine);}
+.cal-sel{background:var(--stripe);border-color:var(--rule-strong);}
+.cal-has-entry{background:var(--pine) !important;}
+.cal-has-entry .cal-num{color:var(--on-accent);}
+.cal-has-entry .cal-tag{color:rgba(251,252,247,.8);}
+.cal-has-ot:not(.cal-has-entry){background:var(--stripe);}
+.cal-num{font-family:var(--mono);font-size:13px;font-weight:700;line-height:1;}
+.cal-tag{font-size:8px;font-weight:800;letter-spacing:.04em;margin-top:2px;color:var(--pine);}
+.week-strip{margin:12px 22px 0;border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;}
+.week-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px dotted var(--rule);cursor:pointer;}
+.week-row:last-child{border-bottom:none;}
+.week-row:active{background:var(--stripe);}
+.week-row.wsel{background:var(--stripe);}
+.wr-day{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-soft);width:26px;flex-shrink:0;}
+.wr-date{font-size:13px;font-weight:600;flex:1;}
+.wr-badge{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:5px;margin-left:3px;}
+.wr-ot{background:var(--pine);color:var(--on-accent);}
+.wr-en{background:var(--accent-ink);color:var(--on-accent);}
+.cal-day-panel{margin:12px 22px 0;background:var(--stripe);border:1px solid var(--rule-strong);border-radius:10px;padding:14px;}
+.cdp-date{font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase;}
+.cdp-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;font-size:13.5px;border-bottom:1px dotted var(--rule);}
+.cdp-row:last-of-type{border-bottom:none;}
+.cdp-label{color:var(--ink-soft);flex:1;padding-right:8px;font-size:13px;}
+.cdp-val{font-family:var(--mono);font-weight:700;white-space:nowrap;}
+.cal-month-sum{margin:14px 22px 0;border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;}
+.cms-hdr{background:var(--pine);color:var(--on-accent);padding:10px 16px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;display:flex;justify-content:space-between;}
+.cms-row{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-bottom:1px dotted var(--rule);}
+.cms-row:last-child{border-bottom:none;}
+.cms-lbl{font-size:13px;color:var(--ink-soft);}
+.cms-val{font-family:var(--mono);font-size:14px;font-weight:700;}
+.cms-val.net-v{color:var(--accent-ink);font-size:17px;font-weight:800;}
+.cms-val.ded-v{color:var(--brick);}
+.cal-print-wrap{padding:10px 22px 4px;}
+/* ── Custom deductions ── */
+.ded-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.ded-item{display:flex;align-items:center;gap:10px;background:var(--stripe);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;}
+.ded-name{flex:1;font-size:13.5px;font-weight:600;}
+.ded-val-tag{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent-ink);}
+.ded-del{width:28px;height:28px;border:1.5px solid var(--rule-strong);background:var(--paper);color:var(--brick);border-radius:6px;font-size:15px;cursor:pointer;flex-shrink:0;}
+.ded-form{background:var(--stripe);border:1.5px solid var(--rule-strong);border-radius:10px;padding:14px;margin-top:8px;}
+.ded-form-row{display:flex;gap:8px;margin-bottom:10px;}
+.ded-type-seg{display:flex;gap:4px;}
+.ded-type-btn{flex:1;padding:8px 6px;border:1.5px solid var(--rule-strong);border-radius:7px;background:var(--paper);color:var(--ink-soft);font-size:13px;font-weight:600;cursor:pointer;}
+.ded-type-btn.on{background:var(--pine);border-color:var(--pine);color:var(--on-accent);}
+/* ── Deduction presets ── */
+.preset-card{background:var(--stripe);border:1.5px solid var(--rule);border-radius:10px;padding:12px 14px;margin-bottom:8px;transition:border-color .15s;}
+.preset-card.is-active{border-color:var(--pine);background:var(--pine);}
+.preset-card.is-active .preset-sum{color:rgba(251,252,247,.72);}
+.preset-card.is-active .preset-nm{color:var(--on-accent);}
+.preset-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+.preset-nm{font-size:14px;font-weight:700;color:var(--ink);}
+.preset-sum{font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;line-height:1.4;}
+.preset-acts{display:flex;gap:6px;align-items:center;}
+.preset-apply{flex:1;padding:7px 10px;border:1.5px solid var(--pine);border-radius:7px;background:var(--paper);color:var(--pine);font-size:13px;font-weight:600;cursor:pointer;}
+.preset-apply:active{opacity:.8;}
+.preset-active-tag{flex:1;font-size:11px;font-weight:700;color:rgba(251,252,247,.8);letter-spacing:.04em;}
+.preset-del{width:30px;height:30px;border:1.5px solid var(--rule-strong);border-radius:7px;background:var(--paper);color:var(--brick);font-size:15px;cursor:pointer;flex-shrink:0;}
+.preset-card.is-active .preset-del{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:rgba(251,252,247,.7);}
+.preset-save-form{background:var(--stripe);border:1.5px solid var(--rule-strong);border-radius:10px;padding:14px;margin-top:10px;}
+.ded-section-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin:14px 0 8px;display:flex;align-items:center;gap:8px;}
+.ded-active-badge{font-size:10px;font-weight:700;background:var(--pine);color:var(--on-accent);border-radius:4px;padding:2px 6px;letter-spacing:.04em;}
+/* ── Settings screen ── */
+.screen-intro{padding:18px 22px 2px;}
+.screen-intro h1{margin:0 0 4px;font-family:var(--mono);font-size:20px;font-weight:800;}
+.screen-intro p{margin:0;font-size:13px;color:var(--ink-soft);line-height:1.45;}
+.seg{display:flex;gap:8px;}
+.seg button{flex:1;border:1.5px solid var(--rule-strong);background:var(--paper);color:var(--ink);border-radius:8px;padding:10px 6px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.seg button svg{width:16px;height:16px;}
+.seg button.on{background:var(--pine);border-color:var(--pine);color:var(--on-accent);}
+.swatches{display:flex;gap:12px;margin-top:4px;}
+.swatch{width:46px;height:46px;border-radius:50%;border:3px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.swatch.on{border-color:var(--ink);}
+.swatch svg{width:16px;height:16px;color:#fff;opacity:0;}
+.swatch.on svg{opacity:1;}
+.sblock{padding:18px 22px;border-bottom:1px solid var(--rule);}
+.sblock:last-child{border-bottom:none;}
+.sblock h3{margin:0 0 12px;font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;}
+/* ── Entry / Detail sheets ── */
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10;opacity:0;transition:opacity .25s;pointer-events:none;}
+.sheet-overlay.open{opacity:1;pointer-events:auto;}
+.sheet{position:fixed;bottom:0;left:0;right:0;max-width:440px;margin:0 auto;z-index:11;background:var(--paper);border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.sheet.open{transform:translateY(0);}
+.dsheet-z{z-index:14 !important;}
+.dsheet-ov-z{z-index:13 !important;}
+.sheet-handle{width:36px;height:4px;background:var(--rule-strong);border-radius:2px;margin:12px auto 0;}
+.sheet-hdr{padding:12px 22px 0;display:flex;align-items:center;justify-content:space-between;}
+.sheet-title{font-family:var(--mono);font-size:16px;font-weight:800;margin:0;}
+.sheet-x{border:none;background:none;color:var(--ink-soft);font-size:24px;cursor:pointer;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.sheet-tabs{display:flex;padding:14px 22px 0;gap:8px;}
+.stab{flex:1;padding:9px 6px;border:1.5px solid var(--rule-strong);border-radius:8px;background:var(--paper);color:var(--ink-soft);font-size:13px;font-weight:600;cursor:pointer;}
+.stab.on{background:var(--pine);border-color:var(--pine);color:var(--on-accent);}
+.sbody{padding:16px 22px 28px;}
+.sprv{background:var(--stripe);border-radius:10px;padding:14px;margin:12px 0;}
+.sprv-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13.5px;}
+.sprv-row strong{font-family:var(--mono);font-weight:700;}
+.sprv-row.net-row{border-top:1px solid var(--rule-strong);margin-top:6px;padding-top:10px;}
+.sprv-row.net-row strong{font-size:17px;color:var(--accent-ink);}
+/* ── Detail view ── */
+.dv-eyebrow{padding:14px 22px 2px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);}
+.dv-divider{height:1px;background:var(--rule-strong);margin:0 22px;}
+.dv-row{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;}
+.dv-label{font-size:14px;color:var(--ink-soft);font-weight:500;}
+.dv-value{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+.dv-section-title{padding:14px 22px 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-ink);}
+.dv-shift{padding:12px 22px;border-bottom:1px dotted var(--rule-strong);}
+.dv-shift:last-of-type{border-bottom:none;}
+.dv-shift-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.dv-check{width:20px;height:20px;border-radius:50%;background:var(--pine);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+.dv-day{font-size:14px;font-weight:700;color:var(--ink);}
+.dv-shift-time{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.dv-shift-meta{font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+.dv-shift-pay{font-family:var(--mono);font-size:20px;font-weight:800;color:var(--accent-ink);font-variant-numeric:tabular-nums;}
+.dv-row.dv-total .dv-label{font-weight:700;color:var(--ink);}
+.dv-row.dv-total .dv-value{font-size:17px;}
+.dv-row.dv-deduction .dv-value{color:var(--brick);}
+.dv-net{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;background:var(--pine);color:var(--on-accent);}
+.dv-net-label{font-size:14px;font-weight:700;}
+.dv-net-value{font-family:var(--mono);font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;}
+.dv-note-row{padding:10px 22px;font-size:13px;color:var(--ink-soft);font-style:italic;}
+.dv-actions{padding:16px 22px 28px;display:flex;flex-direction:column;gap:8px;}
+.de-preview{background:var(--stripe);border-radius:10px;padding:14px;margin:12px 0;}
+.de-preview-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13.5px;}
+.de-preview-row span:last-child{font-family:var(--mono);font-weight:700;}
+.de-preview-row.net-row{border-top:1px solid var(--rule-strong);margin-top:6px;padding-top:10px;}
+.de-preview-row.net-row span:last-child{font-size:17px;color:var(--accent-ink);}
+/* ── Payslip screen ── */
+.ps-topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 22px 8px;}
+.ps-heading{margin:0 0 2px;font-family:var(--mono);font-size:20px;font-weight:800;}
+.ps-sub{margin:0;font-size:13px;color:var(--ink-soft);}
+.ps-section{padding:0 22px 20px;}
+.ps-hitem{background:var(--stripe);border:1.5px solid var(--rule);border-radius:8px;padding:10px 14px;margin-bottom:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .15s;}
+.ps-hitem:active,.ps-hitem.selected{border-color:var(--pine);}
+.ps-hitem.selected{background:var(--pine);color:var(--on-accent);}
+.ps-hitem.selected .ps-hi-date,.ps-hitem.selected .ps-hi-det{color:rgba(251,252,247,.75);}
+.ps-hi-date{font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:2px;}
+.ps-hi-net{font-family:var(--mono);font-size:16px;font-weight:800;color:var(--accent-ink);}
+.ps-hitem.selected .ps-hi-net{color:var(--on-accent);}
+.ps-hi-det{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.ps-preview{border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;background:var(--paper);}
+.psl-header{background:var(--pine);color:var(--on-accent);padding:16px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start;}
+.psl-wordmark{font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:-.01em;}
+.psl-badge{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;background:rgba(251,252,247,.18);border-radius:4px;padding:3px 8px;margin-top:4px;}
+.psl-meta{padding:12px 18px;border-bottom:1px solid var(--rule);}
+.psl-meta-row{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;}
+.psl-meta-label{color:var(--ink-soft);}
+.psl-meta-value{font-weight:600;font-family:var(--mono);}
+.psl-section-hdr{padding:10px 18px 4px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-ink);background:var(--stripe);border-bottom:1px solid var(--rule);}
+.psl-ot-group-hdr{padding:7px 18px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent-ink);background:var(--stripe);border-bottom:1px dotted var(--rule);}
+.psl-row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 18px;border-bottom:1px dotted var(--rule);font-size:13px;}
+.psl-row-label{color:var(--ink-soft);flex:1;min-width:0;padding-right:8px;line-height:1.3;}
+.psl-row-sub{display:block;font-size:10.5px;font-family:var(--mono);color:var(--ink-soft);opacity:.8;margin-top:1px;}
+.psl-row-val{font-family:var(--mono);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.psl-ot-shift .psl-row-label{padding-left:6px;font-size:12.5px;}
+.psl-row.deduction .psl-row-val{color:var(--brick);}
+.psl-total-row{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:var(--stripe);border-top:1.5px solid var(--ink-soft);}
+.psl-ot-subtotal{background:var(--stripe);border-top:none;}
+.psl-ot-subtotal .psl-total-label{font-family:var(--mono);font-size:12.5px;}
+.psl-total-label{font-size:13px;font-weight:700;color:var(--ink);}
+.psl-total-val{font-family:var(--mono);font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
+.psl-total-row.deduction-total .psl-total-val{color:var(--brick);}
+.psl-net{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:var(--pine);color:var(--on-accent);}
+.psl-net-label{font-size:14px;font-weight:700;}
+.psl-net-val{font-family:var(--mono);font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;}
+.psl-footer{padding:10px 18px;font-size:10.5px;color:var(--ink-soft);line-height:1.55;border-top:1px solid var(--rule);}
+/* ── Toast ── */
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--paper);font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:20px;white-space:nowrap;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:20;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* ── Print ── */
+#print-payslip{display:none;}
+@media print{
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
+  body{margin:0;padding:0;background:#fff !important;color:#1a1a1a !important;}
+  .shell,.sheet-overlay,.sheet,.dsheet-overlay,.dsheet,.toast,nav{display:none !important;}
+  #print-payslip{display:block !important;font-family:'IBM Plex Sans',-apple-system,sans-serif;padding:24px 32px;max-width:640px;margin:0 auto;color:#1a1a1a;}
+  @page{margin:1.2cm;}
+  .prn-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1f5c43;padding-bottom:14px;margin-bottom:16px;}
+  .prn-company{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:20px;color:#1a1a1a;}
+  .prn-powered{font-size:10px;color:#888;margin-top:4px;}
+  .prn-badge{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#1f5c43;border:1.5px solid #1f5c43;border-radius:4px;padding:3px 8px;}
+  .prn-hdr-right{text-align:right;}
+  .prn-hdr-sub{font-size:10px;color:#666;margin-top:6px;}
+  .prn-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;margin-bottom:20px;font-size:12px;}
+  .prn-meta-row{display:flex;gap:6px;}
+  .prn-ml{color:#555;min-width:110px;}
+  .prn-mv{font-weight:600;font-family:'JetBrains Mono',monospace;color:#1a1a1a;}
+  .prn-section{margin-bottom:16px;}
+  .prn-section-hdr{background:none !important;color:#1a1a1a !important;padding:6px 0 5px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;border-bottom:2px solid #1a1a1a;margin-bottom:0;}
+  .prn-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .prn-table td{padding:7px 10px;border-bottom:1px solid #e0e0e0;color:#1a1a1a !important;}
+  .prn-table td:last-child{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;}
+  .prn-table .prn-sub{font-size:10px;color:#555 !important;display:block;margin-top:1px;}
+  .prn-total td{border-top:2px solid #1a1a1a !important;border-bottom:none;font-weight:700;font-size:13px;}
+  .prn-deduction td:last-child{color:#8f3e35 !important;}
+  .prn-ot-group-hdr td{background:#f2f2f2 !important;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#1a1a1a !important;padding:5px 10px !important;border-bottom:1px solid #ddd !important;}
+  .prn-ot-shift td:first-child{padding-left:20px !important;font-size:12px;}
+  .prn-ot-subtotal td{font-weight:700;border-top:1px solid #ccc !important;background:#f8f8f8 !important;color:#1a1a1a !important;font-size:12px;}
+  .prn-net{display:flex;justify-content:space-between;align-items:center;background:#1f5c43 !important;color:#fff !important;padding:14px 12px;border-radius:0 0 6px 6px;margin-top:-1px;border:3px solid #1f5c43;}
+  .prn-net-label{font-size:14px;font-weight:700;color:#fff !important;}
+  .prn-net-val{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:800;color:#fff !important;}
+  .prn-footer{margin-top:20px;font-size:10px;color:#555;line-height:1.6;border-top:1px solid #ddd;padding-top:10px;}
+}
+/* ── Deduction Presets ── */
+.preset-card{background:var(--stripe);border:1.5px solid var(--rule);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+.preset-card.preset-active{border-color:var(--pine);}
+.preset-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.preset-name-lbl{font-size:14px;font-weight:700;flex:1;min-width:0;}
+.preset-active-badge{font-size:9px;font-weight:700;letter-spacing:.06em;background:var(--pine);color:var(--on-accent);border-radius:5px;padding:2px 7px;text-transform:uppercase;flex-shrink:0;}
+.preset-summary{font-size:12px;color:var(--ink-soft);margin-bottom:8px;line-height:1.5;}
+.preset-actions{display:flex;gap:6px;}
+.preset-apply-btn{flex:1;padding:8px 6px;border:1.5px solid var(--pine);border-radius:7px;background:var(--paper);color:var(--pine);font-size:12.5px;font-weight:700;cursor:pointer;}
+.preset-apply-btn:active{background:var(--stripe);}
+.preset-apply-btn.applied{background:var(--pine);color:var(--on-accent);}
+.preset-icon-btn{width:34px;height:34px;border:1.5px solid var(--rule-strong);border-radius:7px;background:var(--paper);font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.preset-icon-btn.del{color:var(--brick);}
+.preset-icon-btn.edit{color:var(--ink-soft);}
+.preset-editor{background:var(--stripe);border:1.5px solid var(--rule-strong);border-radius:10px;padding:14px;margin-top:10px;}
+.preset-ed-title{font-size:11.5px;font-weight:700;color:var(--accent-ink);margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;}
+.preset-ded-row{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--rule);border-radius:7px;padding:8px 10px;margin-bottom:6px;}
+.preset-ded-row .ded-name{font-size:13px;}
+.preset-ded-row .ded-val-tag{font-size:12.5px;}
+.active-note{font-size:12px;color:var(--pine);font-weight:600;background:color-mix(in srgb,var(--pine) 10%,transparent);border:1px solid var(--pine);border-radius:8px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.active-note-clear{font-size:11.5px;color:var(--pine);font-weight:700;border:none;background:none;cursor:pointer;text-decoration:underline;white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div><div class="wordmark">WageWise</div><div class="screen-label" id="screen-label">Calculator</div></div>
+    <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
+      <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5" y1="5" x2="6.5" y2="6.5"/><line x1="19" y1="19" x2="17.5" y2="17.5"/><line x1="5" y1="19" x2="6.5" y2="17.5"/><line x1="19" y1="5" x2="17.5" y2="6.5"/></svg>
+      <svg id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" hidden><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+    </button>
+  </div>
+  <div class="perf" aria-hidden="true"></div>
+  <div class="screens">
+
+    <!-- ═══ CALCULATOR ═══ -->
+    <section class="screen active" data-screen="calculator">
+      <form id="calc-form" autocomplete="off">
+        <section class="card">
+          <h2 class="card-title">This pay period</h2>
+          <div class="basic-display">
+            <div>
+              <div class="basic-display-lbl">Basic pay (weekly)</div>
+              <div class="basic-display-val" id="basic-display-val">&pound;549.66</div>
+            </div>
+            <button type="button" class="basic-display-link" id="basic-goto-settings">Change in Settings &#9881;</button>
+          </div>
+          <div class="field" style="margin-bottom:4px;">
+            <label>Overtime</label>
+            <div id="ot-list"></div>
+            <button type="button" class="link-btn" id="add-ot">+ Add overtime entry</button>
+          </div>
+        </section>
+        <details class="settings">
+          <summary>Tax &amp; National Insurance</summary>
+          <div class="settings-body">
+            <div class="field" style="margin-bottom:10px;">
+              <label for="allowance">Personal allowance (yearly)</label>
+              <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="1" min="0" id="allowance" value="12570"></div>
+            </div>
+            <p class="note">Using <strong id="tax-year-lbl">2026/27</strong> Scottish Income Tax bands and UK NI weekly thresholds.</p>
+            <div class="band-table"><table><thead><tr><th>Band</th><th>Rate</th></tr></thead><tbody id="band-tbody"></tbody></table></div>
+          </div>
+        </details>
+        <section class="ledger-wrap">
+          <h2 class="card-title ledger-heading">Your earnings</h2>
+          <div class="ledger" id="ledger">
+            <div class="line"><span class="line-label">Basic pay</span><span class="line-value" id="out-basic">&pound;0.00</span></div>
+            <div id="ledger-ot"></div>
+            <div class="line line-total"><span class="line-label">Gross pay</span><span class="line-value" id="out-gross">&pound;0.00</span></div>
+            <div class="line line-deduction"><span class="line-label" id="out-tax-lbl">Tax</span><span class="line-value" id="out-tax">&minus; &pound;0.00</span></div>
+            <div class="line line-deduction"><span class="line-label">National Insurance</span><span class="line-value" id="out-ni">&minus; &pound;0.00</span></div>
+            <div id="ledger-custom-ded"></div>
+          </div>
+          <div class="stamp-wrap"><div class="stamp" id="stamp"><div class="stamp-ring"><span class="stamp-label">Net pay</span><span class="stamp-value" id="out-net">&pound;0.00</span></div></div></div>
+          <button type="button" class="link-btn center" id="breakdown-toggle">Show full breakdown</button>
+          <div id="breakdown-area" hidden>
+            <p class="mini-table-cap">Tax bands (annual)</p>
+            <div class="mini-table"><table><thead><tr><th>Band</th><th>Amount</th><th>Tax</th></tr></thead><tbody id="tax-bd"></tbody></table></div>
+            <p class="mini-table-cap">National Insurance (weekly)</p>
+            <div class="mini-table"><table><thead><tr><th>Band</th><th>Amount</th><th>NI</th></tr></thead><tbody id="ni-bd"></tbody></table></div>
+            <p class="mini-table-cap">Weekly / Monthly / Annual</p>
+            <div class="mini-table"><table>
+              <thead><tr><th>&nbsp;</th><th>Weekly</th><th>Monthly</th><th>Annual</th></tr></thead>
+              <tbody>
+                <tr><td>Gross</td><td id="tw-g"></td><td id="tm-g"></td><td id="ta-g"></td></tr>
+                <tr><td>Tax</td><td id="tw-t"></td><td id="tm-t"></td><td id="ta-t"></td></tr>
+                <tr><td>NI</td><td id="tw-n"></td><td id="tm-n"></td><td id="ta-n"></td></tr>
+                <tr><td>Net</td><td id="tw-net"></td><td id="tm-net"></td><td id="ta-net"></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </section>
+        <div class="save-cta"><button type="button" class="primary-btn" id="save-pay-btn">&#10003; Save this week&rsquo;s pay</button></div>
+        <div class="actions"><button type="button" class="ghost-btn" id="reset-btn">Reset to example figures</button></div>
+      </form>
+      <footer class="foot"><p>Estimate only. Income Tax annualises your gross pay (&times;52) across the <span id="tax-year-lbl2">2026/27</span> Scottish bands.</p></footer>
+    </section>
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <section class="screen" data-screen="dashboard">
+      <div class="dash-pad"><h1 style="margin:0 0 2px;font-family:var(--mono);font-size:20px;font-weight:800;">Dashboard</h1><p style="margin:0;font-size:13px;color:var(--ink-soft);">Tap any entry to view details.</p></div>
+      <div class="dash-section" style="margin-top:18px;"><h2 class="card-title">Year to date</h2><div class="dash-stats" id="dash-stats"></div></div>
+      <div class="dash-section"><h2 class="card-title">Monthly net earnings</h2><div class="chart-wrap" id="dash-chart"><div class="chart-empty">Save pay entries to see your monthly trend.</div></div></div>
+      <div class="dash-section"><h2 class="card-title">Forecast</h2><div id="dash-forecast"></div></div>
+      <div class="dash-section">
+        <div class="history-header"><h2 class="card-title">Earnings history</h2><button type="button" class="link-btn" id="add-entry-btn" style="margin:0;">+ Add past entry</button></div>
+        <div class="history-list" id="history-list"></div>
+        <div class="history-empty" id="history-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/></svg>
+          <p>No entries yet. Tap <strong>Save this week&rsquo;s pay</strong> on the Calculator tab to get started.</p>
+        </div>
+        <div class="clear-wrap"><button type="button" class="ghost-btn" id="clear-btn" hidden>Clear all history</button></div>
+      </div>
+    </section>
+
+    <!-- ═══ CALENDAR ═══ -->
+    <section class="screen" data-screen="calendar">
+      <div class="cal-topbar">
+        <div class="seg" id="cal-view-seg" style="flex:1;">
+          <button type="button" id="cal-monthly-btn" class="on">Monthly</button>
+          <button type="button" id="cal-weekly-btn">Weekly</button>
+        </div>
+        <div class="cal-nav-row">
+          <button type="button" class="cal-nav-btn" id="cal-prev">&#9664;</button>
+          <span class="cal-period-lbl" id="cal-period-lbl">Jun 2026</span>
+          <button type="button" class="cal-nav-btn" id="cal-next">&#9654;</button>
+        </div>
+      </div>
+      <div id="cal-body"></div>
+      <div id="cal-day-panel" hidden></div>
+      <div id="cal-month-sum"></div>
+      <div class="cal-print-wrap"><button type="button" id="cal-print-btn" class="primary-btn" hidden>&#128438; Print monthly payslip</button></div>
+      <div style="height:20px;"></div>
+    </section>
+
+    <!-- ═══ PAYSLIP ═══ -->
+    <section class="screen" data-screen="payslip">
+      <div class="ps-topbar">
+        <div><h1 class="ps-heading">Payslip</h1><p class="ps-sub">Preview, print or save as PDF.</p></div>
+        <button type="button" class="primary-btn" id="ps-print-btn" style="width:auto;padding:10px 18px;font-size:14px;">&#128438; Print</button>
+      </div>
+      <div class="ps-section">
+        <div class="card-title">Generate from</div>
+        <div class="seg" id="ps-src-seg">
+          <button type="button" id="ps-src-calc" class="on">Current calculation</button>
+          <button type="button" id="ps-src-hist">Saved entry</button>
+        </div>
+        <div id="ps-hist-picker" hidden style="margin-top:12px;">
+          <div id="ps-hist-list"></div>
+          <p id="ps-hist-empty" class="note" hidden>No saved entries yet.</p>
+        </div>
+      </div>
+      <div class="ps-section">
+        <div class="card-title">Employer</div>
+        <div class="field" style="margin-bottom:0;"><label for="ps-employer">Company / Employer name</label><div class="input-wrap"><input type="text" id="ps-employer" placeholder="e.g. Malcolm Logistics Ltd"></div></div>
+        <p style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;line-height:1.5;">Shown at the top of the payslip. Leave blank to show WageWise instead.</p>
+      </div>
+      <div class="ps-section">
+        <div class="card-title">Employee</div>
+        <div class="field" style="margin-bottom:0;"><label for="ps-name">Your name (appears on payslip)</label><div class="input-wrap"><input type="text" id="ps-name" placeholder="e.g. Vitalis Nwabueze" autocomplete="name"></div></div>
+      </div>
+      <div class="ps-section">
+        <div class="card-title">Preview</div>
+        <div class="ps-preview" id="ps-preview"><p style="text-align:center;color:var(--ink-soft);font-size:13px;padding:24px 0;">Generating payslip&hellip;</p></div>
+      </div>
+      <div style="padding:0 22px 28px;">
+        <button type="button" class="primary-btn" id="ps-print-btn2">&#128438; Print / Save as PDF</button>
+        <p style="font-size:11px;color:var(--ink-soft);text-align:center;margin:10px 0 0;line-height:1.55;">Opens your device&rsquo;s print screen. Choose &ldquo;Save as PDF&rdquo; to download.</p>
+      </div>
+    </section>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <section class="screen" data-screen="settings">
+      <div class="screen-intro"><h1>Settings</h1><p>Preferences saved on this device.</p></div>
+      <div class="sblock">
+        <h3>Appearance</h3>
+        <div class="seg" style="margin-bottom:14px;">
+          <button type="button" data-tc="light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/></svg>Light</button>
+          <button type="button" data-tc="dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>Dark</button>
+        </div>
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:8px;">Accent colour</label>
+        <div class="swatches">
+          <button type="button" class="swatch" data-ac="pine"   style="background:#1f5c43;" aria-label="Pine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 18 20 6"/></svg></button>
+          <button type="button" class="swatch" data-ac="indigo" style="background:#2b3f8c;" aria-label="Indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 18 20 6"/></svg></button>
+          <button type="button" class="swatch" data-ac="plum"   style="background:#7a2348;" aria-label="Plum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 18 20 6"/></svg></button>
+          <button type="button" class="swatch" data-ac="slate"  style="background:#1f4f54;" aria-label="Slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 18 20 6"/></svg></button>
+        </div>
+      </div>
+      <div class="sblock">
+        <h3>Basic pay</h3>
+        <div class="field" style="margin-bottom:0;">
+          <label for="settings-basic">Weekly basic pay</label>
+          <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="settings-basic" value="549.66"></div>
+        </div>
+        <p style="font-size:12px;color:var(--ink-soft);margin:8px 0 0;line-height:1.5;">Set once here. Used automatically in every calculation.</p>
+      </div>
+      <div class="sblock">
+        <h3>Deduction presets</h3>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px;line-height:1.5;">Save named sets of deductions to switch between in one tap — useful if your deductions vary week to week.</p>
+        <div id="preset-list"></div>
+        <button type="button" class="link-btn" id="save-preset-btn" style="margin-top:0;">+ Save current deductions as preset</button>
+        <div class="preset-save-form" id="save-preset-form" hidden>
+          <div class="field" style="margin-bottom:10px;"><label for="preset-name-inp">Preset name</label><div class="input-wrap"><input type="text" id="preset-name-inp" placeholder="e.g. Standard Week, Diageo Rate"></div></div>
+          <button type="button" class="primary-btn" id="save-preset-confirm" style="margin-top:4px;">Save preset</button>
+          <button type="button" class="secondary-btn" id="save-preset-cancel">Cancel</button>
+        </div>
+      </div>
+      <div class="sblock">
+        <h3>Active deductions</h3>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px;line-height:1.5;">Applied to every calculation. Apply a preset above or build your own below.</p>
+        <div id="ded-active-lbl"></div>
+        <div class="ded-list" id="ded-list"></div>
+        <button type="button" class="link-btn" id="ded-add-btn" style="margin-top:0;">+ Add deduction</button>
+        <div class="ded-form" id="ded-form" hidden>
+          <div class="field" style="margin-bottom:10px;"><label for="ded-name-inp">Name</label><div class="input-wrap"><input type="text" id="ded-name-inp" placeholder="e.g. Pension"></div></div>
+          <div class="ded-form-row">
+            <div style="flex:1;"><label style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;">Type</label><div class="ded-type-seg"><button type="button" class="ded-type-btn on" id="ded-pct-btn">% Gross</button><button type="button" class="ded-type-btn" id="ded-amt-btn">&pound; Fixed</button></div></div>
+            <div style="flex:1;"><label for="ded-val-inp" style="display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;">Value</label><div class="input-wrap sm"><input type="number" inputmode="decimal" step="0.01" min="0" id="ded-val-inp" placeholder="0"></div></div>
+          </div>
+          <button type="button" class="primary-btn" id="ded-save-btn" style="margin-top:4px;">Add deduction</button>
+          <button type="button" class="secondary-btn" id="ded-cancel-btn">Cancel</button>
+        </div>
+      </div>
+      <div class="sblock">
+        <h3>Tax engine</h3>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0;">Using <strong id="tax-year-lbl3">2026/27</strong> Scottish Income Tax bands and UK NI thresholds.</p>
+      </div>
+      <div class="sblock">
+        <h3>Data</h3>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0 0 12px;">All data stored locally on this device only.</p>
+        <button type="button" class="ghost-btn" id="clear-settings-btn">Clear earnings history</button>
+      </div>
+      <div class="sblock" id="pwa-block" hidden>
+        <h3>Install app</h3>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0 0 12px;">Add WageWise to your home screen for a full-screen experience.</p>
+        <button type="button" class="primary-btn" id="pwa-install-btn" style="width:auto;padding:11px 20px;font-size:14px;">+ Add to Home Screen</button>
+        <div id="ios-hint" hidden style="margin-top:10px;font-size:12px;color:var(--ink-soft);line-height:1.6;background:var(--stripe);padding:10px 12px;border-radius:8px;">On iPhone/iPad: tap the <strong>Share</strong> button in Safari, then <strong>Add to Home Screen</strong>.</div>
+      </div>
+      <div class="sblock"><h3>About</h3><p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0;">WageWise &mdash; Phase 1&ndash;3 complete. Calendar, custom deductions, and basic pay settings now live.</p></div>
+    </section>
+
+  </div><!-- .screens -->
+
+  <nav class="bottomnav">
+    <button type="button" class="navbtn is-active" data-nav="calculator">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="16" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="12" y1="16" x2="12" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+      <span>Calculator</span>
+    </button>
+    <button type="button" class="navbtn" data-nav="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="5" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="19" y1="20" x2="19" y2="15"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button type="button" class="navbtn" data-nav="calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Calendar</span>
+    </button>
+    <button type="button" class="navbtn" data-nav="payslip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l3 3v15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+      <span>Payslip</span>
+    </button>
+    <button type="button" class="navbtn" data-nav="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+</div>
+
+<div id="print-payslip"></div>
+
+<!-- Entry sheet -->
+<div class="sheet-overlay" id="sheet-overlay" hidden></div>
+<div class="sheet" id="entry-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr"><h2 class="sheet-title" id="sheet-title">Save pay entry</h2><button type="button" class="sheet-x" id="sheet-close">&times;</button></div>
+  <div class="sheet-tabs"><button type="button" class="stab on" id="stab-calc">From calculator</button><button type="button" class="stab" id="stab-manual">Manual entry</button></div>
+  <div class="sbody" id="sbody-calc">
+    <div class="field"><label for="edate-calc">Pay period ending</label><div class="input-wrap"><input type="date" id="edate-calc"></div></div>
+    <div class="sprv">
+      <div class="sprv-row"><span>Gross pay</span><strong id="ep-gross">&pound;0.00</strong></div>
+      <div class="sprv-row"><span>Overtime</span><strong id="ep-ot">&pound;0.00</strong></div>
+      <div class="sprv-row"><span>Tax</span><strong id="ep-tax">&minus; &pound;0.00</strong></div>
+      <div class="sprv-row"><span>National Insurance</span><strong id="ep-ni">&minus; &pound;0.00</strong></div>
+      <div class="sprv-row net-row"><span>Net pay</span><strong id="ep-net">&pound;0.00</strong></div>
+    </div>
+    <button type="button" class="primary-btn" id="save-calc-btn">Save this entry</button>
+  </div>
+  <div class="sbody" id="sbody-manual" hidden>
+    <div class="field"><label for="edate-manual">Pay period ending</label><div class="input-wrap"><input type="date" id="edate-manual"></div></div>
+    <div class="field"><label for="m-gross">Gross pay</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-gross" placeholder="0.00"></div></div>
+    <div class="field"><label for="m-net">Net pay (take-home)</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-net" placeholder="0.00"></div></div>
+    <div class="field"><label for="m-note">Note (optional)</label><div class="input-wrap"><input type="text" id="m-note" placeholder="e.g. Bank holiday week"></div></div>
+    <button type="button" class="primary-btn" id="save-manual-btn">Save entry</button>
+  </div>
+</div>
+
+<!-- Detail sheet -->
+<div class="sheet-overlay dsheet-ov-z" id="dsheet-overlay" hidden></div>
+<div class="sheet dsheet-z" id="dsheet" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr"><h2 class="sheet-title" id="dsheet-title">Week ending</h2><button type="button" class="sheet-x" id="dsheet-close">&times;</button></div>
+  <div id="dv-body"></div>
+  <div class="dv-actions" id="dv-actions">
+    <button type="button" class="primary-btn" id="dv-edit-btn">&#9998; Edit this entry</button>
+    <button type="button" class="secondary-btn" id="dv-delete-btn">Delete entry</button>
+  </div>
+  <div id="de-body" hidden>
+    <div class="sbody">
+      <div class="field"><label for="de-date">Pay period ending</label><div class="input-wrap"><input type="date" id="de-date"></div></div>
+      <div class="field"><label for="de-basic">Basic pay</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="de-basic"></div></div>
+      <div class="field" style="margin-bottom:4px;"><label>Overtime entries</label><div id="de-ot-list"></div><button type="button" class="link-btn" id="de-add-ot">+ Add overtime entry</button></div>
+      <div class="de-preview" id="de-preview">
+        <div class="de-preview-row"><span>Gross pay</span><span id="dep-gross">&pound;0.00</span></div>
+        <div class="de-preview-row"><span>Tax</span><span id="dep-tax">&minus; &pound;0.00</span></div>
+        <div class="de-preview-row"><span>National Insurance</span><span id="dep-ni">&minus; &pound;0.00</span></div>
+        <div class="de-preview-row net-row"><span>Net pay</span><span id="dep-net">&pound;0.00</span></div>
+      </div>
+      <button type="button" class="primary-btn" id="de-save-btn">Save changes</button>
+      <button type="button" class="secondary-btn" id="de-cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<noscript><p style="text-align:center;font-family:sans-serif;">WageWise needs JavaScript enabled.</p></noscript>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+
+/* ── TAX ENGINE ── */
+var TE=(function(){
+  var YEAR='2026/27';
+  var BANDS=[
+    {name:'Starter rate',rate:.19,width:3967},
+    {name:'Basic rate',rate:.20,width:12989},
+    {name:'Intermediate rate',rate:.21,width:14136},
+    {name:'Higher rate',rate:.42,width:31338},
+    {name:'Advanced rate',rate:.45,width:50140},
+    {name:'Top rate',rate:.48,width:Infinity}
+  ];
+  var NI={pt:242,uel:967,main:.08,upper:.02};
+  function pa(g,b){if(g<=100000)return b;return Math.max(0,b-Math.floor((g-100000)/2));}
+  function tax(ga,bp){
+    var p=pa(ga,bp),rem=Math.max(0,ga-p),t=0,bd=[];
+    for(var i=0;i<BANDS.length&&rem>0;i++){
+      var a=Math.min(rem,BANDS[i].width);
+      if(a>0){var bt=a*BANDS[i].rate;t+=bt;bd.push({name:BANDS[i].name,rate:BANDS[i].rate,amount:a,tax:bt});}
+      rem-=a;
+    }
+    return{tax:t,pa:p,breakdown:bd};
+  }
+  function ni(gw){
+    var n=0,bd=[];
+    if(gw>NI.pt){var ma=Math.min(gw,NI.uel)-NI.pt;var mn=ma*NI.main;n+=mn;bd.push({name:'8% (PT\u2013UEL)',amount:ma,ni:mn});}
+    if(gw>NI.uel){var ua=gw-NI.uel;var un=ua*NI.upper;n+=un;bd.push({name:'2% (above UEL)',amount:ua,ni:un});}
+    return{ni:n,breakdown:bd};
+  }
+  return{YEAR:YEAR,BANDS:BANDS,tax:tax,ni:ni};
+})();
+
+/* ── STORAGE ── */
+var SK='wagewise-v5';
+function loadPersisted(){try{var r=window.localStorage.getItem(SK);return r?JSON.parse(r):null;}catch(e){return null;}}
+var _st;function persist(){clearTimeout(_st);_st=setTimeout(function(){try{window.localStorage.setItem(SK,JSON.stringify(state));}catch(e){}},350);}
+
+/* ── HELPERS ── */
+var GBP=new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'});
+function money(n){return GBP.format(n);}
+function moneySgn(n){var v=Math.round(n*100)/100;return(v<0?'\u2212 ':'')+GBP.format(Math.abs(v));}
+function clamp(v,lo){v=parseFloat(v);return isNaN(v)?0:Math.max(lo||0,v);}
+function p2(n){return n<10?'0'+n:''+n;}
+function todayISO(){var d=new Date();return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function fmtISO(iso){if(!iso)return'';var d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
+function fmtDayShort(iso){if(!iso)return'';var d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
+function fmtHrs(h){var hrs=Math.floor(h);var m=Math.round((h-hrs)*60);return hrs+'h '+m+'m';}
+function fmtHrsShort(h){return(Number((Math.round(h*100)/100).toFixed(2)).toString())+' hrs';}
+
+/* ── TAX WEEK ── */
+function getTaxWeek(iso){
+  if(!iso)return null;
+  var d=new Date(iso+'T00:00:00');
+  var y=d.getFullYear(),mo=d.getMonth()+1,day=d.getDate();
+  var tys=(mo>4||(mo===4&&day>=6))?new Date(y,3,6):new Date(y-1,3,6);
+  return Math.floor(Math.floor((d-tys)/(24*60*60*1000))/7)+1;
+}
+
+/* ── SHIFT ── */
+function shiftResult(e){
+  if(!e.startTime||!e.endTime)return null;
+  var sp=e.startTime.split(':'),ep=e.endTime.split(':');
+  var s=parseInt(sp[0],10)*60+parseInt(sp[1],10);
+  var en=parseInt(ep[0],10)*60+parseInt(ep[1],10);
+  var d=en-s,ov=false;if(d<=0){d+=1440;ov=true;}
+  d-=(parseInt(e.breakMins,10)||0);
+  return{hours:Math.max(0,d/60),overnight:ov};
+}
+function effHours(e){if(e.mode==='shift'){var r=shiftResult(e);return r?r.hours:0;}return e.hours;}
+
+/* ── STATE ── */
+var DEF={
+  basic:549.66,
+  otEntries:[{mode:'manual',hours:5,rate:14.96,date:'',startTime:'',endTime:'',breakMins:0}],
+  allowance:12570,theme:'light',accent:'pine',history:[],employeeName:'',employerName:'',customDeductions:[],deductionPresets:[],activePresetId:null
+};
+var state=JSON.parse(JSON.stringify(DEF));
+(function(){
+  var s=loadPersisted();if(!s)return;
+  if(typeof s.basic==='number')state.basic=s.basic;
+  if(typeof s.allowance==='number')state.allowance=s.allowance;
+  if(s.theme)state.theme=s.theme;if(s.accent)state.accent=s.accent;
+  if(Array.isArray(s.otEntries)&&s.otEntries.length)state.otEntries=s.otEntries;
+  if(Array.isArray(s.history))state.history=s.history;
+  if(typeof s.employeeName==='string')state.employeeName=s.employeeName;
+  if(typeof s.employerName==='string')state.employerName=s.employerName;
+  if(Array.isArray(s.customDeductions))state.customDeductions=s.customDeductions;
+  if(Array.isArray(s.deductionPresets))state.deductionPresets=s.deductionPresets;
+  if(s.activePresetId!==undefined)state.activePresetId=s.activePresetId;
+})();
+
+/* ── CUSTOM DEDUCTIONS CALC ── */
+function applyCustomDed(gross,deds){
+  var total=0,bd=[];
+  (deds||[]).forEach(function(d){
+    var amt=d.type==='percent'?gross*d.value/100:d.value;
+    total+=amt;bd.push({name:d.name,amount:amt,type:d.type,value:d.value});
+  });
+  return{total:Math.round((total+Number.EPSILON)*100)/100,breakdown:bd};
+}
+
+function roundPence(value){return Math.round((value+Number.EPSILON)*100)/100;}
+
+/* ── CALCULATION ── */
+function calcWith(basic,otEntries,allowance,customDeds,history,taxWeek){
+  var otTotal=otEntries.reduce(function(s,e){return s+effHours(e)*e.rate;},0);
+  var gross=basic+otTotal;
+  var taxRes=TE.tax(gross*52,allowance);
+  taxRes.tax=roundPence(taxRes.tax);
+  var taxW=roundPence(taxRes.tax/52);
+  var niRes=TE.ni(gross);
+  niRes.ni=roundPence(niRes.ni);
+  var cdr=applyCustomDed(gross,customDeds||[]);
+  var net=roundPence(gross-taxW-niRes.ni-cdr.total);
+  return{otTotal:otTotal,gross:gross,taxRes:taxRes,taxW:taxW,niRes:niRes,customDedRes:cdr,net:net};
+/*
+
+  // Compute cumulative gross pay to date from history + current week
+  var validHistory=(history||[]).filter(function(entry){return entry&&Number.isFinite(Number(entry.gross));});
+  var cumGross=gross;
+  var cumTaxPaid=0;
+  if(validHistory.length){
+    var sorted=validHistory.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+    sorted.forEach(function(entry){
+      cumGross+=Number(entry.gross);
+      cumTaxPaid+=Number(entry.tax)||0;
+    });
+  }else{
+    // With no saved pay history, project this week's gross across the tax year
+    // to avoid comparing one week's pay with many weeks of allowance.
+    cumGross=gross*(taxWeek||1);
+  }
+  if(!Number.isFinite(cumGross))cumGross=gross*(taxWeek||1);
+  if(!Number.isFinite(allowance)||allowance<0)allowance=12570;
+
+  // Cumulative personal allowance = allowance / 52 × tax week number
+  var cumAllowance=allowance/52*(taxWeek||1);
+
+  // Cumulative taxable pay
+  var cumTaxable=Math.max(0,cumGross-cumAllowance);
+
+  // Apply progressive tax bands to cumulative taxable pay
+  var p=cumAllowance,rem=Math.max(0,cumTaxable),t=0,bd=[];
+  for(var i=0;i<TE.BANDS.length&&rem>0;i++){
+    var a=Math.min(rem,TE.BANDS[i].width);
+    if(a>0){var bt=a*TE.BANDS[i].rate;t+=bt;bd.push({name:TE.BANDS[i].name,rate:TE.BANDS[i].rate,amount:a,tax:bt});}
+    rem-=a;
+  }
+  var cumTaxDue=t;
+
+  // This week's tax deduction = cumulative tax due minus tax already paid in previous weeks
+  var taxW=validHistory.length?cumTaxDue-cumTaxPaid:cumTaxDue/(taxWeek||1);
+  taxW=roundPence(Math.max(0,taxW));
+
+  var niRes=TE.ni(gross);
+  niRes.ni=roundPence(niRes.ni);
+  var cdr=applyCustomDed(gross,customDeds||[]);
+  var net=roundPence(gross-taxW-niRes.ni-cdr.total);
+  return{otTotal:otTotal,gross:gross,taxRes:{tax:taxW,pa:cumAllowance-breakdownAmount(bd),breakdown:bd},taxW:taxW,niRes:niRes,customDedRes:cdr,net:net, cumTaxable:cumTaxable, cumAllowance:cumAllowance, cumGross:cumGross, cumTaxPaid:cumTaxPaid};
+*/
+}
+
+function breakdownAmount(bd){
+  var a=0;bd.forEach(function(b){a+=b.amount;});return a;
+}
+
+function calc(){return calcWith(state.basic,state.otEntries,state.allowance,state.customDeductions,state.history,getTaxWeek(todayISO()));}
+
+/* ── GROUPED OT ── */
+function groupOtByRate(otEntries){
+  var groups={},order=[];
+  otEntries.forEach(function(e){
+    var hrs=effHours(e);if(hrs<=0)return;
+    var rk=parseFloat(e.rate).toFixed(4);
+    if(!groups[rk]){groups[rk]={rate:e.rate,totalHours:0,totalPay:0,shifts:[]};order.push(rk);}
+    var label='';
+    if(e.mode==='shift'&&e.date){
+      label=fmtDayShort(e.date);
+      if(e.startTime&&e.endTime){var sr=shiftResult(e);label+=' \u00b7 '+e.startTime+'\u2192'+e.endTime+(sr&&sr.overnight?' (overnight)':'');}
+    }else if(e.mode==='shift'&&e.startTime){label=e.startTime+'\u2192'+(e.endTime||'?');}
+    else{label='Manual entry';}
+    groups[rk].shifts.push({label:label,hours:hrs,pay:hrs*e.rate});
+    groups[rk].totalHours+=hrs;groups[rk].totalPay+=hrs*e.rate;
+  });
+  return order.map(function(k){return groups[k];});
+}
+
+/* ── OT CARD HTML ── */
+var CLOCK_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>';
+var PENCIL_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+function chipH(entry,i,pfx){
+  var sr=shiftResult(entry);
+  var id=pfx+'chip-'+i;
+  if(!sr)return '<div class="ot-chip empty" id="'+id+'"><span class="chip-hint">Enter start &amp; end times above</span></div>';
+  var tag=sr.overnight?'<span class="overnight-tag">OVERNIGHT</span>':'';
+  return '<div class="ot-chip'+(sr.overnight?' overnight':'')+'" id="'+id+'"><span class="chip-hrs">'+fmtHrs(sr.hours)+' '+tag+'</span><span class="chip-pay">'+money(sr.hours*entry.rate)+' OT pay</span></div>';
+}
+function buildOtCard(entry,i,pfx){
+  var isShift=entry.mode==='shift';
+  var p=pfx;
+  var manual='<div class="ot-manual-row">'+
+    '<div class="ot-mini"><label>Hours</label><div class="input-wrap sm"><input type="number" inputmode="decimal" step="0.5" min="0" class="'+p+'h" data-i="'+i+'" value="'+entry.hours+'"></div></div>'+
+    '<span class="ot-at">@</span>'+
+    '<div class="ot-mini"><label>Rate (&pound;/hr)</label><div class="input-wrap sm"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" class="'+p+'r" data-i="'+i+'" value="'+entry.rate+'"></div></div>'+
+  '</div>';
+  var shift=
+    '<div class="field" style="margin-bottom:8px;"><label style="font-size:11px;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:4px;">Date (optional)</label><div class="input-wrap sm"><input type="date" class="'+p+'d" data-i="'+i+'" value="'+entry.date+'"></div></div>'+
+    '<div class="ot-time-row">'+
+      '<div class="ot-mini"><label>Start</label><div class="input-wrap sm"><input type="time" class="'+p+'s" data-i="'+i+'" value="'+entry.startTime+'"></div></div>'+
+      '<span class="ot-time-sep">\u2192</span>'+
+      '<div class="ot-mini"><label>End</label><div class="input-wrap sm"><input type="time" class="'+p+'e" data-i="'+i+'" value="'+entry.endTime+'"></div></div>'+
+    '</div>'+
+    '<div class="ot-row2" style="margin-top:8px;">'+
+      '<div class="ot-mini"><label>Break (mins)</label><div class="input-wrap sm"><input type="number" inputmode="numeric" step="1" min="0" class="'+p+'b" data-i="'+i+'" value="'+(entry.breakMins||0)+'"></div></div>'+
+      '<div class="ot-mini"><label>Rate (&pound;/hr)</label><div class="input-wrap sm"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" class="'+p+'r" data-i="'+i+'" value="'+entry.rate+'"></div></div>'+
+    '</div>'+chipH(entry,i,p);
+  return '<div class="ot-card">'+
+    '<div class="ot-card-header"><span class="ot-card-label">OT '+(i+1)+'</span><div class="ot-card-actions">'+
+      '<button type="button" class="ot-mode-btn'+(isShift?' shift-active':'')+' '+p+'toggle" data-i="'+i+'">'+(isShift?PENCIL_SVG:CLOCK_SVG)+(isShift?'Manual':'Shift times')+'</button>'+
+      '<button type="button" class="ot-remove '+p+'remove" data-i="'+i+'" aria-label="Remove">&times;</button>'+
+    '</div></div>'+
+    '<div'+(isShift?' hidden':'')+'>'+manual+'</div>'+
+    '<div class="ot-shift"'+(isShift?'':' hidden')+'>'+shift+'</div>'+
+  '</div>';
+}
+function renderOtRows(){
+  $('ot-list').innerHTML=state.otEntries.length?state.otEntries.map(function(e,i){return buildOtCard(e,i,'ot-');}).join(''):'<p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 8px;">No overtime this period.</p>';
+}
+
+/* ── RENDER RESULTS ── */
+var lastNet=null;
+function renderResults(){
+  var r=calc();
+  $('out-basic').textContent=money(state.basic);
+  $('ledger-ot').innerHTML=state.otEntries.map(function(e){
+    var hrs=effHours(e);
+    var sub='';
+    if(e.mode==='shift'&&(e.date||e.startTime)){sub='<span class="line-sub">'+(e.date?fmtDayShort(e.date)+' \u00b7 ':'')+( e.startTime&&e.endTime?e.startTime+'\u2013'+e.endTime+' \u00b7 ':'')+fmtHrsShort(hrs)+' @ '+money(e.rate)+'</span>';}
+    return '<div class="line"><span class="line-label">'+(sub?'Overtime':'Overtime \u00b7 '+fmtHrsShort(hrs)+' @ '+money(e.rate))+sub+'</span><span class="line-value">'+money(hrs*e.rate)+'</span></div>';
+  }).join('');
+  $('out-gross').textContent=money(r.gross);
+  $('out-tax-lbl').textContent='Tax \u00b7 '+r.taxRes.breakdown.length+(r.taxRes.breakdown.length===1?' band':' bands');
+  $('out-tax').textContent=moneySgn(-r.taxW);
+  $('out-ni').textContent=moneySgn(-r.niRes.ni);
+  var dl=$('ledger-custom-ded');
+  if(dl){dl.innerHTML=r.customDedRes.breakdown.map(function(d){var desc=d.name+(d.type==='percent'?' ('+d.value+'%)':' (fixed)');return'<div class="line line-deduction"><span class="line-label">'+desc+'</span><span class="line-value">'+moneySgn(-d.amount)+'</span></div>';}).join('');}
+  $('out-net').textContent=money(r.net);
+  $('tax-bd').innerHTML=r.taxRes.breakdown.map(function(b){return'<tr><td>'+b.name+' ('+Math.round(b.rate*100)+'%)</td><td>'+money(b.amount)+'</td><td>'+money(b.tax)+'</td></tr>';}).join('')||'<tr><td colspan="3">No tax due.</td></tr>';
+  $('ni-bd').innerHTML=r.niRes.breakdown.map(function(b){return'<tr><td>'+b.name+'</td><td>'+money(b.amount)+'</td><td>'+money(b.ni)+'</td></tr>';}).join('')||'<tr><td colspan="3">No NI due.</td></tr>';
+  [['g',r.gross],['t',-r.taxW],['n',-r.niRes.ni],['net',r.net]].forEach(function(p){var k=p[0],w=p[1];$('tw-'+k).textContent=moneySgn(w);$('tm-'+k).textContent=moneySgn(w*52/12);$('ta-'+k).textContent=moneySgn(w*52);});
+  if(lastNet!==null&&Math.abs(lastNet-r.net)>0.0001){var stamp=$('stamp');stamp.classList.remove('pulse');void stamp.offsetWidth;stamp.classList.add('pulse');}
+  lastNet=r.net;persist();
+}
+function renderBandTable(){
+  var floor=state.allowance,rows='<tr><td>Personal allowance</td><td>0%</td></tr>';
+  TE.BANDS.forEach(function(b){var to=b.width===Infinity?null:floor+b.width;rows+='<tr><td>'+b.name+(to?' to \u00a3'+Math.round(to).toLocaleString('en-GB'):' and above')+'</td><td>'+Math.round(b.rate*100)+'%</td></tr>';if(to)floor=to;});
+  $('band-tbody').innerHTML=rows;
+}
+
+/* ── OT EVENT DELEGATION ── */
+function refreshChip(entries,i,pfx){var c=$(pfx+'chip-'+i);if(c)c.outerHTML=chipH(entries[i],i,pfx);}
+$('ot-list').addEventListener('input',function(e){
+  var t=e.target,i=parseInt(t.getAttribute('data-i'),10);if(isNaN(i)||!state.otEntries[i])return;
+  var en=state.otEntries[i];
+  if(t.classList.contains('ot-h')){en.hours=clamp(t.value);renderResults();}
+  if(t.classList.contains('ot-r')){en.rate=clamp(t.value);refreshChip(state.otEntries,i,'ot-');renderResults();}
+  if(t.classList.contains('ot-d')){en.date=t.value;renderResults();}
+  if(t.classList.contains('ot-s')){en.startTime=t.value;refreshChip(state.otEntries,i,'ot-');renderResults();}
+  if(t.classList.contains('ot-e')){en.endTime=t.value;refreshChip(state.otEntries,i,'ot-');renderResults();}
+  if(t.classList.contains('ot-b')){en.breakMins=clamp(t.value);refreshChip(state.otEntries,i,'ot-');renderResults();}
+});
+$('ot-list').addEventListener('click',function(e){
+  var mb=e.target.closest?e.target.closest('.ot-toggle'):null;
+  if(mb){var i=parseInt(mb.getAttribute('data-i'),10);if(!isNaN(i)&&state.otEntries[i]){state.otEntries[i].mode=state.otEntries[i].mode==='shift'?'manual':'shift';renderOtRows();renderResults();}return;}
+  var rb=e.target.closest?e.target.closest('.ot-remove'):null;
+  if(rb){var j=parseInt(rb.getAttribute('data-i'),10);if(!isNaN(j)){state.otEntries.splice(j,1);renderOtRows();renderResults();}}
+});
+$('add-ot').addEventListener('click',function(){
+  var last=state.otEntries.length?state.otEntries[state.otEntries.length-1]:null;
+  state.otEntries.push({mode:'manual',hours:0,rate:last?last.rate:14.96,date:'',startTime:'',endTime:'',breakMins:0});
+  renderOtRows();renderResults();
+});
+$('allowance').addEventListener('input',function(){state.allowance=clamp(this.value);renderResults();renderBandTable();});
+$('breakdown-toggle').addEventListener('click',function(){var a=$('breakdown-area'),h=a.hasAttribute('hidden');if(h){a.removeAttribute('hidden');this.textContent='Hide full breakdown';}else{a.setAttribute('hidden','');this.textContent='Show full breakdown';}});
+$('reset-btn').addEventListener('click',function(){
+  state.basic=DEF.basic;state.allowance=DEF.allowance;
+  state.otEntries=JSON.parse(JSON.stringify(DEF.otEntries));
+  $('allowance').value=state.allowance;
+  syncBasicDisplay();renderOtRows();renderResults();
+});
+$('calc-form').addEventListener('submit',function(e){e.preventDefault();});
+
+/* ── BASIC PAY IN SETTINGS ── */
+function syncBasicDisplay(){
+  var v=$('basic-display-val');if(v)v.textContent=money(state.basic);
+  var si=$('settings-basic');if(si&&document.activeElement!==si)si.value=state.basic;
+}
+$('settings-basic').addEventListener('input',function(){state.basic=Math.max(0,parseFloat(this.value)||0);syncBasicDisplay();renderResults();persist();});
+$('basic-goto-settings').addEventListener('click',function(){showScreen('settings');});
+
+/* ── DEDUCTION PRESETS ── */
+function renderPresetList(){
+  var list=$('preset-list');if(!list)return;
+  if(!state.deductionPresets.length){
+    list.innerHTML='<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 8px;">No presets saved yet. Add deductions below then save them as a preset.</p>';
+    return;
+  }
+  list.innerHTML=state.deductionPresets.map(function(p){
+    var isActive=state.activePresetId===p.id;
+    var sum=p.deductions.map(function(d){return d.name+(d.type==='percent'?' '+d.value+'%':' \u00a3'+parseFloat(d.value).toFixed(2));}).join(' \u00b7 ');
+    return'<div class="preset-card'+(isActive?' is-active':'')+'" data-pid="'+p.id+'">' +
+      '<div class="preset-hdr"><span class="preset-nm">'+p.name+'</span>'+(isActive?'<span style="font-size:10px;font-weight:700;color:rgba(251,252,247,.8);">\u2713 Active</span>':'')+'</div>'+
+      '<div class="preset-sum">'+p.deductions.length+' deduction'+(p.deductions.length!==1?'s':'')+(sum?' \u00b7 '+sum:'')+'</div>'+
+      '<div class="preset-acts">'+
+        (!isActive?'<button type="button" class="preset-apply" data-apply="'+p.id+'">Apply</button>':'<span class="preset-active-tag">Currently applied</span>')+
+        '<button type="button" class="preset-del" data-pdel="'+p.id+'" aria-label="Delete preset">&times;</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function applyPreset(id){
+  var preset=null;
+  for(var i=0;i<state.deductionPresets.length;i++){if(state.deductionPresets[i].id===id){preset=state.deductionPresets[i];break;}}
+  if(!preset)return;
+  state.customDeductions=JSON.parse(JSON.stringify(preset.deductions));
+  state.activePresetId=id;
+  persist();renderDedList();renderPresetList();renderResults();
+  showToast('\u2713 Applied: '+preset.name);
+}
+
+function saveAsPreset(name){
+  if(!name.trim())return;
+  var id=Date.now();
+  state.deductionPresets.push({id:id,name:name.trim(),deductions:JSON.parse(JSON.stringify(state.customDeductions))});
+  state.activePresetId=id;
+  persist();renderPresetList();
+  showToast('\u2713 Preset saved: '+name.trim());
+}
+
+function deletePreset(id){
+  if(!confirm('Delete this preset?'))return;
+  state.deductionPresets=state.deductionPresets.filter(function(p){return p.id!==id;});
+  if(state.activePresetId===id)state.activePresetId=null;
+  persist();renderPresetList();renderDedList();
+  showToast('Preset removed');
+}
+
+/* Preset events */
+$('preset-list').addEventListener('click',function(e){
+  var ab=e.target.closest?e.target.closest('[data-apply]'):null;
+  if(ab){applyPreset(parseInt(ab.getAttribute('data-apply'),10));return;}
+  var db=e.target.closest?e.target.closest('[data-pdel]'):null;
+  if(db){deletePreset(parseInt(db.getAttribute('data-pdel'),10));}
+});
+$('save-preset-btn').addEventListener('click',function(){
+  if(!state.customDeductions.length){showToast('Add some deductions first');return;}
+  $('save-preset-form').hidden=false;this.hidden=true;$('preset-name-inp').focus();
+});
+$('save-preset-cancel').addEventListener('click',function(){
+  $('save-preset-form').hidden=true;$('save-preset-btn').hidden=false;$('preset-name-inp').value='';
+});
+$('save-preset-confirm').addEventListener('click',function(){
+  var name=$('preset-name-inp').value.trim();
+  if(!name){$('preset-name-inp').focus();return;}
+  saveAsPreset(name);
+  $('save-preset-form').hidden=true;$('save-preset-btn').hidden=false;$('preset-name-inp').value='';
+});
+
+/* ── CUSTOM DEDUCTIONS ── */
+var _dedType='percent';
+function renderDedList(){
+  var list=$('ded-list');if(!list)return;
+  var lbl=$('ded-active-lbl');
+  if(lbl){
+    if(state.activePresetId){
+      var ap=null;for(var pi=0;pi<state.deductionPresets.length;pi++){if(state.deductionPresets[pi].id===state.activePresetId){ap=state.deductionPresets[pi];break;}}
+      lbl.innerHTML=ap?'<div class="ded-section-lbl">From preset<span class="ded-active-badge">'+ap.name+'</span></div>':'';
+    }else{lbl.innerHTML=state.customDeductions.length?'<div class="ded-section-lbl">Custom (unsaved)</div>':'';}
+  }
+  if(!state.customDeductions.length){list.innerHTML='<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 4px;">No active deductions.</p>';return;}
+  list.innerHTML=state.customDeductions.map(function(d){
+    var vs=d.type==='percent'?d.value+'% of gross':'\u00a3'+parseFloat(d.value).toFixed(2)+' fixed';
+    return'<div class="ded-item"><span class="ded-name">'+d.name+'</span><span class="ded-val-tag">'+vs+'</span><button type="button" class="ded-del" data-did="'+d.id+'">&times;</button></div>';
+  }).join('');
+}
+$('ded-add-btn').addEventListener('click',function(){$('ded-form').hidden=false;this.hidden=true;$('ded-name-inp').focus();});
+$('ded-cancel-btn').addEventListener('click',function(){$('ded-form').hidden=true;$('ded-add-btn').hidden=false;$('ded-name-inp').value='';$('ded-val-inp').value='';});
+$('ded-pct-btn').addEventListener('click',function(){_dedType='percent';this.classList.add('on');$('ded-amt-btn').classList.remove('on');});
+$('ded-amt-btn').addEventListener('click',function(){_dedType='amount';this.classList.add('on');$('ded-pct-btn').classList.remove('on');});
+$('ded-save-btn').addEventListener('click',function(){
+  var name=$('ded-name-inp').value.trim();var val=parseFloat($('ded-val-inp').value)||0;
+  if(!name||val<=0){showToast('Enter a name and value');return;}
+  state.customDeductions.push({id:Date.now(),name:name,type:_dedType,value:val});
+  state.activePresetId=null;
+  persist();renderDedList();renderPresetList();renderResults();
+  $('ded-form').hidden=true;$('ded-add-btn').hidden=false;
+  $('ded-name-inp').value='';$('ded-val-inp').value='';
+  showToast('\u2713 Deduction added');
+});
+$('ded-list').addEventListener('click',function(e){
+  var btn=e.target.closest?e.target.closest('.ded-del'):null;if(!btn)return;
+  var id=parseInt(btn.getAttribute('data-did'),10);
+  state.customDeductions=state.customDeductions.filter(function(d){return d.id!==id;});
+  state.activePresetId=null;
+  persist();renderDedList();renderPresetList();renderResults();showToast('Deduction removed');
+});
+
+/* ── DASHBOARD ── */
+function getLast6Months(){
+  var now=new Date(),months=[];
+  for(var i=5;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth()-i,1);var key=d.getFullYear()+'-'+p2(d.getMonth()+1);months.push({key:key,label:d.toLocaleDateString('en-GB',{month:'short'}),isCurrent:i===0});}
+  return months;
+}
+function fmtK(n){return n>=1000?(n/1000).toFixed(1).replace('.0','')+'k':Math.round(n).toString();}
+function buildChart(history){
+  var months=getLast6Months();var byM={};
+  history.forEach(function(e){if(!e.date)return;var d=new Date(e.date+'T00:00:00');var key=d.getFullYear()+'-'+p2(d.getMonth()+1);byM[key]=(byM[key]||0)+e.net;});
+  var vals=months.map(function(m){return byM[m.key]||0;});
+  var maxV=Math.max.apply(null,vals);if(maxV===0)maxV=500;
+  var niceMax=maxV<=500?500:maxV<=1000?1000:maxV<=2000?2000:Math.ceil(maxV/500)*500;
+  var W=316,H=160,pL=44,pB=26,pT=14,pR=6,plotW=W-pL-pR,plotH=H-pT-pB,n=months.length,step=plotW/n,barW=Math.max(8,Math.floor(step)-8);
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">';
+  for(var g=1;g<=3;g++){var gy=(pT+plotH-(g/3)*plotH).toFixed(1);var gvl=Math.round((g/3)*niceMax)>=1000?'\u00a3'+((Math.round((g/3)*niceMax))/1000).toFixed(1).replace('.0','')+'k':'\u00a3'+Math.round((g/3)*niceMax);svg+='<line x1="'+pL+'" y1="'+gy+'" x2="'+(W-pR)+'" y2="'+gy+'" stroke="var(--rule)" stroke-width="1" stroke-dasharray="3 3"/><text x="'+(pL-4)+'" y="'+(parseFloat(gy)+3.5).toFixed(1)+'" font-size="9" fill="var(--ink-soft)" text-anchor="end" font-family="monospace">'+gvl+'</text>';}
+  svg+='<line x1="'+pL+'" y1="'+(pT+plotH)+'" x2="'+(W-pR)+'" y2="'+(pT+plotH)+'" stroke="var(--rule-strong)" stroke-width="1.5"/>';
+  vals.forEach(function(v,idx){
+    var bh=v>0?Math.max(3,(v/niceMax)*plotH):0,bx=(pL+idx*step+(step-barW)/2).toFixed(1),by=(pT+plotH-bh).toFixed(1);
+    if(v>0){svg+='<rect x="'+bx+'" y="'+by+'" width="'+barW+'" height="'+bh.toFixed(1)+'" rx="3" fill="'+(months[idx].isCurrent?'var(--pine)':'var(--rule-strong)')+'" />';if(bh>18)svg+='<text x="'+(parseFloat(bx)+barW/2).toFixed(1)+'" y="'+(parseFloat(by)-4).toFixed(1)+'" font-size="8.5" fill="var(--pine)" text-anchor="middle" font-weight="bold" font-family="monospace">\u00a3'+fmtK(v)+'</text>';}
+    else{svg+='<rect x="'+bx+'" y="'+(pT+plotH-4)+'" width="'+barW+'" height="4" rx="2" fill="var(--rule)" opacity="0.35"/>';}
+    svg+='<text x="'+(parseFloat(bx)+barW/2).toFixed(1)+'" y="'+(H-pB+13)+'" font-size="9.5" fill="var(--ink-soft)" text-anchor="middle">'+months[idx].label+'</text>';
+  });
+  svg+='</svg>';return svg;
+}
+function renderDashboard(){
+  var now=new Date(),ys=new Date(now.getFullYear(),0,1);
+  var ytd=state.history.filter(function(e){return new Date(e.date+'T00:00:00')>=ys;});
+  var ytdNet=ytd.reduce(function(s,e){return s+e.net;},0);
+  var allAvg=state.history.length?state.history.reduce(function(s,e){return s+e.net;},0)/state.history.length:0;
+  $('dash-stats').innerHTML='<div class="stat-card"><div class="stat-label">YTD Net</div><div class="stat-value">'+(ytd.length?money(ytdNet):'&mdash;')+'</div><div class="stat-sub">'+ytd.length+' entr'+(ytd.length===1?'y':'ies')+'</div></div><div class="stat-card"><div class="stat-label">Avg weekly</div><div class="stat-value">'+(state.history.length?money(allAvg):'&mdash;')+'</div><div class="stat-sub">net pay</div></div><div class="stat-card"><div class="stat-label">Saved</div><div class="stat-value">'+state.history.length+'</div><div class="stat-sub">total entries</div></div>';
+  $('dash-chart').innerHTML=state.history.length?buildChart(state.history):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
+  if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
+  else{
+    var recent=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,8);
+    var avgN=recent.reduce(function(s,e){return s+e.net;},0)/recent.length;
+    var avgG=recent.reduce(function(s,e){return s+e.gross;},0)/recent.length;
+    $('dash-forecast').innerHTML='<div class="forecast-grid"><div class="fcard"><div class="f-label">Weekly avg</div><div class="f-value">'+money(avgN)+'</div><div class="f-sub">net pay</div></div><div class="fcard"><div class="f-label">Monthly</div><div class="f-value">'+money(avgN*52/12)+'</div><div class="f-sub">net pay</div></div><div class="fcard hi"><div class="f-label">Annual net</div><div class="f-value">'+money(avgN*52)+'</div><div class="f-sub">projected</div></div><div class="fcard"><div class="f-label">Annual gross</div><div class="f-value">'+money(avgG*52)+'</div><div class="f-sub">projected</div></div></div><p class="forecast-note">Based on last '+recent.length+' entr'+(recent.length===1?'y':'ies')+'. Assumes the same pay every week.</p>';
+  }
+  var hl=$('history-list'),he=$('history-empty'),cb=$('clear-btn');
+  if(!state.history.length){hl.innerHTML='';he.hidden=false;cb.hidden=true;return;}
+  he.hidden=true;cb.hidden=false;
+  var sorted=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  hl.innerHTML=sorted.map(function(e){
+    var tag=e.manual?'<span class="manual-tag">Manual</span>':'';
+    var detail='Gross '+money(e.gross)+(e.otTotal?' \u00b7 OT '+money(e.otTotal):'')+(e.note?' \u00b7 '+e.note:'');
+    return'<div class="hitem" data-eid="'+e.id+'"><div class="hitem-left"><div class="hdate">'+fmtISO(e.date)+tag+'</div><div class="hnet">'+money(e.net)+'</div><div class="hdetail">'+detail+'</div></div><button type="button" class="hdel" data-did="'+e.id+'" aria-label="Delete">&times;</button></div>';
+  }).join('');
+}
+$('history-list').addEventListener('click',function(e){
+  var del=e.target.closest?e.target.closest('.hdel'):null;
+  if(del){var id=parseInt(del.getAttribute('data-did'),10);state.history=state.history.filter(function(x){return x.id!==id;});persist();renderDashboard();showToast('Entry removed');return;}
+  var item=e.target.closest?e.target.closest('.hitem'):null;
+  if(item){openDetailSheet(parseInt(item.getAttribute('data-eid'),10));}
+});
+
+/* ── CALENDAR ── */
+var _calView='monthly',_calYear=new Date().getFullYear(),_calMonth=new Date().getMonth(),_calSelDate=null;
+var MNAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DNAMES=['Mo','Tu','We','Th','Fr','Sa','Su'];
+function buildDateMap(){
+  var map={};
+  state.history.forEach(function(entry){
+    if(entry.date){if(!map[entry.date])map[entry.date]={hasEntry:false,hasOT:false,eids:[]};map[entry.date].hasEntry=true;if(map[entry.date].eids.indexOf(entry.id)<0)map[entry.date].eids.push(entry.id);}
+    if(entry.otEntries)entry.otEntries.forEach(function(e){if(e.date){if(!map[e.date])map[e.date]={hasEntry:false,hasOT:false,eids:[]};map[e.date].hasOT=true;if(map[e.date].eids.indexOf(entry.id)<0)map[e.date].eids.push(entry.id);}});
+  });
+  return map;
+}
+function getMonday(iso){var d=new Date(iso+'T00:00:00');var dow=d.getDay();var diff=dow===0?-6:1-dow;d.setDate(d.getDate()+diff);return d;}
+function isoD(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function renderCalendarScreen(){var map=buildDateMap();if(_calView==='monthly')renderMonthly(map);else renderWeekly(map);renderMonthSummary(map);}
+function renderMonthly(map){
+  var y=_calYear,m=_calMonth;
+  $('cal-period-lbl').textContent=MNAMES[m]+' '+y;
+  var first=new Date(y,m,1),dim=new Date(y,m+1,0).getDate();
+  var off=first.getDay()===0?6:first.getDay()-1;
+  var today=todayISO();
+  var cells=[];for(var i=0;i<off;i++)cells.push(null);
+  for(var d=1;d<=dim;d++){var iso=y+'-'+p2(m+1)+'-'+p2(d);cells.push({d:d,iso:iso,info:map[iso]||null});}
+  while(cells.length%7!==0)cells.push(null);
+  var h='<div class="cal-dow-row">'+DNAMES.map(function(n){return'<div class="cal-dow">'+n+'</div>';}).join('')+'</div><div class="cal-grid">';
+  cells.forEach(function(c){
+    if(!c){h+='<div class="cal-cell cal-empty"></div>';return;}
+    var cls='cal-cell';
+    if(c.iso===today)cls+=' cal-today';
+    if(c.iso===_calSelDate)cls+=' cal-sel';
+    if(c.info&&c.info.hasEntry)cls+=' cal-has-entry';
+    else if(c.info&&c.info.hasOT)cls+=' cal-has-ot';
+    var tag=c.info?(c.info.hasEntry?'<span class="cal-tag">\u2713</span>':'<span class="cal-tag">OT</span>'):'';
+    h+='<div class="'+cls+'" data-cd="'+c.iso+'"><span class="cal-num">'+c.d+'</span>'+tag+'</div>';
+  });
+  h+='</div>';
+  $('cal-body').innerHTML=h;
+  renderDayPanel(map);
+}
+function renderWeekly(map){
+  var pivot=_calSelDate||todayISO();var mon=getMonday(pivot);
+  var tw=getTaxWeek(isoD(mon));
+  $('cal-period-lbl').textContent='Week '+(tw||'');
+  var today=todayISO();
+  var h='<div class="week-strip">';
+  for(var i=0;i<7;i++){
+    var d=new Date(mon);d.setDate(mon.getDate()+i);
+    var iso=isoD(d);var info=map[iso];
+    var dl=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    var badges='';
+    if(info&&info.hasEntry)badges+='<span class="wr-badge wr-en">\u2713</span>';
+    if(info&&info.hasOT)badges+='<span class="wr-badge wr-ot">OT</span>';
+    h+='<div class="week-row'+(iso===_calSelDate?' wsel':'')+(iso===today?' cal-today':'')+'" data-cd="'+iso+'"><span class="wr-day">'+DNAMES[i]+'</span><span class="wr-date">'+dl+'</span>'+badges+'</div>';
+  }
+  h+='</div>';
+  $('cal-body').innerHTML=h;
+  renderDayPanel(map);
+}
+function renderDayPanel(map){
+  var panel=$('cal-day-panel');
+  if(!_calSelDate){panel.hidden=true;return;}
+  var info=map[_calSelDate];
+  panel.hidden=false;
+  var ds=fmtISO(_calSelDate)||_calSelDate;
+  if(!info){panel.innerHTML='<div class="cdp-date">'+ds+'</div><p style="font-size:13px;color:var(--ink-soft);">No activity on this day.</p>';return;}
+  var h='<div class="cdp-date">'+ds+'</div>';
+  var shown=[];
+  info.eids.forEach(function(eid){
+    if(shown.indexOf(eid)>=0)return;shown.push(eid);
+    var entry=findEntry(eid);if(!entry)return;
+    if(entry.date===_calSelDate)h+='<div class="cdp-row"><span class="cdp-label">Pay period entry &ndash; Net</span><span class="cdp-val">'+money(entry.net)+'</span></div>';
+    if(entry.otEntries)entry.otEntries.forEach(function(e){if(e.date===_calSelDate){var hrs=effHours(e);h+='<div class="cdp-row"><span class="cdp-label">OT \u00b7 '+fmtHrs(hrs)+' @ '+money(e.rate)+'/hr</span><span class="cdp-val">'+money(hrs*e.rate)+'</span></div>';}});
+    h+='<div style="margin-top:8px;"><button type="button" class="link-btn" style="margin:0;" data-oe="'+eid+'">View full entry \u2192</button></div>';
+  });
+  panel.innerHTML=h;
+  panel.querySelectorAll('[data-oe]').forEach(function(btn){btn.addEventListener('click',function(){openDetailSheet(parseInt(btn.getAttribute('data-oe'),10));});});
+}
+function renderMonthSummary(map){
+  var sm=$('cal-month-sum'),pb=$('cal-print-btn');
+  var pfx=_calYear+'-'+p2(_calMonth+1);
+  var entries=state.history.filter(function(e){return e.date&&e.date.startsWith(pfx);});
+  if(!entries.length){sm.innerHTML='';if(pb)pb.hidden=true;return;}
+  var tG=0,tN=0,tT=0,tI=0,tO=0;
+  entries.forEach(function(e){tG+=e.gross;tN+=e.net;tT+=(e.tax||0);tI+=(e.ni||0);tO+=(e.otTotal||0);});
+  sm.innerHTML='<div class="cal-month-sum"><div class="cms-hdr"><span>'+MNAMES[_calMonth]+' '+_calYear+'</span><span>'+entries.length+' entr'+(entries.length===1?'y':'ies')+'</span></div>'+
+    '<div class="cms-row"><span class="cms-lbl">Overtime</span><span class="cms-val">'+money(tO)+'</span></div>'+
+    '<div class="cms-row"><span class="cms-lbl">Gross</span><span class="cms-val">'+money(tG)+'</span></div>'+
+    '<div class="cms-row"><span class="cms-lbl">Tax + NI</span><span class="cms-val ded-v">'+moneySgn(-(tT+tI))+'</span></div>'+
+    '<div class="cms-row"><span class="cms-lbl">Net pay</span><span class="cms-val net-v">'+money(tN)+'</span></div></div>';
+  if(pb)pb.hidden=false;
+}
+$('cal-body').addEventListener('click',function(e){
+  var c=e.target.closest?e.target.closest('[data-cd]'):null;if(!c)return;
+  _calSelDate=c.getAttribute('data-cd');
+  var map=buildDateMap();if(_calView==='monthly')renderMonthly(map);else renderWeekly(map);renderDayPanel(map);
+});
+$('cal-monthly-btn').addEventListener('click',function(){_calView='monthly';this.classList.add('on');$('cal-weekly-btn').classList.remove('on');renderCalendarScreen();});
+$('cal-weekly-btn').addEventListener('click',function(){_calView='weekly';this.classList.add('on');$('cal-monthly-btn').classList.remove('on');renderCalendarScreen();});
+$('cal-prev').addEventListener('click',function(){
+  if(_calView==='monthly'){_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--;}}
+  else{var d=getMonday(_calSelDate||todayISO());d.setDate(d.getDate()-7);_calSelDate=isoD(d);}
+  renderCalendarScreen();
+});
+$('cal-next').addEventListener('click',function(){
+  if(_calView==='monthly'){_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}}
+  else{var d=getMonday(_calSelDate||todayISO());d.setDate(d.getDate()+7);_calSelDate=isoD(d);}
+  renderCalendarScreen();
+});
+$('cal-print-btn').addEventListener('click',function(){
+  var pfx=_calYear+'-'+p2(_calMonth+1);
+  var entries=state.history.filter(function(e){return e.date&&e.date.startsWith(pfx);});
+  if(!entries.length){showToast('No entries for this month');return;}
+  var tG=0,tN=0,tT=0,tI=0,tO=0;
+  entries.forEach(function(e){tG+=e.gross;tN+=e.net;tT+=(e.tax||0);tI+=(e.ni||0);tO+=(e.otTotal||0);});
+  var ml=MNAMES[_calMonth]+' '+_calYear,name=state.employeeName||'&mdash;';
+  var calEmpName=state.employerName||'WageWise';
+  var calPBy=state.employerName?'<div class="prn-powered">Powered by WageWise</div>':'';
+  $('print-payslip').innerHTML='<div class="prn-header"><div><div class="prn-company">'+calEmpName+'</div>'+calPBy+'</div><div class="prn-hdr-right"><div class="prn-badge">MONTHLY PAYSLIP</div><div class="prn-hdr-sub">'+TE.YEAR+'</div></div></div>'+
+    '<div class="prn-meta"><div class="prn-meta-row"><span class="prn-ml">Employee</span><span class="prn-mv">'+name+'</span></div><div class="prn-meta-row"><span class="prn-ml">Period</span><span class="prn-mv">'+ml+'</span></div><div class="prn-meta-row"><span class="prn-ml">Pay entries</span><span class="prn-mv">'+entries.length+' weeks</span></div><div class="prn-meta-row"><span class="prn-ml">Tax year</span><span class="prn-mv">'+TE.YEAR+'</span></div></div>'+
+    '<div class="prn-section"><div class="prn-section-hdr">Earnings</div><table class="prn-table"><tbody><tr><td>Basic Pay ('+entries.length+' weeks)</td><td>'+money(tG-tO)+'</td></tr><tr><td>Overtime</td><td>'+money(tO)+'</td></tr></tbody><tfoot><tr class="prn-total"><td>Gross Pay</td><td>'+money(tG)+'</td></tr></tfoot></table></div>'+
+    '<div class="prn-section"><div class="prn-section-hdr">Deductions</div><table class="prn-table"><tbody><tr class="prn-deduction"><td>Income Tax</td><td>\u2212 '+money(tT)+'</td></tr><tr class="prn-deduction"><td>National Insurance</td><td>\u2212 '+money(tI)+'</td></tr></tbody><tfoot><tr class="prn-total prn-deduction"><td>Total Deductions</td><td>\u2212 '+money(tT+tI)+'</td></tr></tfoot></table></div>'+
+    '<div class="prn-net"><span class="prn-net-label">MONTHLY NET PAY</span><span class="prn-net-val">'+money(tN)+'</span></div>'+
+    '<div class="prn-footer">Monthly summary: '+ml+'. Aggregated from '+entries.length+' weekly entr'+(entries.length===1?'y':'ies')+'. Tax year '+TE.YEAR+'. Estimate only.</div>';
+  window.print();
+});
+
+/* ── ENTRY SHEET ── */
+function openSheet(mode){
+  var ov=$('sheet-overlay'),sh=$('entry-sheet');
+  ov.removeAttribute('hidden');sh.removeAttribute('hidden');
+  void ov.offsetWidth;ov.classList.add('open');sh.classList.add('open');
+  var isCalc=(mode||'calc')==='calc';
+  $('stab-calc').classList.toggle('on',isCalc);$('stab-manual').classList.toggle('on',!isCalc);
+  $('sbody-calc').hidden=!isCalc;$('sbody-manual').hidden=isCalc;
+  var today=todayISO();if(!$('edate-calc').value)$('edate-calc').value=today;if(!$('edate-manual').value)$('edate-manual').value=today;
+  if(isCalc)fillSheetPreview();
+}
+function closeSheet(){var ov=$('sheet-overlay'),sh=$('entry-sheet');ov.classList.remove('open');sh.classList.remove('open');setTimeout(function(){ov.setAttribute('hidden','');sh.setAttribute('hidden','');},300);}
+function fillSheetPreview(){
+  var r=calc();
+  $('ep-gross').textContent=money(r.gross);$('ep-ot').textContent=money(r.otTotal);
+  $('ep-tax').textContent=moneySgn(-r.taxW);$('ep-ni').textContent=moneySgn(-r.niRes.ni);
+  $('ep-net').textContent=money(r.net);window._calcSnap=r;
+}
+$('save-pay-btn').addEventListener('click',function(){fillSheetPreview();openSheet('calc');});
+$('add-entry-btn').addEventListener('click',function(){openSheet('manual');});
+$('sheet-close').addEventListener('click',closeSheet);$('sheet-overlay').addEventListener('click',closeSheet);
+$('stab-calc').addEventListener('click',function(){$('stab-calc').classList.add('on');$('stab-manual').classList.remove('on');$('sbody-calc').hidden=false;$('sbody-manual').hidden=true;fillSheetPreview();});
+$('stab-manual').addEventListener('click',function(){$('stab-manual').classList.add('on');$('stab-calc').classList.remove('on');$('sbody-manual').hidden=false;$('sbody-calc').hidden=true;});
+$('save-calc-btn').addEventListener('click',function(){
+  var date=$('edate-calc').value;if(!date){$('edate-calc').focus();return;}
+  var r=window._calcSnap||calc();
+  state.history.unshift({id:Date.now(),date:date,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:'',manual:false});
+  persist();closeSheet();showToast('\u2713 Pay entry saved');
+  if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
+});
+$('save-manual-btn').addEventListener('click',function(){
+  var date=$('edate-manual').value,gross=clamp($('m-gross').value),net=clamp($('m-net').value);
+  if(!date){$('edate-manual').focus();return;}if(!gross||!net){showToast('Please enter gross and net pay');return;}
+  state.history.unshift({id:Date.now(),date:date,basic:0,otEntries:[],otTotal:0,gross:gross,tax:0,ni:0,net:net,note:$('m-note').value||'',manual:true});
+  $('m-gross').value='';$('m-net').value='';$('m-note').value='';
+  persist();closeSheet();showToast('\u2713 Entry saved');
+  if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
+});
+function clearHistory(){if(!confirm('Clear all earnings history? This cannot be undone.'))return;state.history=[];persist();renderDashboard();showToast('History cleared');}
+$('clear-btn').addEventListener('click',clearHistory);$('clear-settings-btn').addEventListener('click',clearHistory);
+
+/* ── DETAIL SHEET ── */
+var _did=null,_des={basic:0,allowance:12570,date:'',otEntries:[]};
+function findEntry(id){for(var i=0;i<state.history.length;i++){if(state.history[i].id===id)return state.history[i];}return null;}
+function openDetailSheet(id){
+  var entry=findEntry(id);if(!entry)return;_did=id;
+  renderDetailView(entry);
+  $('dv-body').hidden=false;$('dv-actions').hidden=false;$('de-body').hidden=true;
+  $('dsheet-title').textContent=fmtISO(entry.date)||'Pay entry';
+  var ov=$('dsheet-overlay'),sh=$('dsheet');
+  ov.removeAttribute('hidden');sh.removeAttribute('hidden');void ov.offsetWidth;ov.classList.add('open');sh.classList.add('open');
+}
+function closeDetailSheet(){var ov=$('dsheet-overlay'),sh=$('dsheet');ov.classList.remove('open');sh.classList.remove('open');setTimeout(function(){ov.setAttribute('hidden','');sh.setAttribute('hidden','');},300);}
+function renderDetailView(entry){
+  var h='<div class="dv-eyebrow">This Week</div><div class="dv-divider"></div><div class="dv-row"><span class="dv-label">Basic Pay</span><span class="dv-value">'+money(entry.basic||0)+'</span></div>';
+  if(entry.otEntries&&entry.otEntries.length){
+    h+='<div class="dv-divider"></div><div class="dv-section-title">Overtime Shifts</div>';
+    entry.otEntries.forEach(function(e,idx){
+      var hrs=effHours(e),pay=hrs*e.rate;
+      h+='<div class="dv-shift"><div class="dv-shift-top"><div class="dv-check">&#10003;</div>';
+      if(e.mode==='shift'&&e.date)h+='<span class="dv-day">'+fmtDayShort(e.date)+'</span>';
+      else h+='<span class="dv-day">OT '+(idx+1)+'</span>';
+      h+='</div>';
+      if(e.mode==='shift'&&e.startTime&&e.endTime){var sr=shiftResult(e);h+='<div class="dv-shift-time">'+e.startTime+' \u2192 '+e.endTime+(sr&&sr.overnight?' <span class="overnight-tag">OVERNIGHT</span>':'')+'</div><div class="dv-shift-meta">'+fmtHrs(hrs)+(parseInt(e.breakMins,10)?' \u00b7 '+e.breakMins+'m break':'')+' @ '+money(e.rate)+'/hr</div>';}
+      else{h+='<div class="dv-shift-meta">'+fmtHrsShort(hrs)+' @ '+money(e.rate)+'/hr</div>';}
+      h+='<div class="dv-shift-pay">'+money(pay)+'</div></div>';
+    });
+    h+='<div class="dv-divider"></div><div class="dv-row dv-total"><span class="dv-label">Total OT</span><span class="dv-value">'+money(entry.otTotal||0)+'</span></div>';
+  }else if((entry.otTotal||0)>0){h+='<div class="dv-divider"></div><div class="dv-row"><span class="dv-label">Overtime</span><span class="dv-value">'+money(entry.otTotal)+'</span></div>';}
+  h+='<div class="dv-divider"></div><div class="dv-row dv-total"><span class="dv-label">Gross Pay</span><span class="dv-value">'+money(entry.gross)+'</span></div>';
+  if(!entry.manual){h+='<div class="dv-divider"></div><div class="dv-row dv-deduction"><span class="dv-label">Income Tax</span><span class="dv-value">'+moneySgn(-(entry.tax||0))+'</span></div><div class="dv-row dv-deduction"><span class="dv-label">National Insurance</span><span class="dv-value">'+moneySgn(-(entry.ni||0))+'</span></div>';}
+  h+='<div class="dv-net"><span class="dv-net-label">Net Pay</span><span class="dv-net-value">'+money(entry.net)+'</span></div>';
+  if(entry.note)h+='<div class="dv-note-row">'+entry.note+'</div>';
+  $('dv-body').innerHTML=h;
+}
+function enterDetailEdit(){
+  var entry=findEntry(_did);if(!entry)return;
+  _des.basic=entry.basic||0;_des.date=entry.date||'';_des.allowance=state.allowance;
+  _des.otEntries=JSON.parse(JSON.stringify(entry.otEntries&&entry.otEntries.length?entry.otEntries:[]));
+  $('de-date').value=_des.date;$('de-basic').value=_des.basic;
+  renderDeOtRows();updateDePreview();
+  $('dv-body').hidden=true;$('dv-actions').hidden=true;$('de-body').hidden=false;
+  $('dsheet-title').textContent='Edit entry';$('dsheet').scrollTop=0;
+}
+function renderDeOtRows(){$('de-ot-list').innerHTML=_des.otEntries.length?_des.otEntries.map(function(e,i){return buildOtCard(e,i,'de-');}).join(''):'<p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 8px;">No overtime entries.</p>';}
+function updateDePreview(){
+  var r=calcWith(_des.basic,_des.otEntries,_des.allowance,state.customDeductions,state.history,getTaxWeek(todayISO()));
+  $('dep-gross').textContent=money(r.gross);$('dep-tax').textContent=moneySgn(-r.taxW);$('dep-ni').textContent=moneySgn(-r.niRes.ni);$('dep-net').textContent=money(r.net);window._desCalc=r;
+}
+$('de-ot-list').addEventListener('input',function(e){
+  var t=e.target,i=parseInt(t.getAttribute('data-i'),10);if(isNaN(i)||!_des.otEntries[i])return;
+  var en=_des.otEntries[i];
+  if(t.classList.contains('de-h')){en.hours=clamp(t.value);}
+  if(t.classList.contains('de-r')){en.rate=clamp(t.value);refreshChip(_des.otEntries,i,'de-');}
+  if(t.classList.contains('de-d')){en.date=t.value;}
+  if(t.classList.contains('de-s')){en.startTime=t.value;refreshChip(_des.otEntries,i,'de-');}
+  if(t.classList.contains('de-e')){en.endTime=t.value;refreshChip(_des.otEntries,i,'de-');}
+  if(t.classList.contains('de-b')){en.breakMins=clamp(t.value);refreshChip(_des.otEntries,i,'de-');}
+  updateDePreview();
+});
+$('de-ot-list').addEventListener('click',function(e){
+  var mb=e.target.closest?e.target.closest('.de-toggle'):null;
+  if(mb){var i=parseInt(mb.getAttribute('data-i'),10);if(!isNaN(i)&&_des.otEntries[i]){_des.otEntries[i].mode=_des.otEntries[i].mode==='shift'?'manual':'shift';renderDeOtRows();updateDePreview();}return;}
+  var rb=e.target.closest?e.target.closest('.de-remove'):null;
+  if(rb){var j=parseInt(rb.getAttribute('data-i'),10);if(!isNaN(j)){_des.otEntries.splice(j,1);renderDeOtRows();updateDePreview();}}
+});
+$('de-add-ot').addEventListener('click',function(){var last=_des.otEntries.length?_des.otEntries[_des.otEntries.length-1]:null;_des.otEntries.push({mode:'manual',hours:0,rate:last?last.rate:14.96,date:'',startTime:'',endTime:'',breakMins:0});renderDeOtRows();updateDePreview();});
+$('de-basic').addEventListener('input',function(){_des.basic=clamp(this.value);updateDePreview();});
+$('de-date').addEventListener('input',function(){_des.date=this.value;$('dsheet-title').textContent=_des.date?fmtISO(_des.date):'Edit entry';});
+$('de-save-btn').addEventListener('click',function(){
+  var idx=-1;for(var i=0;i<state.history.length;i++){if(state.history[i].id===_did){idx=i;break;}}if(idx<0)return;
+  var r=window._desCalc||calcWith(_des.basic,_des.otEntries,_des.allowance,state.customDeductions);
+  state.history[idx]={id:_did,date:_des.date||state.history[idx].date,basic:_des.basic,otEntries:JSON.parse(JSON.stringify(_des.otEntries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:state.history[idx].note||'',manual:false};
+  persist();showToast('\u2713 Entry updated');
+  var updated=state.history[idx];renderDetailView(updated);$('dsheet-title').textContent=fmtISO(updated.date)||'Pay entry';
+  $('de-body').hidden=true;$('dv-body').hidden=false;$('dv-actions').hidden=false;
+  if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
+});
+$('de-cancel-btn').addEventListener('click',function(){var entry=findEntry(_did);if(entry)renderDetailView(entry);$('dsheet-title').textContent=entry?fmtISO(entry.date)||'Pay entry':'Pay entry';$('de-body').hidden=true;$('dv-body').hidden=false;$('dv-actions').hidden=false;});
+$('dv-edit-btn').addEventListener('click',enterDetailEdit);
+$('dv-delete-btn').addEventListener('click',function(){if(!confirm('Delete this entry?'))return;state.history=state.history.filter(function(x){return x.id!==_did;});persist();closeDetailSheet();showToast('Entry deleted');if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();});
+$('dsheet-close').addEventListener('click',closeDetailSheet);$('dsheet-overlay').addEventListener('click',closeDetailSheet);
+
+/* ── PAYSLIP ── */
+var _psSource='current';
+function getPayslipData(){
+  if(_psSource==='current'){var r=calc();return{date:todayISO(),employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r.customDedRes,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,taxW:r.taxW,taxBreakdown:r.taxRes.breakdown,niW:r.niRes.ni,niBreakdown:r.niRes.breakdown,net:r.net,allowance:state.allowance};}
+  var entry=findEntry(_psSource);if(!entry)return null;
+  var ot=entry.otEntries&&entry.otEntries.length?entry.otEntries:[];
+  var r2=calcWith(entry.basic||0,ot,state.allowance,state.customDeductions,state.history,getTaxWeek(entry.date||todayISO()));
+  return{date:entry.date,employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r2.customDedRes,basic:entry.basic||0,otEntries:ot,otTotal:r2.otTotal,gross:r2.gross,taxW:r2.taxW,taxBreakdown:r2.taxRes.breakdown,niW:r2.niRes.ni,niBreakdown:r2.niRes.breakdown,net:r2.net,allowance:state.allowance};
+}
+function buildPayslipHTML(d,forPrint){
+  if(!d)return'<p style="text-align:center;padding:24px;color:var(--ink-soft);">No data available.</p>';
+  var name=d.employeeName||'&mdash;',dateStr=fmtISO(d.date)||'&mdash;';
+  var tw=getTaxWeek(d.date),twStr=tw?'Tax Week '+tw:'&mdash;';
+  var totalDed=d.taxW+d.niW+(d.customDedRes?d.customDedRes.total:0);
+  var groups=groupOtByRate(d.otEntries);
+  if(forPrint){
+    var eRows='<tr><td>Basic Pay</td><td>'+money(d.basic)+'</td></tr>';
+    groups.forEach(function(g){
+      eRows+='<tr class="prn-ot-group-hdr"><td colspan="2">Overtime @ '+money(g.rate)+'/hr &ndash; '+fmtHrsShort(g.totalHours)+' total</td></tr>';
+      g.shifts.forEach(function(s){eRows+='<tr class="prn-ot-shift"><td>'+s.label+'<span class="prn-sub">'+fmtHrs(s.hours)+'</span></td><td>'+money(s.pay)+'</td></tr>';});
+      if(g.shifts.length>1)eRows+='<tr class="prn-ot-subtotal"><td>'+fmtHrsShort(g.totalHours)+' @ '+money(g.rate)+'/hr</td><td>'+money(g.totalPay)+'</td></tr>';
+    });
+    var dRows='';
+    (d.customDedRes&&d.customDedRes.breakdown||[]).forEach(function(cd){dRows+='<tr class="prn-deduction"><td>'+cd.name+(cd.type==='percent'?' ('+cd.value+'%)':' (fixed)')+'</td><td>\u2212 '+money(cd.amount)+'</td></tr>';});
+    d.taxBreakdown.forEach(function(b){dRows+='<tr class="prn-deduction"><td>Income Tax \u2013 '+b.name+' ('+Math.round(b.rate*100)+'%)<span class="prn-sub">Cumulative YTD: '+money(b.amount)+'</span></td><td>\u2212 '+money(b.tax)+'</td></tr>';});
+    d.niBreakdown.forEach(function(b){dRows+='<tr class="prn-deduction"><td>National Insurance \u2013 '+b.name+'</td><td>\u2212 '+money(b.ni)+'</td></tr>';});
+    if(!dRows)dRows='<tr><td>No deductions at this income</td><td>'+money(0)+'</td></tr>';
+    var empName=d.employerName||'WageWise';
+    var poweredBy=d.employerName?'<div class="prn-powered">Powered by WageWise</div>':'';
+    return'<div class="prn-header"><div><div class="prn-company">'+empName+'</div>'+poweredBy+'</div><div class="prn-hdr-right"><div class="prn-badge">PAYSLIP</div><div class="prn-hdr-sub">'+TE.YEAR+' \u00b7 '+twStr+'</div></div></div>'+
+      '<div class="prn-meta"><div class="prn-meta-row"><span class="prn-ml">Employee</span><span class="prn-mv">'+name+'</span></div><div class="prn-meta-row"><span class="prn-ml">Pay period</span><span class="prn-mv">'+dateStr+'</span></div><div class="prn-meta-row"><span class="prn-ml">Tax week</span><span class="prn-mv">'+twStr+'</span></div><div class="prn-meta-row"><span class="prn-ml">Personal allowance</span><span class="prn-mv">'+money(d.allowance)+'</span></div></div>'+
+      '<div class="prn-section"><div class="prn-section-hdr">Earnings</div><table class="prn-table"><tbody>'+eRows+'</tbody><tfoot><tr class="prn-total"><td>Gross Pay</td><td>'+money(d.gross)+'</td></tr></tfoot></table></div>'+
+      '<div class="prn-section"><div class="prn-section-hdr">Deductions</div><table class="prn-table"><tbody>'+dRows+'</tbody><tfoot><tr class="prn-total prn-deduction"><td>Total Deductions</td><td>\u2212 '+money(totalDed)+'</td></tr></tfoot></table></div>'+
+      '<div class="prn-net"><span class="prn-net-label">NET PAY</span><span class="prn-net-val">'+money(d.net)+'</span></div>'+
+      '<div class="prn-footer">Scottish Income Tax rates apply \u00b7 Tax year '+TE.YEAR+' \u00b7 '+twStr+' \u00b7 Personal allowance '+money(d.allowance)+'<br>NI calculated on weekly gross using Class 1 thresholds. Estimate only. Not an official payslip.</div>';
+  }else{
+    var empDisp=d.employerName||'WageWise';
+    var viaBadge=d.employerName?'<div style="font-size:10px;opacity:.6;margin-top:2px;">via WageWise</div>':'';
+    var h='<div class="psl-header"><div><div class="psl-wordmark">'+empDisp+'</div><div style="font-size:11px;opacity:.8;margin-top:3px;">'+dateStr+'</div>'+viaBadge+'</div><div style="text-align:right;"><div class="psl-badge">PAYSLIP</div><div style="font-size:10px;opacity:.7;margin-top:4px;">'+twStr+'</div></div></div>';
+    h+='<div class="psl-meta"><div class="psl-meta-row"><span class="psl-meta-label">Employee</span><span class="psl-meta-value">'+name+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Tax week</span><span class="psl-meta-value">'+twStr+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Tax year</span><span class="psl-meta-value">'+TE.YEAR+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Personal allowance</span><span class="psl-meta-value">'+money(d.allowance)+'</span></div></div>';
+    h+='<div class="psl-section-hdr">Earnings</div><div class="psl-row"><span class="psl-row-label">Basic Pay</span><span class="psl-row-val">'+money(d.basic)+'</span></div>';
+    groups.forEach(function(g){
+      h+='<div class="psl-ot-group-hdr">Overtime @ '+money(g.rate)+'/hr</div>';
+      g.shifts.forEach(function(s){h+='<div class="psl-row psl-ot-shift"><span class="psl-row-label">'+s.label+'<span class="psl-row-sub">'+fmtHrs(s.hours)+'</span></span><span class="psl-row-val">'+money(s.pay)+'</span></div>';});
+      h+='<div class="psl-total-row psl-ot-subtotal"><span class="psl-total-label">'+fmtHrsShort(g.totalHours)+' @ '+money(g.rate)+'/hr</span><span class="psl-total-val">'+money(g.totalPay)+'</span></div>';
+    });
+    h+='<div class="psl-total-row"><span class="psl-total-label">Gross Pay</span><span class="psl-total-val">'+money(d.gross)+'</span></div>';
+    h+='<div class="psl-section-hdr">Deductions</div>';
+    (d.customDedRes&&d.customDedRes.breakdown||[]).forEach(function(cd){h+='<div class="psl-row deduction"><span class="psl-row-label">'+cd.name+(cd.type==='percent'?' ('+cd.value+'%)':'')+'</span><span class="psl-row-val">\u2212 '+money(cd.amount)+'</span></div>';});
+    d.taxBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">Tax \u2013 '+b.name+' ('+Math.round(b.rate*100)+'%)<span class="psl-row-sub">Cumulative YTD: '+money(b.amount)+'</span></span><span class="psl-row-val">\u2212 '+money(b.tax)+'</span></div>';});
+    d.niBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">NI \u2013 '+b.name+'</span><span class="psl-row-val">\u2212 '+money(b.ni)+'</span></div>';});
+    if(!d.taxBreakdown.length&&!d.niBreakdown.length)h+='<div class="psl-row"><span class="psl-row-label">No deductions at this income</span><span class="psl-row-val">'+money(0)+'</span></div>';
+    h+='<div class="psl-total-row deduction-total"><span class="psl-total-label">Total Deductions</span><span class="psl-total-val">\u2212 '+money(totalDed)+'</span></div>';
+    h+='<div class="psl-net"><span class="psl-net-label">NET PAY</span><span class="psl-net-val">'+money(d.net)+'</span></div>';
+    h+='<div class="psl-footer">Scottish IT \u00b7 '+TE.YEAR+' \u00b7 '+twStr+' \u00b7 Allowance '+money(d.allowance)+' \u00b7 Estimate only.</div>';
+    return h;
+  }
+}
+function renderPayslipScreen(){
+  if(state.history.length){
+    $('ps-hist-empty').hidden=true;
+    var sorted=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+    $('ps-hist-list').innerHTML=sorted.map(function(e){var sel=_psSource===e.id;return'<div class="ps-hitem'+(sel?' selected':'')+'" data-psid="'+e.id+'"><div><div class="ps-hi-date">'+fmtISO(e.date)+'</div><div class="ps-hi-net">'+money(e.net)+'</div></div>'+(sel?'<span style="font-size:18px;font-weight:700">&#10003;</span>':'')+'</div>';}).join('');
+  }else{$('ps-hist-list').innerHTML='';$('ps-hist-empty').hidden=false;}
+  $('ps-preview').innerHTML=buildPayslipHTML(getPayslipData(),'');
+}
+function doPrint(){var d=getPayslipData();$('print-payslip').innerHTML=buildPayslipHTML(d,true);window.print();}
+$('ps-name').addEventListener('input',function(){state.employeeName=this.value;persist();renderPayslipScreen();});
+$('ps-employer').addEventListener('input',function(){state.employerName=this.value;persist();renderPayslipScreen();});
+$('ps-src-calc').addEventListener('click',function(){_psSource='current';$('ps-src-calc').classList.add('on');$('ps-src-hist').classList.remove('on');$('ps-hist-picker').hidden=true;renderPayslipScreen();});
+$('ps-src-hist').addEventListener('click',function(){$('ps-src-hist').classList.add('on');$('ps-src-calc').classList.remove('on');$('ps-hist-picker').hidden=false;if(_psSource==='current')_psSource=state.history.length?state.history[0].id:'current';renderPayslipScreen();});
+$('ps-hist-list').addEventListener('click',function(e){var item=e.target.closest?e.target.closest('[data-psid]'):null;if(!item)return;_psSource=parseInt(item.getAttribute('data-psid'),10);renderPayslipScreen();});
+$('ps-print-btn').addEventListener('click',doPrint);$('ps-print-btn2').addEventListener('click',doPrint);
+
+/* ── TOAST ── */
+var _toastTimer;
+function showToast(msg){clearTimeout(_toastTimer);var t=$('toast');t.textContent=msg;t.classList.add('show');_toastTimer=setTimeout(function(){t.classList.remove('show');},2500);}
+
+/* ── THEME ── */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',state.theme);document.documentElement.setAttribute('data-accent',state.accent);
+  $('icon-sun').toggleAttribute('hidden',state.theme==='dark');$('icon-moon').toggleAttribute('hidden',state.theme!=='dark');
+  var tbs=document.querySelectorAll('[data-tc]');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('on',tbs[i].getAttribute('data-tc')===state.theme);
+  var abs=document.querySelectorAll('[data-ac]');for(var j=0;j<abs.length;j++)abs[j].classList.toggle('on',abs[j].getAttribute('data-ac')===state.accent);
+}
+$('theme-toggle').addEventListener('click',function(){state.theme=state.theme==='dark'?'light':'dark';applyTheme();persist();});
+document.querySelectorAll('[data-tc]').forEach(function(b){b.addEventListener('click',function(){state.theme=b.getAttribute('data-tc');applyTheme();persist();});});
+document.querySelectorAll('[data-ac]').forEach(function(b){b.addEventListener('click',function(){state.accent=b.getAttribute('data-ac');applyTheme();persist();});});
+
+/* ── PWA ── */
+(function(){
+  var mf={name:'WageWise',short_name:'WageWise',display:'standalone',orientation:'portrait',background_color:'#1f5c43',theme_color:'#1f5c43',start_url:'.',icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231f5c43'/%3E%3Ctext x='256' y='360' font-family='monospace' font-size='280' font-weight='700' fill='%23fbfcf7' text-anchor='middle'%3E%C2%A3%3C/text%3E%3C/svg%3E",sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}]};
+  var lnk=document.createElement('link');lnk.rel='manifest';lnk.href='data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(mf));document.head.appendChild(lnk);
+  var apns=[['apple-mobile-web-app-capable','yes'],['apple-mobile-web-app-status-bar-style','black-translucent'],['apple-mobile-web-app-title','WageWise']];
+  apns.forEach(function(p){var m=document.createElement('meta');m.name=p[0];m.content=p[1];document.head.appendChild(m);});
+  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){$('pwa-block').hidden=false;$('ios-hint').hidden=false;$('pwa-install-btn').hidden=true;}
+  var _dp=null;
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_dp=e;$('pwa-block').hidden=false;$('pwa-install-btn').hidden=false;$('ios-hint').hidden=true;});
+  $('pwa-install-btn').addEventListener('click',function(){if(!_dp)return;_dp.prompt();_dp.userChoice.then(function(r){if(r.outcome==='accepted')showToast('\u2713 WageWise installed!');_dp=null;$('pwa-block').hidden=true;});});
+  window.addEventListener('appinstalled',function(){$('pwa-block').hidden=true;showToast('\u2713 Added to Home Screen');});
+  if('serviceWorker' in navigator){try{var swSrc='self.addEventListener("install",function(e){self.skipWaiting();});self.addEventListener("activate",function(e){e.waitUntil(clients.claim());});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request);}).catch(function(){return caches.match(e.request);}));});';var b=new Blob([swSrc],{type:'application/javascript'});navigator.serviceWorker.register(URL.createObjectURL(b)).catch(function(){});}catch(e){}}
+})();
+
+/* ── NAVIGATION ── */
+var LBLS={calculator:'Calculator',dashboard:'Dashboard',calendar:'Calendar',payslip:'Payslip',settings:'Settings'};
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('active',s.getAttribute('data-screen')===name);});
+  document.querySelectorAll('.navbtn').forEach(function(b){b.classList.toggle('is-active',b.getAttribute('data-nav')===name);});
+  $('screen-label').textContent=LBLS[name]||'';
+  if(name==='dashboard')renderDashboard();
+  if(name==='calendar')renderCalendarScreen();
+  if(name==='payslip'){if($('ps-name'))$('ps-name').value=state.employeeName||'';renderPayslipScreen();}
+}
+document.querySelectorAll('.navbtn').forEach(function(b){b.addEventListener('click',function(){showScreen(b.getAttribute('data-nav'));});});
+
+/* ── INIT ── */
+['tax-year-lbl','tax-year-lbl2','tax-year-lbl3'].forEach(function(id){$(id).textContent=TE.YEAR;});
+$('allowance').value=state.allowance;
+if(state.employeeName)$('ps-name').value=state.employeeName;
+if(state.employerName)$('ps-employer').value=state.employerName;
+syncBasicDisplay();
+renderDedList();
+renderPresetList();
+renderOtRows();
+renderBandTable();
+renderResults();
+applyTheme();
+showScreen('calculator');
+})();
+</script>
+</body>
+</html>
