@@ -839,51 +839,6 @@ function calcWith(basic,otEntries,allowance,customDeds,history,taxWeek){
   var cdr=applyCustomDed(gross,customDeds||[]);
   var net=roundPence(gross-taxW-niRes.ni-cdr.total);
   return{otTotal:otTotal,gross:gross,taxRes:taxRes,taxW:taxW,niRes:niRes,customDedRes:cdr,net:net};
-/*
-
-  // Compute cumulative gross pay to date from history + current week
-  var validHistory=(history||[]).filter(function(entry){return entry&&Number.isFinite(Number(entry.gross));});
-  var cumGross=gross;
-  var cumTaxPaid=0;
-  if(validHistory.length){
-    var sorted=validHistory.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-    sorted.forEach(function(entry){
-      cumGross+=Number(entry.gross);
-      cumTaxPaid+=Number(entry.tax)||0;
-    });
-  }else{
-    // With no saved pay history, project this week's gross across the tax year
-    // to avoid comparing one week's pay with many weeks of allowance.
-    cumGross=gross*(taxWeek||1);
-  }
-  if(!Number.isFinite(cumGross))cumGross=gross*(taxWeek||1);
-  if(!Number.isFinite(allowance)||allowance<0)allowance=12570;
-
-  // Cumulative personal allowance = allowance / 52 × tax week number
-  var cumAllowance=allowance/52*(taxWeek||1);
-
-  // Cumulative taxable pay
-  var cumTaxable=Math.max(0,cumGross-cumAllowance);
-
-  // Apply progressive tax bands to cumulative taxable pay
-  var p=cumAllowance,rem=Math.max(0,cumTaxable),t=0,bd=[];
-  for(var i=0;i<TE.BANDS.length&&rem>0;i++){
-    var a=Math.min(rem,TE.BANDS[i].width);
-    if(a>0){var bt=a*TE.BANDS[i].rate;t+=bt;bd.push({name:TE.BANDS[i].name,rate:TE.BANDS[i].rate,amount:a,tax:bt});}
-    rem-=a;
-  }
-  var cumTaxDue=t;
-
-  // This week's tax deduction = cumulative tax due minus tax already paid in previous weeks
-  var taxW=validHistory.length?cumTaxDue-cumTaxPaid:cumTaxDue/(taxWeek||1);
-  taxW=roundPence(Math.max(0,taxW));
-
-  var niRes=TE.ni(gross);
-  niRes.ni=roundPence(niRes.ni);
-  var cdr=applyCustomDed(gross,customDeds||[]);
-  var net=roundPence(gross-taxW-niRes.ni-cdr.total);
-  return{otTotal:otTotal,gross:gross,taxRes:{tax:taxW,pa:cumAllowance-breakdownAmount(bd),breakdown:bd},taxW:taxW,niRes:niRes,customDedRes:cdr,net:net, cumTaxable:cumTaxable, cumAllowance:cumAllowance, cumGross:cumGross, cumTaxPaid:cumTaxPaid};
-*/
 }
 
 function breakdownAmount(bd){
