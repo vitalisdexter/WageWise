@@ -416,6 +416,24 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .preset-ded-row .ded-val-tag{font-size:12.5px;}
 .active-note{font-size:12px;color:var(--pine);font-weight:600;background:color-mix(in srgb,var(--pine) 10%,transparent);border:1px solid var(--pine);border-radius:8px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .active-note-clear{font-size:11.5px;color:var(--pine);font-weight:700;border:none;background:none;cursor:pointer;text-decoration:underline;white-space:nowrap;}
+
+/* ── Sweet Spot ── */
+.sweet-spot-headline{display:flex;flex-direction:column;gap:4px;}
+.sweet-spot-headline .basic-display-lbl{font-size:11px;}
+.sweet-spot-headline .basic-display-val{font-size:14.5px;font-weight:600;line-height:1.5;}
+.sweet-spot-table{margin-top:12px;}
+.sweet-spot-table td{font-size:11.5px;}
+.sweet-spot-range{font-family:var(--mono);font-weight:700;}
+.sweet-spot-keep{font-family:var(--mono);font-weight:800;color:var(--accent-ink);}
+.sweet-spot-why{font-size:11px;color:var(--ink-soft);}
+.sweet-spot-empty{text-align:center;padding:16px;color:var(--ink-soft);font-size:13px;}
+
+/* ── YTD Override ── */
+.ytd-override{background:var(--stripe);border:1.5px solid var(--pine);border-radius:10px;padding:14px;margin:12px 0;}
+.ytd-override-title{font-size:11.5px;font-weight:700;color:var(--accent-ink);margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;}
+.ytd-override-row{display:flex;gap:8px;margin-bottom:10px;}
+.ytd-override-row .input-wrap{flex:1;}
+.ytd-override-note{font-size:11px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -448,8 +466,8 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
             <button type="button" class="link-btn" id="add-ot">+ Add overtime entry</button>
           </div>
         </section>
-        <details class="settings">
-          <summary>Tax &amp; National Insurance</summary>
+<details class="settings">
+          <summary>Tax & National Insurance</summary>
           <div class="settings-body">
             <div class="field" style="margin-bottom:10px;">
               <label for="allowance">Personal allowance (yearly)</label>
@@ -457,6 +475,36 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
             </div>
             <p class="note">Using <strong id="tax-year-lbl">2026/27</strong> Scottish Income Tax bands and UK NI weekly thresholds.</p>
             <div class="band-table"><table><thead><tr><th>Band</th><th>Rate</th></tr></thead><tbody id="band-tbody"></tbody></table></div>
+          </div>
+        </details>
+        <details class="settings" id="ytd-override-details">
+          <summary>YTD override (from payslip)</summary>
+          <div class="settings-body">
+            <p class="note">Enter year-to-date figures from your latest payslip so the calculator uses real cumulative figures instead of deriving them from saved history.</p>
+            <div class="ytd-override">
+              <p class="ytd-override-title">Payslip YTD totals (tax year to date)</p>
+              <div class="ytd-override-row">
+                <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="ytd-gross" placeholder="Gross pay YTD"></div>
+                <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="ytd-tax" placeholder="Tax paid YTD"></div>
+              </div>
+              <div class="ytd-override-row">
+                <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="ytd-ni" placeholder="NI paid YTD"></div>
+                <div class="input-wrap"><input type="number" inputmode="numeric" step="1" min="0" id="ytd-week" placeholder="Tax week (1-52)"></div>
+              </div>
+              <p class="ytd-override-note">Leave blank to use saved history. Tax week defaults to current date if YTD gross/tax provided.</p>
+            </div>
+          </div>
+        </details>
+        <details class="settings" id="sweet-spot-details">
+          <summary>Overtime sweet spot</summary>
+          <div class="settings-body">
+            <p class="note">More OT is never a loss &mdash; tax and NI are marginal. But the keep-rate on each extra hour can step down once you cross a band this week (or step up once you clear the NI Upper Earnings Limit). This shows where those steps land, on top of what you've already entered above.</p>
+            <div class="field" style="margin-top:12px;margin-bottom:10px;">
+              <label for="ss-rate">Modelling further hours at (&pound;/hr)</label>
+              <div class="input-wrap sm"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="ss-rate" value="0"></div>
+            </div>
+            <div class="basic-display" id="ss-headline" style="display:block;"></div>
+            <div class="band-table sweet-spot-table" style="margin-top:12px;"><table><thead><tr><th>Extra hours</th><th>You keep</th><th>Why</th></tr></thead><tbody id="ss-tbody"></tbody></table></div>
           </div>
         </details>
         <section class="ledger-wrap">
@@ -470,10 +518,11 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
             <div id="ledger-custom-ded"></div>
           </div>
           <div class="stamp-wrap"><div class="stamp" id="stamp"><div class="stamp-ring"><span class="stamp-label">Net pay</span><span class="stamp-value" id="out-net">&pound;0.00</span></div></div></div>
+          <p class="note" id="ytd-line" style="text-align:center;margin:2px 0 0;"></p>
           <button type="button" class="link-btn center" id="breakdown-toggle">Show full breakdown</button>
           <div id="breakdown-area" hidden>
-            <p class="mini-table-cap">Tax bands (annual)</p>
-            <div class="mini-table"><table><thead><tr><th>Band</th><th>Amount</th><th>Tax</th></tr></thead><tbody id="tax-bd"></tbody></table></div>
+            <p class="mini-table-cap">Tax bands \u2014 cumulative position, year to date</p>
+            <div class="mini-table"><table><thead><tr><th>Band</th><th>YTD amount</th><th>YTD tax</th></tr></thead><tbody id="tax-bd"></tbody></table></div>
             <p class="mini-table-cap">National Insurance (weekly)</p>
             <div class="mini-table"><table><thead><tr><th>Band</th><th>Amount</th><th>NI</th></tr></thead><tbody id="ni-bd"></tbody></table></div>
             <p class="mini-table-cap">Weekly / Monthly / Annual</p>
@@ -621,7 +670,9 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
       </div>
       <div class="sblock">
         <h3>Tax engine</h3>
-        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0;">Using <strong id="tax-year-lbl3">2026/27</strong> Scottish Income Tax bands and UK NI thresholds.</p>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0 0 12px;">Using <strong id="tax-year-lbl3">2026/27</strong> Scottish Income Tax bands and UK NI thresholds, calculated cumulatively across the tax year &mdash; the same way HMRC/PAYE actually works, so high-overtime weeks aren't over-taxed in isolation.</p>
+        <button type="button" class="ghost-btn" id="recalc-history-btn">Recalculate tax on saved history</button>
+        <p style="font-size:11.5px;color:var(--ink-soft);line-height:1.5;margin:8px 0 0;">Use this once after an update to the tax engine, so entries saved under an older calculation get corrected. Safe to run any time &mdash; net pay for each entry is adjusted by exactly the tax correction, any other deductions already recorded are left untouched.</p>
       </div>
       <div class="sblock">
         <h3>Data</h3>
@@ -685,7 +736,10 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
   <div class="sbody" id="sbody-manual" hidden>
     <div class="field"><label for="edate-manual">Pay period ending</label><div class="input-wrap"><input type="date" id="edate-manual"></div></div>
     <div class="field"><label for="m-gross">Gross pay</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-gross" placeholder="0.00"></div></div>
+    <div class="field"><label for="m-tax">Tax paid (optional)</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-tax" placeholder="0.00"></div></div>
+    <div class="field"><label for="m-ni">NI paid (optional)</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-ni" placeholder="0.00"></div></div>
     <div class="field"><label for="m-net">Net pay (take-home)</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-net" placeholder="0.00"></div></div>
+    <p class="note" style="margin:-4px 0 10px;">Backfilling your position from a real payslip rather than logging one week? Use its <strong>to-date</strong> totals here (gross/tax/NI paid so far this tax year) so future weeks calculate correctly \u2014 the calculator needs your real year-to-date figures to work out cumulative tax.</p>
     <div class="field"><label for="m-note">Note (optional)</label><div class="input-wrap"><input type="text" id="m-note" placeholder="e.g. Bank holiday week"></div></div>
     <button type="button" class="primary-btn" id="save-manual-btn">Save entry</button>
   </div>
@@ -753,8 +807,40 @@ var TE=(function(){
     if(gw>NI.uel){var ua=gw-NI.uel;var un=ua*NI.upper;n+=un;bd.push({name:'2% (above UEL)',amount:ua,ni:un});}
     return{ni:n,breakdown:bd};
   }
-  return{YEAR:YEAR,BANDS:BANDS,tax:tax,ni:ni};
+  return{YEAR:YEAR,BANDS:BANDS,NI:NI,tax:tax,ni:ni};
 })();
+
+/* ── TAX YEAR / CUMULATIVE HELPERS ──
+   The tax engine now works the way HMRC's real cumulative PAYE does: each
+   week's tax is (tax due on year-to-date pay so far) minus (tax already
+   paid this tax year), using bands scaled to the current tax week. This
+   replaces the old "annualise this week's gross in isolation" method,
+   which overstated tax badly on high-overtime weeks (validated against
+   real payslips — isolated weeks were often £20–£30 too high). */
+function taxYearStartFor(iso){
+  var d=new Date(iso+'T00:00:00');
+  var y=d.getFullYear(),mo=d.getMonth()+1,day=d.getDate();
+  return(mo>4||(mo===4&&day>=6))?new Date(y,3,6):new Date(y-1,3,6);
+}
+function cumulativeBefore(payDateISO,excludeId){
+  var tys=taxYearStartFor(payDateISO),target=new Date(payDateISO+'T00:00:00'),gross=0,taxPaid=0,niPaid=0;
+  state.history.forEach(function(e){
+    if(excludeId!=null&&e.id===excludeId)return;
+    if(!e.date)return;
+    var ed=new Date(e.date+'T00:00:00');
+    if(ed>=tys&&ed<target){gross+=e.gross||0;taxPaid+=e.tax||0;niPaid+=e.ni||0;} /* manual entries store tax:0 — real tax on them is unknown, so their gross still counts toward YTD but can't reduce what's "already paid" */
+  });
+  return{gross:gross,taxPaid:taxPaid,niPaid:niPaid};
+}
+function cumulativeTaxDue(cumGross,taxWeek,allowance){
+  var scaledAllowance=allowance*taxWeek/52,rem=Math.max(0,cumGross-scaledAllowance),tax=0,bd=[];
+  for(var i=0;i<TE.BANDS.length&&rem>0;i++){
+    var w=TE.BANDS[i].width,scaledWidth=w===Infinity?Infinity:w*taxWeek/52,amt=Math.min(rem,scaledWidth);
+    if(amt>0){var bt=amt*TE.BANDS[i].rate;tax+=bt;bd.push({name:TE.BANDS[i].name,rate:TE.BANDS[i].rate,amount:amt,tax:bt});}
+    rem-=amt;
+  }
+  return{tax:tax,breakdown:bd};
+}
 
 /* ── STORAGE ── */
 var SK='wagewise-v5';
@@ -827,25 +913,60 @@ function applyCustomDed(gross,deds){
 
 function roundPence(value){return Math.round((value+Number.EPSILON)*100)/100;}
 
-/* ── CALCULATION ── */
-function calcWith(basic,otEntries,allowance,customDeds,history,taxWeek){
+/* ── CALCULATION ──
+   payDateISO: the pay period this calc is for (defaults to today).
+   excludeHistoryId: when recalculating an entry that's already saved,
+   pass its id so it doesn't count itself in its own year-to-date total.
+
+   This week's tax = (tax due on ALL pay to date, using THIS week's scaled
+   bands) minus (tax ACTUALLY already withheld in previous weeks, taken
+   straight from saved history). That second part matters: it must be the
+   real amount already paid, not a re-estimate of what "should" have been
+   paid under this week's scaling — re-estimating it was an earlier bug
+   here that overstated tax by tens of pounds after just a few weeks,
+   caught by chaining real payslip data through the whole calculation
+   rather than only checking single weeks in isolation.
+
+   YTD OVERRIDE: if the user enters YTD figures in the calculator drawer,
+   those replace the history-derived cumulative figures entirely. */
+function calcWith(basic,otEntries,allowance,customDeds,payDateISO,excludeHistoryId){
+  payDateISO=payDateISO||todayISO();
+  var taxWeek=getTaxWeek(payDateISO)||1;
   var otTotal=otEntries.reduce(function(s,e){return s+effHours(e)*e.rate;},0);
   var gross=basic+otTotal;
-  var taxRes=TE.tax(gross*52,allowance);
-  taxRes.tax=roundPence(taxRes.tax);
-  var taxW=roundPence(taxRes.tax/52);
+
+  // YTD override from calculator drawer (if user filled it in)
+  var ytdGross=parseFloat($('ytd-gross').value)||0;
+  var ytdTax=parseFloat($('ytd-tax').value)||0;
+  var ytdNi=parseFloat($('ytd-ni').value)||0;
+  var ytdWeek=parseInt($('ytd-week').value)||taxWeek;
+  var useOverride=ytdGross>0||ytdTax>0;
+
+  // Cumulative figures from history (excluding current entry if editing)
+  var cb=useOverride?{gross:0,taxPaid:0,niPaid:0}:cumulativeBefore(payDateISO,excludeHistoryId);
+
+  // If override used, scale override gross to current tax week
+  var cumGrossBefore=useOverride?Math.round(ytdGross*ytdWeek/52):cb.gross;
+  var cumTaxPaid=useOverride?ytdTax:cb.taxPaid;
+  var cumNiPaid=useOverride?ytdNi:cb.niPaid;
+
+  var cumGrossAfter=cumGrossBefore+gross;
+  var due=cumulativeTaxDue(cumGrossAfter,taxWeek,allowance);
+  var taxW=Math.max(0,roundPence(due.tax-cumTaxPaid));
+  var taxRes={tax:taxW,breakdown:due.breakdown,cumulativeTax:roundPence(due.tax)}; /* breakdown is the CUMULATIVE (year-to-date) position by band, not just this week — see renderResults/buildPayslipHTML */
+
   var niRes=TE.ni(gross);
   niRes.ni=roundPence(niRes.ni);
   var cdr=applyCustomDed(gross,customDeds||[]);
   var net=roundPence(gross-taxW-niRes.ni-cdr.total);
-  return{otTotal:otTotal,gross:gross,taxRes:taxRes,taxW:taxW,niRes:niRes,customDedRes:cdr,net:net};
+  return{otTotal:otTotal,gross:gross,taxRes:taxRes,taxW:taxW,niRes:niRes,customDedRes:cdr,net:net,taxWeek:taxWeek,cumulativeGross:cumGrossAfter,cumulativeTaxToDate:roundPence(due.tax),cumulativeNiToDate:roundPence(cumNiPaid+niRes.ni)};
 }
 
 function breakdownAmount(bd){
   var a=0;bd.forEach(function(b){a+=b.amount;});return a;
 }
 
-function calc(){return calcWith(state.basic,state.otEntries,state.allowance,state.customDeductions,state.history,getTaxWeek(todayISO()));}
+function calc(){return calcWith(state.basic,state.otEntries,state.allowance,state.customDeductions,todayISO(),null);}
 
 /* ── GROUPED OT ── */
 function groupOtByRate(otEntries){
@@ -910,6 +1031,7 @@ function renderOtRows(){
 
 /* ── RENDER RESULTS ── */
 var lastNet=null;
+var _ssRateTouched=false;
 function renderResults(){
   var r=calc();
   $('out-basic').textContent=money(state.basic);
@@ -920,22 +1042,114 @@ function renderResults(){
     return '<div class="line"><span class="line-label">'+(sub?'Overtime':'Overtime \u00b7 '+fmtHrsShort(hrs)+' @ '+money(e.rate))+sub+'</span><span class="line-value">'+money(hrs*e.rate)+'</span></div>';
   }).join('');
   $('out-gross').textContent=money(r.gross);
-  $('out-tax-lbl').textContent='Tax \u00b7 '+r.taxRes.breakdown.length+(r.taxRes.breakdown.length===1?' band':' bands');
+  $('out-tax-lbl').textContent='Tax \u00b7 Week '+r.taxWeek;
   $('out-tax').textContent=moneySgn(-r.taxW);
   $('out-ni').textContent=moneySgn(-r.niRes.ni);
   var dl=$('ledger-custom-ded');
   if(dl){dl.innerHTML=r.customDedRes.breakdown.map(function(d){var desc=d.name+(d.type==='percent'?' ('+d.value+'%)':' (fixed)');return'<div class="line line-deduction"><span class="line-label">'+desc+'</span><span class="line-value">'+moneySgn(-d.amount)+'</span></div>';}).join('');}
   $('out-net').textContent=money(r.net);
+  $('ytd-line').textContent='Year to date: gross '+money(r.cumulativeGross)+' \u00b7 tax '+money(r.cumulativeTaxToDate)+' \u00b7 NI '+money(r.cumulativeNiToDate);
   $('tax-bd').innerHTML=r.taxRes.breakdown.map(function(b){return'<tr><td>'+b.name+' ('+Math.round(b.rate*100)+'%)</td><td>'+money(b.amount)+'</td><td>'+money(b.tax)+'</td></tr>';}).join('')||'<tr><td colspan="3">No tax due.</td></tr>';
   $('ni-bd').innerHTML=r.niRes.breakdown.map(function(b){return'<tr><td>'+b.name+'</td><td>'+money(b.amount)+'</td><td>'+money(b.ni)+'</td></tr>';}).join('')||'<tr><td colspan="3">No NI due.</td></tr>';
   [['g',r.gross],['t',-r.taxW],['n',-r.niRes.ni],['net',r.net]].forEach(function(p){var k=p[0],w=p[1];$('tw-'+k).textContent=moneySgn(w);$('tm-'+k).textContent=moneySgn(w*52/12);$('ta-'+k).textContent=moneySgn(w*52);});
   if(lastNet!==null&&Math.abs(lastNet-r.net)>0.0001){var stamp=$('stamp');stamp.classList.remove('pulse');void stamp.offsetWidth;stamp.classList.add('pulse');}
   lastNet=r.net;persist();
+  renderSweetSpot();
 }
 function renderBandTable(){
   var floor=state.allowance,rows='<tr><td>Personal allowance</td><td>0%</td></tr>';
   TE.BANDS.forEach(function(b){var to=b.width===Infinity?null:floor+b.width;rows+='<tr><td>'+b.name+(to?' to \u00a3'+Math.round(to).toLocaleString('en-GB'):' and above')+'</td><td>'+Math.round(b.rate*100)+'%</td></tr>';if(to)floor=to;});
   $('band-tbody').innerHTML=rows;
+}
+
+/* ── SWEET SPOT ENGINE ──
+   Not a "cap" — tax/NI are marginal, so more OT never means a net loss.
+   What this finds is where the KEEP-RATE on the next hour steps down (you
+   cross into a higher Scottish band, cumulatively, this tax week) or steps
+   up (you clear the NI Upper Earnings Limit, where NI drops 8%\u21922%).
+   Uses the same cumulative engine as calcWith, so it always matches. */
+function bandRateAtCumulative(cumGross,taxWeek,allowance){
+  var scaledAllowance=allowance*taxWeek/52;
+  if(cumGross<=scaledAllowance)return{rate:0,name:'Personal allowance'};
+  var floor=scaledAllowance;
+  for(var i=0;i<TE.BANDS.length;i++){
+    var w=TE.BANDS[i].width,scaledWidth=w===Infinity?Infinity:w*taxWeek/52,to=floor+scaledWidth;
+    if(cumGross<=to)return{rate:TE.BANDS[i].rate,name:TE.BANDS[i].name};
+    floor=to;
+  }
+  var last=TE.BANDS[TE.BANDS.length-1];return{rate:last.rate,name:last.name};
+}
+function niRateAt(weeklyGross){
+  if(weeklyGross<=TE.NI.pt)return{rate:0,name:'below NI threshold'};
+  if(weeklyGross<=TE.NI.uel)return{rate:TE.NI.main,name:'NI'};
+  return{rate:TE.NI.upper,name:'NI (past Upper Earnings Limit)'};
+}
+function blendedOtRate(){
+  var hrs=0,pay=0;
+  state.otEntries.forEach(function(e){var h=effHours(e);if(h>0){hrs+=h;pay+=h*e.rate;}});
+  if(hrs>0)return pay/hrs;
+  return state.otEntries.length?state.otEntries[state.otEntries.length-1].rate:0;
+}
+/* baseWeeklyGross: this week's gross (basic + OT already entered), BEFORE any hypothetical extra hours.
+   cumGrossBefore: year-to-date cumulative gross from all PRIOR weeks (excludes this week entirely). */
+function otKeepRateLadder(baseWeeklyGross,cumGrossBefore,taxWeek,ratePerHour,allowance,maxExtraHours){
+  maxExtraHours=maxExtraHours||40;
+  if(!(ratePerHour>0)||!(maxExtraHours>0))return [];
+  var g0=cumGrossBefore+baseWeeklyGross; /* cumulative gross if extra hours = 0 */
+  var scaledAllowance=allowance*taxWeek/52,floor=scaledAllowance,cumBoundaries=[];
+  TE.BANDS.forEach(function(b){var w=b.width,scaledWidth=w===Infinity?Infinity:w*taxWeek/52,to=floor+scaledWidth;if(isFinite(to))cumBoundaries.push(to);floor=to;});
+  var crossings=[];
+  cumBoundaries.forEach(function(cb){if(cb>g0+1e-6){var h=(cb-g0)/ratePerHour;if(h>1e-6&&h<=maxExtraHours)crossings.push(h);}});
+  [TE.NI.pt,TE.NI.uel].forEach(function(nb){if(nb>baseWeeklyGross+1e-6){var h=(nb-baseWeeklyGross)/ratePerHour;if(h>1e-6&&h<=maxExtraHours)crossings.push(h);}});
+  crossings.sort(function(a,b){return a-b;});
+  var dedup=[];crossings.forEach(function(h){if(!dedup.length||h-dedup[dedup.length-1]>0.01)dedup.push(h);});
+  var bounds=[0].concat(dedup).concat([maxExtraHours]),segs=[];
+  for(var i=0;i<bounds.length-1;i++){
+    var from=bounds[i],to=bounds[i+1];if(to-from<1e-6)continue;
+    var mid=(from+to)/2,wg=baseWeeklyGross+mid*ratePerHour,cg=cumGrossBefore+wg;
+    var bt=bandRateAtCumulative(cg,taxWeek,allowance),nt=niRateAt(wg);
+    segs.push({fromHours:from,toHours:to,keepRate:1-bt.rate-nt.rate,taxBand:bt.name,taxRatePct:Math.round(bt.rate*100),niLabel:nt.name,niRatePct:Math.round(nt.rate*100),cappedAtMax:to>=maxExtraHours-1e-6});
+  }
+  return segs;
+}
+function renderSweetSpot(){
+  var rateInput=$('ss-rate');if(!rateInput)return;
+  if(!_ssRateTouched){var def=blendedOtRate();rateInput.value=def>0?def.toFixed(2):'';}
+  var rate=clamp(rateInput.value);
+  var today=todayISO(),taxWeek=getTaxWeek(today)||1;
+  var baseWeeklyGross=state.basic+state.otEntries.reduce(function(s,e){return s+effHours(e)*e.rate;},0);
+  var cb=cumulativeBefore(today,null);
+  var segs=rate>0?otKeepRateLadder(baseWeeklyGross,cb.gross,taxWeek,rate,state.allowance,40):[];
+  if(!segs.length){
+    $('ss-headline').innerHTML='<div class="basic-display-lbl">Enter a rate above</div><div class="basic-display-val" style="font-size:14px;">to see how far extra hours go this week.</div>';
+    $('ss-tbody').innerHTML='<tr><td colspan="3">&mdash;</td></tr>';
+    return;
+  }
+  var first=segs[0],second=segs[1];
+  var headline;
+  if(!second){
+    headline='At this rate, you keep <strong>'+Math.round(first.keepRate*100)+'p per &pound;1</strong> of extra OT for at least the next '+fmtHrsShort(40)+' this week.';
+  }else{
+    var dir=second.keepRate<first.keepRate?'drops to':'improves to';
+    headline='Your next <strong>'+fmtHrsShort(first.toHours)+'</strong> of extra OT keep <strong>'+Math.round(first.keepRate*100)+'p per &pound;1</strong>. Beyond that it '+dir+' <strong>'+Math.round(second.keepRate*100)+'p per &pound;1</strong> ('+second.taxBand+(second.niRatePct?' + '+second.niRatePct+'% '+second.niLabel:'')+').';
+  }
+  $('ss-headline').innerHTML='<div class="basic-display-lbl">This week</div><div class="basic-display-val" style="font-size:14.5px;line-height:1.5;font-weight:600;">'+headline+'</div>';
+  $('ss-tbody').innerHTML=segs.map(function(s){
+    var range=s.cappedAtMax?fmtHrsShort(s.fromHours)+'+':fmtHrsShort(s.fromHours)+'\u2013'+fmtHrsShort(s.toHours);
+    var why=s.taxBand+(s.taxRatePct?' '+s.taxRatePct+'%':'')+(s.niRatePct?' + '+s.niRatePct+'% '+s.niLabel:s.fromHours===0&&s.niLabel==='below NI threshold'?'':' + no NI');
+    return '<tr><td class="sweet-spot-range">'+range+'</td><td class="sweet-spot-keep">'+Math.round(s.keepRate*100)+'p/\u00a31</td><td class="sweet-spot-why">'+why+'</td></tr>';
+  }).join('');
+}
+
+function recalculateAllHistory(){
+  var entries=state.history.filter(function(e){return!e.manual;}).slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  entries.forEach(function(entry){
+    var r=calcWith(entry.basic||0,entry.otEntries&&entry.otEntries.length?entry.otEntries:[],state.allowance,[],entry.date,entry.id);
+    var oldTax=entry.tax||0,newTax=r.taxW;
+    entry.net=roundPence((entry.net||0)+(oldTax-newTax)); /* shift net by exactly the tax correction — preserves any custom deductions already baked into the stored net, since we don't retain per-entry deduction history */
+    entry.tax=newTax;
+  });
+  persist();
 }
 
 /* ── OT EVENT DELEGATION ── */
@@ -962,11 +1176,13 @@ $('add-ot').addEventListener('click',function(){
   renderOtRows();renderResults();
 });
 $('allowance').addEventListener('input',function(){state.allowance=clamp(this.value);renderResults();renderBandTable();});
+$('ss-rate').addEventListener('input',function(){_ssRateTouched=true;renderSweetSpot();});
 $('breakdown-toggle').addEventListener('click',function(){var a=$('breakdown-area'),h=a.hasAttribute('hidden');if(h){a.removeAttribute('hidden');this.textContent='Hide full breakdown';}else{a.setAttribute('hidden','');this.textContent='Show full breakdown';}});
 $('reset-btn').addEventListener('click',function(){
   state.basic=DEF.basic;state.allowance=DEF.allowance;
   state.otEntries=JSON.parse(JSON.stringify(DEF.otEntries));
   $('allowance').value=state.allowance;
+  _ssRateTouched=false;
   syncBasicDisplay();renderOtRows();renderResults();
 });
 $('calc-form').addEventListener('submit',function(e){e.preventDefault();});
@@ -1282,12 +1498,14 @@ function openSheet(mode){
 }
 function closeSheet(){var ov=$('sheet-overlay'),sh=$('entry-sheet');ov.classList.remove('open');sh.classList.remove('open');setTimeout(function(){ov.setAttribute('hidden','');sh.setAttribute('hidden','');},300);}
 function fillSheetPreview(){
-  var r=calc();
+  var date=$('edate-calc').value||todayISO();
+  var r=calcWith(state.basic,state.otEntries,state.allowance,state.customDeductions,date,null);
   $('ep-gross').textContent=money(r.gross);$('ep-ot').textContent=money(r.otTotal);
   $('ep-tax').textContent=moneySgn(-r.taxW);$('ep-ni').textContent=moneySgn(-r.niRes.ni);
   $('ep-net').textContent=money(r.net);window._calcSnap=r;
 }
 $('save-pay-btn').addEventListener('click',function(){fillSheetPreview();openSheet('calc');});
+$('edate-calc').addEventListener('input',fillSheetPreview);
 $('add-entry-btn').addEventListener('click',function(){openSheet('manual');});
 $('sheet-close').addEventListener('click',closeSheet);$('sheet-overlay').addEventListener('click',closeSheet);
 $('stab-calc').addEventListener('click',function(){$('stab-calc').classList.add('on');$('stab-manual').classList.remove('on');$('sbody-calc').hidden=false;$('sbody-manual').hidden=true;fillSheetPreview();});
@@ -1300,15 +1518,23 @@ $('save-calc-btn').addEventListener('click',function(){
   if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
 });
 $('save-manual-btn').addEventListener('click',function(){
-  var date=$('edate-manual').value,gross=clamp($('m-gross').value),net=clamp($('m-net').value);
+  var date=$('edate-manual').value,gross=clamp($('m-gross').value),net=clamp($('m-net').value),tax=clamp($('m-tax').value)||0,ni=clamp($('m-ni').value)||0;
   if(!date){$('edate-manual').focus();return;}if(!gross||!net){showToast('Please enter gross and net pay');return;}
-  state.history.unshift({id:Date.now(),date:date,basic:0,otEntries:[],otTotal:0,gross:gross,tax:0,ni:0,net:net,note:$('m-note').value||'',manual:true});
-  $('m-gross').value='';$('m-net').value='';$('m-note').value='';
+  state.history.unshift({id:Date.now(),date:date,basic:0,otEntries:[],otTotal:0,gross:gross,tax:tax,ni:ni,net:net,note:$('m-note').value||'',manual:true});
+  $('m-gross').value='';$('m-tax').value='';$('m-ni').value='';$('m-net').value='';$('m-note').value='';
   persist();closeSheet();showToast('\u2713 Entry saved');
   if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
 });
 function clearHistory(){if(!confirm('Clear all earnings history? This cannot be undone.'))return;state.history=[];persist();renderDashboard();showToast('History cleared');}
 $('clear-btn').addEventListener('click',clearHistory);$('clear-settings-btn').addEventListener('click',clearHistory);
+$('recalc-history-btn').addEventListener('click',function(){
+  if(!state.history.length){showToast('No saved entries yet');return;}
+  if(!confirm('Recalculate tax for all saved entries using the current tax engine? Net pay will be adjusted to match \u2014 this cannot be undone.'))return;
+  recalculateAllHistory();
+  renderResults();
+  if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
+  showToast('\u2713 History recalculated');
+});
 
 /* ── DETAIL SHEET ── */
 var _did=null,_des={basic:0,allowance:12570,date:'',otEntries:[]};
@@ -1355,7 +1581,7 @@ function enterDetailEdit(){
 }
 function renderDeOtRows(){$('de-ot-list').innerHTML=_des.otEntries.length?_des.otEntries.map(function(e,i){return buildOtCard(e,i,'de-');}).join(''):'<p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 8px;">No overtime entries.</p>';}
 function updateDePreview(){
-  var r=calcWith(_des.basic,_des.otEntries,_des.allowance,state.customDeductions,state.history,getTaxWeek(todayISO()));
+  var r=calcWith(_des.basic,_des.otEntries,_des.allowance,state.customDeductions,_des.date||todayISO(),_did);
   $('dep-gross').textContent=money(r.gross);$('dep-tax').textContent=moneySgn(-r.taxW);$('dep-ni').textContent=moneySgn(-r.niRes.ni);$('dep-net').textContent=money(r.net);window._desCalc=r;
 }
 $('de-ot-list').addEventListener('input',function(e){
@@ -1380,7 +1606,7 @@ $('de-basic').addEventListener('input',function(){_des.basic=clamp(this.value);u
 $('de-date').addEventListener('input',function(){_des.date=this.value;$('dsheet-title').textContent=_des.date?fmtISO(_des.date):'Edit entry';});
 $('de-save-btn').addEventListener('click',function(){
   var idx=-1;for(var i=0;i<state.history.length;i++){if(state.history[i].id===_did){idx=i;break;}}if(idx<0)return;
-  var r=window._desCalc||calcWith(_des.basic,_des.otEntries,_des.allowance,state.customDeductions);
+  var r=window._desCalc||calcWith(_des.basic,_des.otEntries,_des.allowance,state.customDeductions,_des.date||todayISO(),_did);
   state.history[idx]={id:_did,date:_des.date||state.history[idx].date,basic:_des.basic,otEntries:JSON.parse(JSON.stringify(_des.otEntries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:state.history[idx].note||'',manual:false};
   persist();showToast('\u2713 Entry updated');
   var updated=state.history[idx];renderDetailView(updated);$('dsheet-title').textContent=fmtISO(updated.date)||'Pay entry';
@@ -1395,11 +1621,11 @@ $('dsheet-close').addEventListener('click',closeDetailSheet);$('dsheet-overlay')
 /* ── PAYSLIP ── */
 var _psSource='current';
 function getPayslipData(){
-  if(_psSource==='current'){var r=calc();return{date:todayISO(),employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r.customDedRes,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,taxW:r.taxW,taxBreakdown:r.taxRes.breakdown,niW:r.niRes.ni,niBreakdown:r.niRes.breakdown,net:r.net,allowance:state.allowance};}
+  if(_psSource==='current'){var r=calc();return{date:todayISO(),employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r.customDedRes,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,taxW:r.taxW,taxBreakdown:r.taxRes.breakdown,niW:r.niRes.ni,niBreakdown:r.niRes.breakdown,net:r.net,allowance:state.allowance,taxWeek:r.taxWeek,ytdGross:r.cumulativeGross,ytdTax:r.cumulativeTaxToDate,ytdNi:r.cumulativeNiToDate};}
   var entry=findEntry(_psSource);if(!entry)return null;
   var ot=entry.otEntries&&entry.otEntries.length?entry.otEntries:[];
-  var r2=calcWith(entry.basic||0,ot,state.allowance,state.customDeductions,state.history,getTaxWeek(entry.date||todayISO()));
-  return{date:entry.date,employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r2.customDedRes,basic:entry.basic||0,otEntries:ot,otTotal:r2.otTotal,gross:r2.gross,taxW:r2.taxW,taxBreakdown:r2.taxRes.breakdown,niW:r2.niRes.ni,niBreakdown:r2.niRes.breakdown,net:r2.net,allowance:state.allowance};
+  var r2=calcWith(entry.basic||0,ot,state.allowance,state.customDeductions,entry.date||todayISO(),entry.id);
+  return{date:entry.date,employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r2.customDedRes,basic:entry.basic||0,otEntries:ot,otTotal:r2.otTotal,gross:r2.gross,taxW:r2.taxW,taxBreakdown:r2.taxRes.breakdown,niW:r2.niRes.ni,niBreakdown:r2.niRes.breakdown,net:r2.net,allowance:state.allowance,taxWeek:r2.taxWeek,ytdGross:r2.cumulativeGross,ytdTax:r2.cumulativeTaxToDate,ytdNi:r2.cumulativeNiToDate};
 }
 function buildPayslipHTML(d,forPrint){
   if(!d)return'<p style="text-align:center;padding:24px;color:var(--ink-soft);">No data available.</p>';
@@ -1426,6 +1652,7 @@ function buildPayslipHTML(d,forPrint){
       '<div class="prn-section"><div class="prn-section-hdr">Earnings</div><table class="prn-table"><tbody>'+eRows+'</tbody><tfoot><tr class="prn-total"><td>Gross Pay</td><td>'+money(d.gross)+'</td></tr></tfoot></table></div>'+
       '<div class="prn-section"><div class="prn-section-hdr">Deductions</div><table class="prn-table"><tbody>'+dRows+'</tbody><tfoot><tr class="prn-total prn-deduction"><td>Total Deductions</td><td>\u2212 '+money(totalDed)+'</td></tr></tfoot></table></div>'+
       '<div class="prn-net"><span class="prn-net-label">NET PAY</span><span class="prn-net-val">'+money(d.net)+'</span></div>'+
+      '<div class="prn-section"><div class="prn-section-hdr">To-date totals (tax year '+TE.YEAR+')</div><table class="prn-table"><tbody><tr><td>Gross pay t/d</td><td>'+money(d.ytdGross)+'</td></tr><tr><td>Tax paid t/d</td><td>'+money(d.ytdTax)+'</td></tr><tr><td>Employee NI t/d</td><td>'+money(d.ytdNi)+'</td></tr></tbody></table></div>'+
       '<div class="prn-footer">Scottish Income Tax rates apply \u00b7 Tax year '+TE.YEAR+' \u00b7 '+twStr+' \u00b7 Personal allowance '+money(d.allowance)+'<br>NI calculated on weekly gross using Class 1 thresholds. Estimate only. Not an official payslip.</div>';
   }else{
     var empDisp=d.employerName||'WageWise';
@@ -1444,9 +1671,13 @@ function buildPayslipHTML(d,forPrint){
     d.taxBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">Tax \u2013 '+b.name+' ('+Math.round(b.rate*100)+'%)<span class="psl-row-sub">Cumulative YTD: '+money(b.amount)+'</span></span><span class="psl-row-val">\u2212 '+money(b.tax)+'</span></div>';});
     d.niBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">NI \u2013 '+b.name+'</span><span class="psl-row-val">\u2212 '+money(b.ni)+'</span></div>';});
     if(!d.taxBreakdown.length&&!d.niBreakdown.length)h+='<div class="psl-row"><span class="psl-row-label">No deductions at this income</span><span class="psl-row-val">'+money(0)+'</span></div>';
-    h+='<div class="psl-total-row deduction-total"><span class="psl-total-label">Total Deductions</span><span class="psl-total-val">\u2212 '+money(totalDed)+'</span></div>';
+h+='<div class="psl-total-row deduction-total"><span class="psl-total-label">Total Deductions</span><span class="psl-total-val">\u2212 '+money(totalDed)+'</span></div>';
     h+='<div class="psl-net"><span class="psl-net-label">NET PAY</span><span class="psl-net-val">'+money(d.net)+'</span></div>';
-    h+='<div class="psl-footer">Scottish IT \u00b7 '+TE.YEAR+' \u00b7 '+twStr+' \u00b7 Allowance '+money(d.allowance)+' \u00b7 Estimate only.</div>';
+    h+='<div class="psl-section-hdr">To-date totals (tax year '+TE.YEAR+')</div>';
+    h+='<div class="psl-row"><span class="psl-row-label">Gross pay t/d</span><span class="psl-row-val">'+money(d.ytdGross)+'</span></div>';
+    h+='<div class="psl-row"><span class="psl-row-label">Tax paid t/d</span><span class="psl-row-val">'+money(d.ytdTax)+'</span></div>';
+    h+='<div class="psl-row"><span class="psl-row-label">Employee NI t/d</span><span class="psl-row-val">'+money(d.ytdNi)+'</span></div>';
+    h+='<div class="psl-footer">Scottish IT \u00b7 '+TE.YEAR+' \u00b7 '+twStr+' \u00b7 Allowance '+money(d.allowance)+' \u2014 Estimate only.</div>';
     return h;
   }
 }
@@ -1521,6 +1752,9 @@ renderBandTable();
 renderResults();
 applyTheme();
 showScreen('calculator');
+['ytd-gross','ytd-tax','ytd-ni','ytd-week'].forEach(function(id){
+  var el=$(id);if(el)el.addEventListener('input',renderResults);
+});
 })();
 </script>
 </body>

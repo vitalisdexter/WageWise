@@ -110,6 +110,11 @@ Notes:
 
 - Enter basic pay (defaults from Settings) + one or more OT entries (rate + hours or shift times) + any deductions → shows computed gross, tax, NI, net
 - Save to history
+- **YTD Override (Payslip Input):** Collapsible drawer to enter YTD Gross, Tax, NI, and Tax Week from your latest payslip. Overrides history-derived cumulative figures so the calculator matches your real PAYE position.
+- **Overtime Sweet Spot Calculator:** Enter an hourly OT rate → see a table of extra hours vs. keep-rate. Shows exactly where your keep-rate steps down (crossing Scottish tax bands) or up (clearing NI UEL).
+- **YTD Summary Line:** "Year to date: gross X · tax Y · NI Z" displayed below net pay
+- **Tax Week Label:** Ledger shows "Tax · Week N" instead of "Tax · N bands"
+- **Cumulative Breakdown Table:** Tax breakdown shows "YTD amount" / "YTD tax" columns
 
 ### Dashboard
 
@@ -126,13 +131,16 @@ Notes:
 
 - Professional-looking payslip layout — employer name, employee name, tax week, full breakdown of pay/deductions
 - Print and PDF export
+- **YTD Totals Section:** Both print and screen versions show "To-date totals (tax year...)" with YTD Gross, Tax, Employee NI
+- Tax breakdown rows show "Cumulative YTD" amounts per band
 
 ### Settings
 
 - **Basic pay** (persistent constant used as calculator default)
 - **Employer/employee name** fields
 - **Management of deduction presets** (create/edit/delete named groups of deductions, apply in one tap on the Calculator)
-- Tax engine information display
+- **Recalculate History Button:** One-click re-run of the cumulative engine on all saved entries. Adjusts net pay by exactly the tax correction. Safe to run anytime after tax engine updates.
+- Tax engine information display (with note about cumulative PAYE)
 - Data: all data stored locally on this device only
 - PWA: install app to home screen
 
@@ -153,7 +161,7 @@ When this prompt is first given to a new AI (with or without the actual code att
 
 ## Technical Notes
 
-- **Tax engine:** Scottish cumulative PAYE using tax week number (starting 6 April) and YTD history from saved earnings
+- **Tax engine:** Scottish cumulative PAYE using tax week number (starting 6 April) and YTD history from saved earnings, with optional YTD override from payslip
 - **NI engine:** Per-period calculation using UK Class 1 thresholds (Primary Threshold £242/week, Upper Earnings Limit £967/week)
 - **Overtime:** Multiple entries per week, each with a rate; hours entered manually or via shift start/end times (including overnight/midnight-crossing shifts)
 - **Persistence:** All data in `window.localStorage` under key `wagewise-v5`
@@ -161,12 +169,30 @@ When this prompt is first given to a new AI (with or without the actual code att
 - **Theme:** Light/dark toggle, accent colour picker (pine, indigo, plum, slate)
 - **Print:** Optimized for printing payslips with proper formatting
 
+## Sweet Spot Engine Details
+
+The Overtime Sweet Spot calculator analyses where your marginal keep-rate changes:
+
+- **Tax band crossings:** Uses scaled bands (band width × tax week / 52) to find where extra OT hours push you into the next Scottish rate
+- **NI thresholds:** Detects crossing of Primary Threshold (£242/week) and Upper Earnings Limit (£967/week)
+- **Blended rate:** Averages your current OT rates for modelling, or uses the last entered rate
+- **Output:** Table of hour ranges with keep-rate (p/£1), tax band, and NI regime
+
+## Recalculate History
+
+The "Recalculate tax on saved history" button in Settings → Tax engine:
+- Re-runs the cumulative engine on all non-manual history entries in date order
+- For each entry: computes correct tax using current engine, compares to stored tax
+- Adjusts net pay by exactly the tax difference (preserves any custom deductions baked into net)
+- Use after tax engine updates or if you suspect drift between saved entries and current logic
+
 ## File Structure
 
 ```
 wagewise/
-├── wagewise.html    (main application — 1551 lines)
+├── wagewise.html    (main application — ~1760 lines)
 ├── package-lock.json
+├── index.html       (deployed version on Cloudflare)
 └── README.md        (this file)
 ```
 
