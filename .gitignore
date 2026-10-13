@@ -1,2 +1,5 @@
 # Ignore payslip image files
 payslips/
+node_modules/
+.wrangler/
+test-results/

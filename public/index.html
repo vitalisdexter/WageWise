@@ -416,6 +416,24 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .preset-ded-row .ded-val-tag{font-size:12.5px;}
 .active-note{font-size:12px;color:var(--pine);font-weight:600;background:color-mix(in srgb,var(--pine) 10%,transparent);border:1px solid var(--pine);border-radius:8px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .active-note-clear{font-size:11.5px;color:var(--pine);font-weight:700;border:none;background:none;cursor:pointer;text-decoration:underline;white-space:nowrap;}
+
+/* ── Sweet Spot ── */
+.sweet-spot-headline{display:flex;flex-direction:column;gap:4px;}
+.sweet-spot-headline .basic-display-lbl{font-size:11px;}
+.sweet-spot-headline .basic-display-val{font-size:14.5px;font-weight:600;line-height:1.5;}
+.sweet-spot-table{margin-top:12px;}
+.sweet-spot-table td{font-size:11.5px;}
+.sweet-spot-range{font-family:var(--mono);font-weight:700;}
+.sweet-spot-keep{font-family:var(--mono);font-weight:800;color:var(--accent-ink);}
+.sweet-spot-why{font-size:11px;color:var(--ink-soft);}
+.sweet-spot-empty{text-align:center;padding:16px;color:var(--ink-soft);font-size:13px;}
+
+/* ── YTD Override ── */
+.ytd-override{background:var(--stripe);border:1.5px solid var(--pine);border-radius:10px;padding:14px;margin:12px 0;}
+.ytd-override-title{font-size:11.5px;font-weight:700;color:var(--accent-ink);margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;}
+.ytd-override-row{display:flex;gap:8px;margin-bottom:10px;}
+.ytd-override-row .input-wrap{flex:1;}
+.ytd-override-note{font-size:11px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -448,15 +466,48 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
             <button type="button" class="link-btn" id="add-ot">+ Add overtime entry</button>
           </div>
         </section>
-        <details class="settings">
-          <summary>Tax &amp; National Insurance</summary>
+        <div class="field"><label for="pay-date">Pay date</label><input type="date" id="pay-date" min="2025-04-06" max="2027-04-05"></div>
+        <p class="note" id="calc-status" role="status"></p>
+<details class="settings">
+          <summary>Tax & National Insurance</summary>
           <div class="settings-body">
             <div class="field" style="margin-bottom:10px;">
-              <label for="allowance">Personal allowance (yearly)</label>
+              <label for="allowance">Scottish suffix-code allowance (S1257L = £12,570)</label>
               <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="1" min="0" id="allowance" value="12570"></div>
             </div>
             <p class="note">Using <strong id="tax-year-lbl">2026/27</strong> Scottish Income Tax bands and UK NI weekly thresholds.</p>
             <div class="band-table"><table><thead><tr><th>Band</th><th>Rate</th></tr></thead><tbody id="band-tbody"></tbody></table></div>
+          </div>
+        </details>
+        <details class="settings" id="ytd-override-details">
+          <summary>YTD override (from payslip)</summary>
+          <div class="settings-body">
+            <p class="note">Enter totals BEFORE the pay being calculated, from the same tax year. To reproduce a payslip, subtract that payslip's current gross, tax and NI from its YTD totals. Do not enter annual projections.</p>
+            <div class="ytd-override">
+              <p class="ytd-override-title">Payslip YTD totals (tax year to date)</p>
+              <div class="ytd-override-row">
+                <div class="input-wrap"><span class="prefix">&pound;</span><input aria-label="Prior taxable gross YTD" type="number" inputmode="decimal" step="0.01" min="0" id="ytd-gross" placeholder="Prior taxable gross YTD"></div>
+                <div class="input-wrap"><span class="prefix">&pound;</span><input aria-label="Prior tax paid YTD" type="number" inputmode="decimal" step="0.01" id="ytd-tax" placeholder="Prior tax paid YTD"></div>
+              </div>
+              <div class="ytd-override-row">
+                <div class="input-wrap"><span class="prefix">&pound;</span><input aria-label="Prior NI paid YTD (optional)" type="number" inputmode="decimal" step="0.01" min="0" id="ytd-ni" placeholder="Prior NI YTD (optional)"></div>
+                <div class="input-wrap"><input aria-label="Prior tax week" type="number" inputmode="numeric" step="1" min="0" max="52" id="ytd-week" placeholder="Prior tax week (0–52)"></div>
+              </div>
+              <label><input type="checkbox" id="ytd-enabled"> Use these prior YTD totals</label>
+              <p class="ytd-override-note">The prior week must be one less than the pay date's tax week. Without this, the calculator uses a clearly labelled Week 1 estimate; saved estimates are not treated as real payroll records.</p>
+            </div>
+          </div>
+        </details>
+        <details class="settings" id="sweet-spot-details">
+          <summary>Overtime sweet spot</summary>
+          <div class="settings-body">
+            <p class="note">Compare extra overtime using the same PAYE, NI and post-tax deductions as the calculator. Figures are estimates, not a recommended limit on working hours; benefits and student loans are not modelled.</p>
+            <div class="field" style="margin-top:12px;margin-bottom:10px;">
+              <label for="ss-rate">Modelling further hours at (&pound;/hr)</label>
+              <div class="input-wrap sm"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="ss-rate" value="0"></div>
+            </div>
+            <div class="basic-display" id="ss-headline" style="display:block;"></div>
+            <div class="band-table sweet-spot-table" style="margin-top:12px;"><table><thead><tr><th>Extra hours</th><th>You keep</th><th>Why</th></tr></thead><tbody id="ss-tbody"></tbody></table></div>
           </div>
         </details>
         <section class="ledger-wrap">
@@ -470,13 +521,14 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
             <div id="ledger-custom-ded"></div>
           </div>
           <div class="stamp-wrap"><div class="stamp" id="stamp"><div class="stamp-ring"><span class="stamp-label">Net pay</span><span class="stamp-value" id="out-net">&pound;0.00</span></div></div></div>
+          <p class="note" id="ytd-line" style="text-align:center;margin:2px 0 0;"></p>
           <button type="button" class="link-btn center" id="breakdown-toggle">Show full breakdown</button>
           <div id="breakdown-area" hidden>
-            <p class="mini-table-cap">Tax bands (annual)</p>
-            <div class="mini-table"><table><thead><tr><th>Band</th><th>Amount</th><th>Tax</th></tr></thead><tbody id="tax-bd"></tbody></table></div>
+            <p class="mini-table-cap">PAYE liability for the calculation basis shown above</p>
+            <div class="mini-table"><table><thead><tr><th>Band</th><th>YTD amount</th><th>YTD tax</th></tr></thead><tbody id="tax-bd"></tbody></table></div>
             <p class="mini-table-cap">National Insurance (weekly)</p>
             <div class="mini-table"><table><thead><tr><th>Band</th><th>Amount</th><th>NI</th></tr></thead><tbody id="ni-bd"></tbody></table></div>
-            <p class="mini-table-cap">Weekly / Monthly / Annual</p>
+            <p class="mini-table-cap">Weekly / Monthly / Annual — simple projections, not payroll calculations</p>
             <div class="mini-table"><table>
               <thead><tr><th>&nbsp;</th><th>Weekly</th><th>Monthly</th><th>Annual</th></tr></thead>
               <tbody>
@@ -491,7 +543,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
         <div class="save-cta"><button type="button" class="primary-btn" id="save-pay-btn">&#10003; Save this week&rsquo;s pay</button></div>
         <div class="actions"><button type="button" class="ghost-btn" id="reset-btn">Reset to example figures</button></div>
       </form>
-      <footer class="foot"><p>Estimate only. Income Tax annualises your gross pay (&times;52) across the <span id="tax-year-lbl2">2026/27</span> Scottish bands.</p></footer>
+      <footer class="foot"><p>Estimate only. Weekly Scottish PAYE (<span id="tax-year-lbl2">2026/27</span>), NI category A. Complete prior YTD totals are needed to reproduce cumulative payroll. Student loans, salary sacrifice and other NI categories are not supported.</p></footer>
     </section>
 
     <!-- ═══ DASHBOARD ═══ -->
@@ -621,7 +673,10 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
       </div>
       <div class="sblock">
         <h3>Tax engine</h3>
-        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0;">Using <strong id="tax-year-lbl3">2026/27</strong> Scottish Income Tax bands and UK NI thresholds.</p>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0 0 12px;">Using <strong id="tax-year-lbl3">2026/27</strong> Scottish weekly PAYE and category A NI. Cumulative calculations require complete prior YTD totals. Otherwise results are Week 1 estimates.</p>
+        <button type="button" class="ghost-btn" id="recalc-history-btn">Export backup of saved data</button>
+        <p class="note">Saved figures are preserved. Editing a calculated entry creates a fresh estimate; manual payroll entries are never recalculated. Deductions here are post-tax only, not salary sacrifice or net-pay pension relief.</p>
+        <p style="font-size:11.5px;color:var(--ink-soft);line-height:1.5;margin:8px 0 0;">Backups contain personal financial data. Store them securely. Clearing browser data or changing device/origin does not transfer your history.</p>
       </div>
       <div class="sblock">
         <h3>Data</h3>
@@ -685,7 +740,10 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
   <div class="sbody" id="sbody-manual" hidden>
     <div class="field"><label for="edate-manual">Pay period ending</label><div class="input-wrap"><input type="date" id="edate-manual"></div></div>
     <div class="field"><label for="m-gross">Gross pay</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-gross" placeholder="0.00"></div></div>
+    <div class="field"><label for="m-tax">Tax paid (optional)</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" id="m-tax" placeholder="0.00"></div></div>
+    <div class="field"><label for="m-ni">NI paid (optional)</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-ni" placeholder="0.00"></div></div>
     <div class="field"><label for="m-net">Net pay (take-home)</label><div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="m-net" placeholder="0.00"></div></div>
+    <p class="note" style="margin:-4px 0 10px;">Backfilling your position from a real payslip rather than logging one week? Use its <strong>to-date</strong> totals here (gross/tax/NI paid so far this tax year) so future weeks calculate correctly \u2014 the calculator needs your real year-to-date figures to work out cumulative tax.</p>
     <div class="field"><label for="m-note">Note (optional)</label><div class="input-wrap"><input type="text" id="m-note" placeholder="e.g. Bank holiday week"></div></div>
     <button type="button" class="primary-btn" id="save-manual-btn">Save entry</button>
   </div>
@@ -721,65 +779,110 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 <div class="toast" id="toast"></div>
 <noscript><p style="text-align:center;font-family:sans-serif;">WageWise needs JavaScript enabled.</p></noscript>
 <script>
+/* Weekly Scottish suffix-code PAYE; HMRC PAYErout v24, sections 3.3 and 4.
+   No personal payslip information is included in this module. */
+(function(root,factory){
+  if(typeof module==='object'&&module.exports)module.exports=factory();
+  else root.Payroll=factory();
+})(typeof globalThis!=='undefined'?globalThis:this,function(){
+  'use strict';
+  const round=n=>Math.round((n+Number.EPSILON)*100)/100;
+  const down=(n,p=100)=>Math.floor(n*p+1e-7)/p;
+  const valid=n=>typeof n==='number'&&Number.isFinite(n);
+  function year(iso){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)||!Number.isFinite(Date.parse(iso))||new Date(iso).toISOString().slice(0,10)!==iso)throw Error('Choose a valid pay date.');
+    return Number(iso.slice(0,4))-(iso.slice(5)<'04-06'?1:0);
+  }
+  function week(iso){return Math.floor((Date.parse(iso)-Date.UTC(year(iso),3,6))/604800000)+1;}
+  function bands(y){
+    if(y!==2025&&y!==2026)throw Error('Supported tax years: 2025/26 and 2026/27.');
+    return (y===2026?[3967,12989,14136,31338,62710,Infinity]:[2827,12094,16171,31338,62710,Infinity]).map((width,i)=>({width,rate:[.19,.20,.21,.42,.45,.48][i],name:['Starter','Basic','Intermediate','Higher','Advanced','Top'][i]+' rate'}));
+  }
+  function freePay(allowance){
+    if(!valid(allowance)||allowance<0||allowance>9999990||allowance%10!==0)throw Error('Enter the numeric Scottish tax-code allowance in multiples of £10 (S1257L = £12,570).');
+    const code=allowance/10;
+    if(!code)return 0;
+    const q=Math.floor((code-1)/500),remainder=(code-1)%500+1;
+    return (q*9616+Math.ceil(down((remainder*10+9)/52,10000)*100-1e-7))/100;
+  }
+  function liability(gross,n,allowance,y){
+    const bs=bands(y),free=round(freePay(allowance)*n),un=round(Math.max(0,gross-free)),tn=Math.floor(un);
+    let cumulativeWidth=0,cumulativeTax=0,previousThreshold=0,previousTax=0;
+    let tax=0,selected=bs[0];
+    for(const b of bs){
+      cumulativeWidth+=b.width;
+      const threshold=down(cumulativeWidth*n/52,10000);
+      if(un<=Math.ceil(threshold)||!Number.isFinite(b.width)){
+        selected=b;tax=down(Math.max(0,previousTax+(tn-previousThreshold)*b.rate));break;
+      }
+      cumulativeTax+=b.width*b.rate;
+      previousThreshold=threshold;previousTax=down(cumulativeTax*n/52,10000);
+    }
+    return {tax,freePay:free,taxable:tn,rate:selected.rate,breakdown:un>0?[{name:'PAYE total (rounded; top band '+selected.name+')',rate:selected.rate,amount:tn,tax}]:[]};
+  }
+  function ni(gross){
+    const main=round(Math.max(0,Math.min(gross,967)-242)*.08),upper=round(Math.max(0,gross-967)*.02);
+    return {ni:round(main+upper),breakdown:[{name:'8% (£242–£967)',amount:Math.max(0,Math.min(gross,967)-242),ni:main},{name:'2% above £967',amount:Math.max(0,gross-967),ni:upper}].filter(b=>b.amount>0)};
+  }
+  function calculate({gross,date,allowance=12570,prior=null,deductions=[]}){
+    if(!valid(gross)||gross<0||gross>10000000)throw Error('Pay must be a finite amount between £0 and £10,000,000.');
+    const y=year(date),w=week(date);bands(y);gross=round(gross);
+    let mode='Week 1 estimate — complete prior YTD figures not supplied';
+    if(prior){
+      if(!valid(prior.gross)||prior.gross<0||!valid(prior.tax)||!Number.isInteger(prior.week)||prior.week!==w-1)throw Error('YTD figures must cover all pay through the week immediately before this pay date.');
+      if(prior.year!==y)throw Error('YTD figures must belong to the selected tax year.');
+      if(prior.ni!=null&&(!valid(prior.ni)||prior.ni<0))throw Error('YTD NI must be zero or a positive amount.');
+      mode='Cumulative PAYE — using supplied prior YTD';
+    }
+    if(w===53)mode='Week 53 — extra weekly allowance (Week 1 basis)';
+    const cumulative=prior&&w<=52,base=cumulative?prior.gross:0,paid=cumulative?prior.tax:0;
+    const due=liability(round(base+gross),cumulative?w:1,allowance,y);
+    const tax=round(Math.min(down(gross*.5),round(due.tax-paid))),nr=ni(gross);
+    const breakdown=deductions.map(d=>{
+      if(!valid(d.value)||d.value<0||!['percent','amount'].includes(d.type))throw Error('Invalid deduction.');
+      return {...d,amount:round(d.type==='percent'?gross*d.value/100:d.value)};
+    });
+    const total=round(breakdown.reduce((s,d)=>s+d.amount,0));
+    return {gross,taxW:tax,taxRes:due,niRes:nr,customDedRes:{total,breakdown},net:round(gross-tax-nr.ni-total),taxWeek:w,taxYear:y,mode,prior,
+      cumulativeGross:prior?round(prior.gross+gross):null,cumulativeTaxToDate:prior?round(prior.tax+tax):null,cumulativeNiToDate:prior&&prior.ni!=null?round(prior.ni+nr.ni):null};
+  }
+  return {round,year,week,bands,freePay,liability,ni,calculate};
+});
+
+</script>
+<script>
 (function(){
 'use strict';
 var $=function(id){return document.getElementById(id);};
 
-/* ── TAX ENGINE ── */
-var TE=(function(){
-  var YEAR='2026/27';
-  var BANDS=[
-    {name:'Starter rate',rate:.19,width:3967},
-    {name:'Basic rate',rate:.20,width:12989},
-    {name:'Intermediate rate',rate:.21,width:14136},
-    {name:'Higher rate',rate:.42,width:31338},
-    {name:'Advanced rate',rate:.45,width:50140},
-    {name:'Top rate',rate:.48,width:Infinity}
-  ];
-  var NI={pt:242,uel:967,main:.08,upper:.02};
-  function pa(g,b){if(g<=100000)return b;return Math.max(0,b-Math.floor((g-100000)/2));}
-  function tax(ga,bp){
-    var p=pa(ga,bp),rem=Math.max(0,ga-p),t=0,bd=[];
-    for(var i=0;i<BANDS.length&&rem>0;i++){
-      var a=Math.min(rem,BANDS[i].width);
-      if(a>0){var bt=a*BANDS[i].rate;t+=bt;bd.push({name:BANDS[i].name,rate:BANDS[i].rate,amount:a,tax:bt});}
-      rem-=a;
-    }
-    return{tax:t,pa:p,breakdown:bd};
-  }
-  function ni(gw){
-    var n=0,bd=[];
-    if(gw>NI.pt){var ma=Math.min(gw,NI.uel)-NI.pt;var mn=ma*NI.main;n+=mn;bd.push({name:'8% (PT\u2013UEL)',amount:ma,ni:mn});}
-    if(gw>NI.uel){var ua=gw-NI.uel;var un=ua*NI.upper;n+=un;bd.push({name:'2% (above UEL)',amount:ua,ni:un});}
-    return{ni:n,breakdown:bd};
-  }
-  return{YEAR:YEAR,BANDS:BANDS,tax:tax,ni:ni};
-})();
+/* Payroll parameters are selected by pay date, not today's calendar year. */
+var TE={YEAR:'2026/27',BANDS:Payroll.bands(2026)};
+function taxYearStartFor(iso){return new Date(Payroll.year(iso),3,6);}
 
 /* ── STORAGE ── */
 var SK='wagewise-v5';
 function loadPersisted(){try{var r=window.localStorage.getItem(SK);return r?JSON.parse(r):null;}catch(e){return null;}}
-var _st;function persist(){clearTimeout(_st);_st=setTimeout(function(){try{window.localStorage.setItem(SK,JSON.stringify(state));}catch(e){}},350);}
+function persist(){
+  try{window.localStorage.setItem(SK,JSON.stringify(state));}
+  catch(e){showToast('Storage unavailable or full. Export a backup before closing.');}
+}
 
 /* ── HELPERS ── */
 var GBP=new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'});
-function money(n){return GBP.format(n);}
+function money(n){return n==null?'Not supplied':GBP.format(n);}
+function escapeHTML(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function moneySgn(n){var v=Math.round(n*100)/100;return(v<0?'\u2212 ':'')+GBP.format(Math.abs(v));}
-function clamp(v,lo){v=parseFloat(v);return isNaN(v)?0:Math.max(lo||0,v);}
+function clamp(v,lo){v=parseFloat(v);return !Number.isFinite(v)?0:Math.max(lo||0,v);}
 function p2(n){return n<10?'0'+n:''+n;}
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
 function fmtISO(iso){if(!iso)return'';var d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
 function fmtDayShort(iso){if(!iso)return'';var d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
-function fmtHrs(h){var hrs=Math.floor(h);var m=Math.round((h-hrs)*60);return hrs+'h '+m+'m';}
+function fmtHrs(h){var mins=Math.round(h*60);return Math.floor(mins/60)+'h '+mins%60+'m';}
 function fmtHrsShort(h){return(Number((Math.round(h*100)/100).toFixed(2)).toString())+' hrs';}
 
 /* ── TAX WEEK ── */
 function getTaxWeek(iso){
-  if(!iso)return null;
-  var d=new Date(iso+'T00:00:00');
-  var y=d.getFullYear(),mo=d.getMonth()+1,day=d.getDate();
-  var tys=(mo>4||(mo===4&&day>=6))?new Date(y,3,6):new Date(y-1,3,6);
-  return Math.floor(Math.floor((d-tys)/(24*60*60*1000))/7)+1;
+  try{return Payroll.week(iso);}catch(e){return null;}
 }
 
 /* ── SHIFT ── */
@@ -788,7 +891,7 @@ function shiftResult(e){
   var sp=e.startTime.split(':'),ep=e.endTime.split(':');
   var s=parseInt(sp[0],10)*60+parseInt(sp[1],10);
   var en=parseInt(ep[0],10)*60+parseInt(ep[1],10);
-  var d=en-s,ov=false;if(d<=0){d+=1440;ov=true;}
+  var d=en-s,ov=false;if(d<0){d+=1440;ov=true;}
   d-=(parseInt(e.breakMins,10)||0);
   return{hours:Math.max(0,d/60),overnight:ov};
 }
@@ -796,7 +899,7 @@ function effHours(e){if(e.mode==='shift'){var r=shiftResult(e);return r?r.hours:
 
 /* ── STATE ── */
 var DEF={
-  basic:549.66,
+  basic:549.65,
   otEntries:[{mode:'manual',hours:5,rate:14.96,date:'',startTime:'',endTime:'',breakMins:0}],
   allowance:12570,theme:'light',accent:'pine',history:[],employeeName:'',employerName:'',customDeductions:[],deductionPresets:[],activePresetId:null
 };
@@ -806,46 +909,34 @@ var state=JSON.parse(JSON.stringify(DEF));
   if(typeof s.basic==='number')state.basic=s.basic;
   if(typeof s.allowance==='number')state.allowance=s.allowance;
   if(s.theme)state.theme=s.theme;if(s.accent)state.accent=s.accent;
-  if(Array.isArray(s.otEntries)&&s.otEntries.length)state.otEntries=s.otEntries;
+  if(Array.isArray(s.otEntries))state.otEntries=s.otEntries;
   if(Array.isArray(s.history))state.history=s.history;
   if(typeof s.employeeName==='string')state.employeeName=s.employeeName;
   if(typeof s.employerName==='string')state.employerName=s.employerName;
   if(Array.isArray(s.customDeductions))state.customDeductions=s.customDeductions;
   if(Array.isArray(s.deductionPresets))state.deductionPresets=s.deductionPresets;
   if(s.activePresetId!==undefined)state.activePresetId=s.activePresetId;
+  if(s.payDate)state.payDate=s.payDate;
+  if(s.ytd)state.ytd=s.ytd;
 })();
 
-/* ── CUSTOM DEDUCTIONS CALC ── */
-function applyCustomDed(gross,deds){
-  var total=0,bd=[];
-  (deds||[]).forEach(function(d){
-    var amt=d.type==='percent'?gross*d.value/100:d.value;
-    total+=amt;bd.push({name:d.name,amount:amt,type:d.type,value:d.value});
-  });
-  return{total:Math.round((total+Number.EPSILON)*100)/100,breakdown:bd};
+function roundPence(value){return Payroll.round(value);}
+function currentPrior(date){
+  var y=state.ytd;
+  if(!y||!y.enabled)return null;
+  if(y.gross===''||y.tax===''||y.week==='')throw Error('Complete prior YTD gross, tax and week, or turn off the YTD override.');
+  return {gross:Number(y.gross),tax:Number(y.tax),ni:y.ni===''?null:Number(y.ni),week:Number(y.week),year:y.year};
 }
-
-function roundPence(value){return Math.round((value+Number.EPSILON)*100)/100;}
-
-/* ── CALCULATION ── */
-function calcWith(basic,otEntries,allowance,customDeds,history,taxWeek){
-  var otTotal=otEntries.reduce(function(s,e){return s+effHours(e)*e.rate;},0);
-  var gross=basic+otTotal;
-  var taxRes=TE.tax(gross*52,allowance);
-  taxRes.tax=roundPence(taxRes.tax);
-  var taxW=roundPence(taxRes.tax/52);
-  var niRes=TE.ni(gross);
-  niRes.ni=roundPence(niRes.ni);
-  var cdr=applyCustomDed(gross,customDeds||[]);
-  var net=roundPence(gross-taxW-niRes.ni-cdr.total);
-  return{otTotal:otTotal,gross:gross,taxRes:taxRes,taxW:taxW,niRes:niRes,customDedRes:cdr,net:net};
+function calcWith(basic,otEntries,allowance,customDeds,payDateISO,excludeHistoryId,prior){
+  var date=payDateISO||state.payDate||todayISO();
+  var otTotal=roundPence(otEntries.reduce(function(s,e){return s+roundPence(effHours(e)*e.rate);},0));
+  var r=Payroll.calculate({gross:roundPence(basic+otTotal),date:date,allowance:allowance,prior:prior===undefined?null:prior,deductions:customDeds||[]});
+  r.otTotal=otTotal;return r;
 }
-
-function breakdownAmount(bd){
-  var a=0;bd.forEach(function(b){a+=b.amount;});return a;
+function calc(){var date=state.payDate||todayISO();return calcWith(state.basic,state.otEntries,state.allowance,state.customDeductions,date,null,currentPrior(date));}
+function guardedCalc(fn){
+  try{return fn();}catch(e){$('calc-status').textContent=e.message;return null;}
 }
-
-function calc(){return calcWith(state.basic,state.otEntries,state.allowance,state.customDeductions,state.history,getTaxWeek(todayISO()));}
 
 /* ── GROUPED OT ── */
 function groupOtByRate(otEntries){
@@ -910,8 +1001,19 @@ function renderOtRows(){
 
 /* ── RENDER RESULTS ── */
 var lastNet=null;
+var _ssRateTouched=false;
 function renderResults(){
-  var r=calc();
+  persist();
+  var r=guardedCalc(calc);
+  $('save-pay-btn').disabled=!r;
+  if(!r){
+    ['out-gross','out-tax','out-ni','out-net','ytd-line','tax-bd','ni-bd','ss-tbody','ss-headline'].forEach(function(id){$(id).textContent='—';});
+    return;
+  }
+  $('calc-status').textContent=r.mode+' · weekly Scottish suffix code / NI category A';
+  TE.YEAR=r.taxYear+'/'+String(r.taxYear+1).slice(2);TE.BANDS=Payroll.bands(r.taxYear);
+  ['tax-year-lbl','tax-year-lbl2','tax-year-lbl3'].forEach(function(id){$(id).textContent=TE.YEAR;});
+  renderBandTable();
   $('out-basic').textContent=money(state.basic);
   $('ledger-ot').innerHTML=state.otEntries.map(function(e){
     var hrs=effHours(e);
@@ -920,22 +1022,42 @@ function renderResults(){
     return '<div class="line"><span class="line-label">'+(sub?'Overtime':'Overtime \u00b7 '+fmtHrsShort(hrs)+' @ '+money(e.rate))+sub+'</span><span class="line-value">'+money(hrs*e.rate)+'</span></div>';
   }).join('');
   $('out-gross').textContent=money(r.gross);
-  $('out-tax-lbl').textContent='Tax \u00b7 '+r.taxRes.breakdown.length+(r.taxRes.breakdown.length===1?' band':' bands');
+  $('out-tax-lbl').textContent='Tax \u00b7 Week '+r.taxWeek;
   $('out-tax').textContent=moneySgn(-r.taxW);
   $('out-ni').textContent=moneySgn(-r.niRes.ni);
   var dl=$('ledger-custom-ded');
-  if(dl){dl.innerHTML=r.customDedRes.breakdown.map(function(d){var desc=d.name+(d.type==='percent'?' ('+d.value+'%)':' (fixed)');return'<div class="line line-deduction"><span class="line-label">'+desc+'</span><span class="line-value">'+moneySgn(-d.amount)+'</span></div>';}).join('');}
+  if(dl){dl.innerHTML=r.customDedRes.breakdown.map(function(d){var desc=escapeHTML(d.name)+(d.type==='percent'?' ('+d.value+'%)':' (fixed)');return'<div class="line line-deduction"><span class="line-label">'+desc+'</span><span class="line-value">'+moneySgn(-d.amount)+'</span></div>';}).join('');}
   $('out-net').textContent=money(r.net);
+  $('ytd-line').textContent=r.cumulativeGross==null?'YTD unavailable — supply prior totals for cumulative PAYE.':'Year to date: gross '+money(r.cumulativeGross)+' \u00b7 tax '+money(r.cumulativeTaxToDate)+' \u00b7 NI '+money(r.cumulativeNiToDate);
   $('tax-bd').innerHTML=r.taxRes.breakdown.map(function(b){return'<tr><td>'+b.name+' ('+Math.round(b.rate*100)+'%)</td><td>'+money(b.amount)+'</td><td>'+money(b.tax)+'</td></tr>';}).join('')||'<tr><td colspan="3">No tax due.</td></tr>';
   $('ni-bd').innerHTML=r.niRes.breakdown.map(function(b){return'<tr><td>'+b.name+'</td><td>'+money(b.amount)+'</td><td>'+money(b.ni)+'</td></tr>';}).join('')||'<tr><td colspan="3">No NI due.</td></tr>';
   [['g',r.gross],['t',-r.taxW],['n',-r.niRes.ni],['net',r.net]].forEach(function(p){var k=p[0],w=p[1];$('tw-'+k).textContent=moneySgn(w);$('tm-'+k).textContent=moneySgn(w*52/12);$('ta-'+k).textContent=moneySgn(w*52);});
   if(lastNet!==null&&Math.abs(lastNet-r.net)>0.0001){var stamp=$('stamp');stamp.classList.remove('pulse');void stamp.offsetWidth;stamp.classList.add('pulse');}
   lastNet=r.net;persist();
+  renderSweetSpot();
 }
 function renderBandTable(){
-  var floor=state.allowance,rows='<tr><td>Personal allowance</td><td>0%</td></tr>';
-  TE.BANDS.forEach(function(b){var to=b.width===Infinity?null:floor+b.width;rows+='<tr><td>'+b.name+(to?' to \u00a3'+Math.round(to).toLocaleString('en-GB'):' and above')+'</td><td>'+Math.round(b.rate*100)+'%</td></tr>';if(to)floor=to;});
+  var floor=0,rows='<tr><td>Code allowance (free pay uses HMRC rounding)</td><td>'+money(state.allowance)+'</td></tr>';
+  TE.BANDS.forEach(function(b){floor+=b.width;rows+='<tr><td>'+b.name+' — taxable pay '+(isFinite(floor)?'up to '+money(floor):'above £125,140')+'</td><td>'+Math.round(b.rate*100)+'%</td></tr>';});
   $('band-tbody').innerHTML=rows;
+}
+function blendedOtRate(){
+  var hours=0,pay=0;state.otEntries.forEach(function(e){var h=effHours(e);hours+=h;pay+=h*e.rate;});
+  return hours?pay/hours:14.96;
+}
+function renderSweetSpot(){
+  if(!_ssRateTouched)$('ss-rate').value=blendedOtRate().toFixed(2);
+  var rate=clamp($('ss-rate').value),base=guardedCalc(calc);
+  if(!base||!rate){$('ss-tbody').textContent='Enter a valid hourly rate.';return;}
+  $('ss-headline').textContent='Additional net pay compared with your current entries. Same tax basis and deductions; rounding included.';
+  $('ss-tbody').innerHTML=[1,5,10,20,40].map(function(hours){
+    var r=Payroll.calculate({gross:roundPence(base.gross+hours*rate),date:state.payDate||todayISO(),allowance:state.allowance,prior:base.prior,deductions:state.customDeductions});
+    return '<tr><td>'+hours+' hrs</td><td>'+money(roundPence(r.net-base.net))+'</td><td>'+Math.round((r.net-base.net)/(hours*rate)*100)+'% of extra gross</td></tr>';
+  }).join('');
+}
+function exportBackup(){
+  var blob=new Blob([JSON.stringify({format:'wagewise-backup',version:1,exportedAt:new Date().toISOString(),state:state},null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='wagewise-backup-'+todayISO()+'.json';a.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);
 }
 
 /* ── OT EVENT DELEGATION ── */
@@ -962,11 +1084,14 @@ $('add-ot').addEventListener('click',function(){
   renderOtRows();renderResults();
 });
 $('allowance').addEventListener('input',function(){state.allowance=clamp(this.value);renderResults();renderBandTable();});
+$('ss-rate').addEventListener('input',function(){_ssRateTouched=true;renderSweetSpot();});
 $('breakdown-toggle').addEventListener('click',function(){var a=$('breakdown-area'),h=a.hasAttribute('hidden');if(h){a.removeAttribute('hidden');this.textContent='Hide full breakdown';}else{a.setAttribute('hidden','');this.textContent='Show full breakdown';}});
 $('reset-btn').addEventListener('click',function(){
   state.basic=DEF.basic;state.allowance=DEF.allowance;
   state.otEntries=JSON.parse(JSON.stringify(DEF.otEntries));
   $('allowance').value=state.allowance;
+  _ssRateTouched=false;state.ytd=null;$('ytd-enabled').checked=false;
+  ['gross','tax','ni','week'].forEach(function(k){$('ytd-'+k).value='';});
   syncBasicDisplay();renderOtRows();renderResults();
 });
 $('calc-form').addEventListener('submit',function(e){e.preventDefault();});
@@ -988,9 +1113,9 @@ function renderPresetList(){
   }
   list.innerHTML=state.deductionPresets.map(function(p){
     var isActive=state.activePresetId===p.id;
-    var sum=p.deductions.map(function(d){return d.name+(d.type==='percent'?' '+d.value+'%':' \u00a3'+parseFloat(d.value).toFixed(2));}).join(' \u00b7 ');
+    var sum=p.deductions.map(function(d){return escapeHTML(d.name)+(d.type==='percent'?' '+d.value+'%':' \u00a3'+parseFloat(d.value).toFixed(2));}).join(' \u00b7 ');
     return'<div class="preset-card'+(isActive?' is-active':'')+'" data-pid="'+p.id+'">' +
-      '<div class="preset-hdr"><span class="preset-nm">'+p.name+'</span>'+(isActive?'<span style="font-size:10px;font-weight:700;color:rgba(251,252,247,.8);">\u2713 Active</span>':'')+'</div>'+
+      '<div class="preset-hdr"><span class="preset-nm">'+escapeHTML(p.name)+'</span>'+(isActive?'<span style="font-size:10px;font-weight:700;color:rgba(251,252,247,.8);">\u2713 Active</span>':'')+'</div>'+
       '<div class="preset-sum">'+p.deductions.length+' deduction'+(p.deductions.length!==1?'s':'')+(sum?' \u00b7 '+sum:'')+'</div>'+
       '<div class="preset-acts">'+
         (!isActive?'<button type="button" class="preset-apply" data-apply="'+p.id+'">Apply</button>':'<span class="preset-active-tag">Currently applied</span>')+
@@ -1056,13 +1181,13 @@ function renderDedList(){
   if(lbl){
     if(state.activePresetId){
       var ap=null;for(var pi=0;pi<state.deductionPresets.length;pi++){if(state.deductionPresets[pi].id===state.activePresetId){ap=state.deductionPresets[pi];break;}}
-      lbl.innerHTML=ap?'<div class="ded-section-lbl">From preset<span class="ded-active-badge">'+ap.name+'</span></div>':'';
+      lbl.innerHTML=ap?'<div class="ded-section-lbl">From preset<span class="ded-active-badge">'+escapeHTML(ap.name)+'</span></div>':'';
     }else{lbl.innerHTML=state.customDeductions.length?'<div class="ded-section-lbl">Custom (unsaved)</div>':'';}
   }
   if(!state.customDeductions.length){list.innerHTML='<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 4px;">No active deductions.</p>';return;}
   list.innerHTML=state.customDeductions.map(function(d){
     var vs=d.type==='percent'?d.value+'% of gross':'\u00a3'+parseFloat(d.value).toFixed(2)+' fixed';
-    return'<div class="ded-item"><span class="ded-name">'+d.name+'</span><span class="ded-val-tag">'+vs+'</span><button type="button" class="ded-del" data-did="'+d.id+'">&times;</button></div>';
+    return'<div class="ded-item"><span class="ded-name">'+escapeHTML(d.name)+'</span><span class="ded-val-tag">'+vs+'</span><button type="button" class="ded-del" data-did="'+d.id+'">&times;</button></div>';
   }).join('');
 }
 $('ded-add-btn').addEventListener('click',function(){$('ded-form').hidden=false;this.hidden=true;$('ded-name-inp').focus();});
@@ -1113,8 +1238,8 @@ function buildChart(history){
   svg+='</svg>';return svg;
 }
 function renderDashboard(){
-  var now=new Date(),ys=new Date(now.getFullYear(),0,1);
-  var ytd=state.history.filter(function(e){return new Date(e.date+'T00:00:00')>=ys;});
+  var now=new Date(),ys=taxYearStartFor(todayISO());
+  var ytd=state.history.filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
   var ytdNet=ytd.reduce(function(s,e){return s+e.net;},0);
   var allAvg=state.history.length?state.history.reduce(function(s,e){return s+e.net;},0)/state.history.length:0;
   $('dash-stats').innerHTML='<div class="stat-card"><div class="stat-label">YTD Net</div><div class="stat-value">'+(ytd.length?money(ytdNet):'&mdash;')+'</div><div class="stat-sub">'+ytd.length+' entr'+(ytd.length===1?'y':'ies')+'</div></div><div class="stat-card"><div class="stat-label">Avg weekly</div><div class="stat-value">'+(state.history.length?money(allAvg):'&mdash;')+'</div><div class="stat-sub">net pay</div></div><div class="stat-card"><div class="stat-label">Saved</div><div class="stat-value">'+state.history.length+'</div><div class="stat-sub">total entries</div></div>';
@@ -1132,13 +1257,13 @@ function renderDashboard(){
   var sorted=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   hl.innerHTML=sorted.map(function(e){
     var tag=e.manual?'<span class="manual-tag">Manual</span>':'';
-    var detail='Gross '+money(e.gross)+(e.otTotal?' \u00b7 OT '+money(e.otTotal):'')+(e.note?' \u00b7 '+e.note:'');
+    var detail='Gross '+money(e.gross)+(e.otTotal?' \u00b7 OT '+money(e.otTotal):'')+(e.note?' \u00b7 '+escapeHTML(e.note):'');
     return'<div class="hitem" data-eid="'+e.id+'"><div class="hitem-left"><div class="hdate">'+fmtISO(e.date)+tag+'</div><div class="hnet">'+money(e.net)+'</div><div class="hdetail">'+detail+'</div></div><button type="button" class="hdel" data-did="'+e.id+'" aria-label="Delete">&times;</button></div>';
   }).join('');
 }
 $('history-list').addEventListener('click',function(e){
   var del=e.target.closest?e.target.closest('.hdel'):null;
-  if(del){var id=parseInt(del.getAttribute('data-did'),10);state.history=state.history.filter(function(x){return x.id!==id;});persist();renderDashboard();showToast('Entry removed');return;}
+  if(del){if(!confirm('Delete this saved entry? Export a backup first if needed.'))return;var id=parseInt(del.getAttribute('data-did'),10);state.history=state.history.filter(function(x){return x.id!==id;});persist();renderDashboard();showToast('Entry removed');return;}
   var item=e.target.closest?e.target.closest('.hitem'):null;
   if(item){openDetailSheet(parseInt(item.getAttribute('data-eid'),10));}
 });
@@ -1257,13 +1382,14 @@ $('cal-print-btn').addEventListener('click',function(){
   if(!entries.length){showToast('No entries for this month');return;}
   var tG=0,tN=0,tT=0,tI=0,tO=0;
   entries.forEach(function(e){tG+=e.gross;tN+=e.net;tT+=(e.tax||0);tI+=(e.ni||0);tO+=(e.otTotal||0);});
-  var ml=MNAMES[_calMonth]+' '+_calYear,name=state.employeeName||'&mdash;';
-  var calEmpName=state.employerName||'WageWise';
+  var ml=MNAMES[_calMonth]+' '+_calYear,name=escapeHTML(state.employeeName)||'&mdash;';
+  var calEmpName=escapeHTML(state.employerName)||'WageWise';
   var calPBy=state.employerName?'<div class="prn-powered">Powered by WageWise</div>':'';
   $('print-payslip').innerHTML='<div class="prn-header"><div><div class="prn-company">'+calEmpName+'</div>'+calPBy+'</div><div class="prn-hdr-right"><div class="prn-badge">MONTHLY PAYSLIP</div><div class="prn-hdr-sub">'+TE.YEAR+'</div></div></div>'+
     '<div class="prn-meta"><div class="prn-meta-row"><span class="prn-ml">Employee</span><span class="prn-mv">'+name+'</span></div><div class="prn-meta-row"><span class="prn-ml">Period</span><span class="prn-mv">'+ml+'</span></div><div class="prn-meta-row"><span class="prn-ml">Pay entries</span><span class="prn-mv">'+entries.length+' weeks</span></div><div class="prn-meta-row"><span class="prn-ml">Tax year</span><span class="prn-mv">'+TE.YEAR+'</span></div></div>'+
     '<div class="prn-section"><div class="prn-section-hdr">Earnings</div><table class="prn-table"><tbody><tr><td>Basic Pay ('+entries.length+' weeks)</td><td>'+money(tG-tO)+'</td></tr><tr><td>Overtime</td><td>'+money(tO)+'</td></tr></tbody><tfoot><tr class="prn-total"><td>Gross Pay</td><td>'+money(tG)+'</td></tr></tfoot></table></div>'+
-    '<div class="prn-section"><div class="prn-section-hdr">Deductions</div><table class="prn-table"><tbody><tr class="prn-deduction"><td>Income Tax</td><td>\u2212 '+money(tT)+'</td></tr><tr class="prn-deduction"><td>National Insurance</td><td>\u2212 '+money(tI)+'</td></tr></tbody><tfoot><tr class="prn-total prn-deduction"><td>Total Deductions</td><td>\u2212 '+money(tT+tI)+'</td></tr></tfoot></table></div>'+
+    '<div class="prn-section"><div class="prn-section-hdr">Deductions</div><table class="prn-table"><tbody><tr class="prn-deduction"><td>Income Tax</td><td>\u2212 '+money(tT)+'</td></tr><tr class="prn-deduction"><td>National Insurance</td><td>\u2212 '+money(tI)+'</td></tr></tbody><tfoot><tr class="prn-total prn-deduction"><td>Total Deductions</td><td>\u2212 '+money(tG-tN)+'</td></tr></tfoot></table></div>'+
+    '<div class="prn-section"><div class="prn-section-hdr">Other / unitemised deductions</div>'+money(roundPence(tG-tN-tT-tI))+'</div>'+
     '<div class="prn-net"><span class="prn-net-label">MONTHLY NET PAY</span><span class="prn-net-val">'+money(tN)+'</span></div>'+
     '<div class="prn-footer">Monthly summary: '+ml+'. Aggregated from '+entries.length+' weekly entr'+(entries.length===1?'y':'ies')+'. Tax year '+TE.YEAR+'. Estimate only.</div>';
   window.print();
@@ -1277,38 +1403,44 @@ function openSheet(mode){
   var isCalc=(mode||'calc')==='calc';
   $('stab-calc').classList.toggle('on',isCalc);$('stab-manual').classList.toggle('on',!isCalc);
   $('sbody-calc').hidden=!isCalc;$('sbody-manual').hidden=isCalc;
-  var today=todayISO();if(!$('edate-calc').value)$('edate-calc').value=today;if(!$('edate-manual').value)$('edate-manual').value=today;
+  var today=todayISO();$('edate-calc').value=state.payDate||today;if(!$('edate-manual').value)$('edate-manual').value=today;
   if(isCalc)fillSheetPreview();
 }
 function closeSheet(){var ov=$('sheet-overlay'),sh=$('entry-sheet');ov.classList.remove('open');sh.classList.remove('open');setTimeout(function(){ov.setAttribute('hidden','');sh.setAttribute('hidden','');},300);}
 function fillSheetPreview(){
-  var r=calc();
+  var date=$('edate-calc').value||todayISO();
+  var r=guardedCalc(function(){return calcWith(state.basic,state.otEntries,state.allowance,state.customDeductions,date,null,currentPrior(date));});
+  $('save-calc-btn').disabled=!r;window._calcSnap=r;
+  if(!r){['ep-gross','ep-ot','ep-tax','ep-ni','ep-net'].forEach(function(id){$(id).textContent='Check pay date / YTD totals';});return;}
+  $('calc-status').textContent=r.mode+' · weekly Scottish suffix code / NI category A';
   $('ep-gross').textContent=money(r.gross);$('ep-ot').textContent=money(r.otTotal);
   $('ep-tax').textContent=moneySgn(-r.taxW);$('ep-ni').textContent=moneySgn(-r.niRes.ni);
   $('ep-net').textContent=money(r.net);window._calcSnap=r;
 }
-$('save-pay-btn').addEventListener('click',function(){fillSheetPreview();openSheet('calc');});
+$('save-pay-btn').addEventListener('click',function(){openSheet('calc');});
+$('edate-calc').addEventListener('input',fillSheetPreview);
 $('add-entry-btn').addEventListener('click',function(){openSheet('manual');});
 $('sheet-close').addEventListener('click',closeSheet);$('sheet-overlay').addEventListener('click',closeSheet);
 $('stab-calc').addEventListener('click',function(){$('stab-calc').classList.add('on');$('stab-manual').classList.remove('on');$('sbody-calc').hidden=false;$('sbody-manual').hidden=true;fillSheetPreview();});
 $('stab-manual').addEventListener('click',function(){$('stab-manual').classList.add('on');$('stab-calc').classList.remove('on');$('sbody-manual').hidden=false;$('sbody-calc').hidden=true;});
 $('save-calc-btn').addEventListener('click',function(){
   var date=$('edate-calc').value;if(!date){$('edate-calc').focus();return;}
-  var r=window._calcSnap||calc();
-  state.history.unshift({id:Date.now(),date:date,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:'',manual:false});
+  fillSheetPreview();var r=window._calcSnap;if(!r)return;
+  state.history.unshift({id:Date.now(),date:date,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:'',manual:false,allowance:state.allowance,customDeductions:JSON.parse(JSON.stringify(state.customDeductions)),snapshot:r});
   persist();closeSheet();showToast('\u2713 Pay entry saved');
   if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
 });
 $('save-manual-btn').addEventListener('click',function(){
-  var date=$('edate-manual').value,gross=clamp($('m-gross').value),net=clamp($('m-net').value);
-  if(!date){$('edate-manual').focus();return;}if(!gross||!net){showToast('Please enter gross and net pay');return;}
-  state.history.unshift({id:Date.now(),date:date,basic:0,otEntries:[],otTotal:0,gross:gross,tax:0,ni:0,net:net,note:$('m-note').value||'',manual:true});
-  $('m-gross').value='';$('m-net').value='';$('m-note').value='';
+  var date=$('edate-manual').value,gross=Number($('m-gross').value),net=Number($('m-net').value),tax=$('m-tax').value===''?null:Number($('m-tax').value),ni=$('m-ni').value===''?null:Number($('m-ni').value);
+  if(!date){$('edate-manual').focus();return;}if($('m-gross').value===''||$('m-net').value===''||!Number.isFinite(gross)||!Number.isFinite(net)||gross<0||net<0||(ni!=null&&(!Number.isFinite(ni)||ni<0))||(tax!=null&&!Number.isFinite(tax))){showToast('Enter valid gross, net and deduction amounts.');return;}
+  state.history.unshift({id:Date.now(),date:date,basic:0,otEntries:[],otTotal:0,gross:gross,tax:tax,ni:ni,net:net,note:$('m-note').value||'',manual:true});
+  $('m-gross').value='';$('m-tax').value='';$('m-ni').value='';$('m-net').value='';$('m-note').value='';
   persist();closeSheet();showToast('\u2713 Entry saved');
   if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
 });
 function clearHistory(){if(!confirm('Clear all earnings history? This cannot be undone.'))return;state.history=[];persist();renderDashboard();showToast('History cleared');}
 $('clear-btn').addEventListener('click',clearHistory);$('clear-settings-btn').addEventListener('click',clearHistory);
+$('recalc-history-btn').addEventListener('click',exportBackup);
 
 /* ── DETAIL SHEET ── */
 var _did=null,_des={basic:0,allowance:12570,date:'',otEntries:[]};
@@ -1339,14 +1471,16 @@ function renderDetailView(entry){
     h+='<div class="dv-divider"></div><div class="dv-row dv-total"><span class="dv-label">Total OT</span><span class="dv-value">'+money(entry.otTotal||0)+'</span></div>';
   }else if((entry.otTotal||0)>0){h+='<div class="dv-divider"></div><div class="dv-row"><span class="dv-label">Overtime</span><span class="dv-value">'+money(entry.otTotal)+'</span></div>';}
   h+='<div class="dv-divider"></div><div class="dv-row dv-total"><span class="dv-label">Gross Pay</span><span class="dv-value">'+money(entry.gross)+'</span></div>';
-  if(!entry.manual){h+='<div class="dv-divider"></div><div class="dv-row dv-deduction"><span class="dv-label">Income Tax</span><span class="dv-value">'+moneySgn(-(entry.tax||0))+'</span></div><div class="dv-row dv-deduction"><span class="dv-label">National Insurance</span><span class="dv-value">'+moneySgn(-(entry.ni||0))+'</span></div>';}
+  if(entry.tax!=null||entry.ni!=null){h+='<div class="dv-divider"></div><div class="dv-row dv-deduction"><span class="dv-label">Income Tax</span><span class="dv-value">'+(entry.tax==null?'Not supplied':moneySgn(-entry.tax))+'</span></div><div class="dv-row dv-deduction"><span class="dv-label">National Insurance</span><span class="dv-value">'+(entry.ni==null?'Not supplied':moneySgn(-entry.ni))+'</span></div>';}
   h+='<div class="dv-net"><span class="dv-net-label">Net Pay</span><span class="dv-net-value">'+money(entry.net)+'</span></div>';
-  if(entry.note)h+='<div class="dv-note-row">'+entry.note+'</div>';
+  if(entry.note)h+='<div class="dv-note-row">'+escapeHTML(entry.note)+'</div>';
   $('dv-body').innerHTML=h;
 }
 function enterDetailEdit(){
   var entry=findEntry(_did);if(!entry)return;
-  _des.basic=entry.basic||0;_des.date=entry.date||'';_des.allowance=state.allowance;
+  if(entry.manual||!entry.snapshot){showToast('Recorded/legacy values are preserved. Add a new entry to correct them.');return;}
+  _des.customDeductions=entry.customDeductions||[];_des.prior=entry.snapshot.prior;
+  _des.basic=entry.basic||0;_des.date=entry.date||'';_des.allowance=entry.allowance;
   _des.otEntries=JSON.parse(JSON.stringify(entry.otEntries&&entry.otEntries.length?entry.otEntries:[]));
   $('de-date').value=_des.date;$('de-basic').value=_des.basic;
   renderDeOtRows();updateDePreview();
@@ -1355,7 +1489,8 @@ function enterDetailEdit(){
 }
 function renderDeOtRows(){$('de-ot-list').innerHTML=_des.otEntries.length?_des.otEntries.map(function(e,i){return buildOtCard(e,i,'de-');}).join(''):'<p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 8px;">No overtime entries.</p>';}
 function updateDePreview(){
-  var r=calcWith(_des.basic,_des.otEntries,_des.allowance,state.customDeductions,state.history,getTaxWeek(todayISO()));
+  var r=guardedCalc(function(){return calcWith(_des.basic,_des.otEntries,_des.allowance,_des.customDeductions,_des.date||todayISO(),_did,_des.prior);});
+  $('de-save-btn').disabled=!r;window._desCalc=r;if(!r){$('dep-net').textContent='Invalid pay date / prior YTD';return;}
   $('dep-gross').textContent=money(r.gross);$('dep-tax').textContent=moneySgn(-r.taxW);$('dep-ni').textContent=moneySgn(-r.niRes.ni);$('dep-net').textContent=money(r.net);window._desCalc=r;
 }
 $('de-ot-list').addEventListener('input',function(e){
@@ -1377,11 +1512,11 @@ $('de-ot-list').addEventListener('click',function(e){
 });
 $('de-add-ot').addEventListener('click',function(){var last=_des.otEntries.length?_des.otEntries[_des.otEntries.length-1]:null;_des.otEntries.push({mode:'manual',hours:0,rate:last?last.rate:14.96,date:'',startTime:'',endTime:'',breakMins:0});renderDeOtRows();updateDePreview();});
 $('de-basic').addEventListener('input',function(){_des.basic=clamp(this.value);updateDePreview();});
-$('de-date').addEventListener('input',function(){_des.date=this.value;$('dsheet-title').textContent=_des.date?fmtISO(_des.date):'Edit entry';});
+$('de-date').addEventListener('input',function(){_des.date=this.value;$('dsheet-title').textContent=_des.date?fmtISO(_des.date):'Edit entry';updateDePreview();});
 $('de-save-btn').addEventListener('click',function(){
   var idx=-1;for(var i=0;i<state.history.length;i++){if(state.history[i].id===_did){idx=i;break;}}if(idx<0)return;
-  var r=window._desCalc||calcWith(_des.basic,_des.otEntries,_des.allowance,state.customDeductions);
-  state.history[idx]={id:_did,date:_des.date||state.history[idx].date,basic:_des.basic,otEntries:JSON.parse(JSON.stringify(_des.otEntries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:state.history[idx].note||'',manual:false};
+  updateDePreview();var r=window._desCalc;if(!r)return;
+  state.history[idx]={id:_did,date:_des.date||state.history[idx].date,basic:_des.basic,otEntries:JSON.parse(JSON.stringify(_des.otEntries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:state.history[idx].note||'',manual:false,allowance:_des.allowance,customDeductions:JSON.parse(JSON.stringify(_des.customDeductions)),snapshot:r};
   persist();showToast('\u2713 Entry updated');
   var updated=state.history[idx];renderDetailView(updated);$('dsheet-title').textContent=fmtISO(updated.date)||'Pay entry';
   $('de-body').hidden=true;$('dv-body').hidden=false;$('dv-actions').hidden=false;
@@ -1395,17 +1530,25 @@ $('dsheet-close').addEventListener('click',closeDetailSheet);$('dsheet-overlay')
 /* ── PAYSLIP ── */
 var _psSource='current';
 function getPayslipData(){
-  if(_psSource==='current'){var r=calc();return{date:todayISO(),employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r.customDedRes,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,taxW:r.taxW,taxBreakdown:r.taxRes.breakdown,niW:r.niRes.ni,niBreakdown:r.niRes.breakdown,net:r.net,allowance:state.allowance};}
+  if(_psSource==='current'){var r=guardedCalc(calc);if(!r)return null;return{date:state.payDate||todayISO(),employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r.customDedRes,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,taxW:r.taxW,taxBreakdown:r.taxRes.breakdown,niW:r.niRes.ni,niBreakdown:r.niRes.breakdown,net:r.net,allowance:state.allowance,taxWeek:r.taxWeek,ytdGross:r.cumulativeGross,ytdTax:r.cumulativeTaxToDate,ytdNi:r.cumulativeNiToDate};}
   var entry=findEntry(_psSource);if(!entry)return null;
   var ot=entry.otEntries&&entry.otEntries.length?entry.otEntries:[];
-  var r2=calcWith(entry.basic||0,ot,state.allowance,state.customDeductions,state.history,getTaxWeek(entry.date||todayISO()));
-  return{date:entry.date,employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r2.customDedRes,basic:entry.basic||0,otEntries:ot,otTotal:r2.otTotal,gross:r2.gross,taxW:r2.taxW,taxBreakdown:r2.taxRes.breakdown,niW:r2.niRes.ni,niBreakdown:r2.niRes.breakdown,net:r2.net,allowance:state.allowance};
+  var snap=entry.snapshot||{},other=roundPence(entry.gross-entry.net-(entry.tax||0)-(entry.ni||0));
+  return {date:entry.date,employeeName:state.employeeName||'',employerName:state.employerName||'',basic:entry.manual?entry.gross:entry.basic||0,otEntries:ot,otTotal:entry.otTotal||0,gross:entry.gross,taxW:entry.tax,niW:entry.ni,net:entry.net,
+    customDedRes:snap.customDedRes||{total:other,breakdown:other?[{name:'Other / unitemised deductions',amount:other,type:'amount'}]:[]},
+    taxBreakdown:[],niBreakdown:[],allowance:entry.allowance==null?null:entry.allowance,taxWeek:getTaxWeek(entry.date),ytdGross:snap.cumulativeGross,ytdTax:snap.cumulativeTaxToDate,ytdNi:snap.cumulativeNiToDate};
 }
+
+
 function buildPayslipHTML(d,forPrint){
   if(!d)return'<p style="text-align:center;padding:24px;color:var(--ink-soft);">No data available.</p>';
-  var name=d.employeeName||'&mdash;',dateStr=fmtISO(d.date)||'&mdash;';
+  var name=escapeHTML(d.employeeName)||'&mdash;',dateStr=fmtISO(d.date)||'&mdash;';
   var tw=getTaxWeek(d.date),twStr=tw?'Tax Week '+tw:'&mdash;';
-  var totalDed=d.taxW+d.niW+(d.customDedRes?d.customDedRes.total:0);
+  var year=Payroll.year(d.date),yearLabel=year+'/'+String(year+1).slice(2);
+  var totalDed=roundPence(d.gross-d.net);
+  // Payslip deductions are THIS period, never cumulative liability.
+  d.taxBreakdown=d.taxW==null?[]:[{name:'this period',rate:0,amount:d.gross,tax:d.taxW}];
+  d.niBreakdown=d.niW==null?[]:[{name:'this period',ni:d.niW}];
   var groups=groupOtByRate(d.otEntries);
   if(forPrint){
     var eRows='<tr><td>Basic Pay</td><td>'+money(d.basic)+'</td></tr>';
@@ -1415,23 +1558,24 @@ function buildPayslipHTML(d,forPrint){
       if(g.shifts.length>1)eRows+='<tr class="prn-ot-subtotal"><td>'+fmtHrsShort(g.totalHours)+' @ '+money(g.rate)+'/hr</td><td>'+money(g.totalPay)+'</td></tr>';
     });
     var dRows='';
-    (d.customDedRes&&d.customDedRes.breakdown||[]).forEach(function(cd){dRows+='<tr class="prn-deduction"><td>'+cd.name+(cd.type==='percent'?' ('+cd.value+'%)':' (fixed)')+'</td><td>\u2212 '+money(cd.amount)+'</td></tr>';});
-    d.taxBreakdown.forEach(function(b){dRows+='<tr class="prn-deduction"><td>Income Tax \u2013 '+b.name+' ('+Math.round(b.rate*100)+'%)<span class="prn-sub">Cumulative YTD: '+money(b.amount)+'</span></td><td>\u2212 '+money(b.tax)+'</td></tr>';});
-    d.niBreakdown.forEach(function(b){dRows+='<tr class="prn-deduction"><td>National Insurance \u2013 '+b.name+'</td><td>\u2212 '+money(b.ni)+'</td></tr>';});
+    (d.customDedRes&&d.customDedRes.breakdown||[]).forEach(function(cd){dRows+='<tr class="prn-deduction"><td>'+escapeHTML(cd.name)+(cd.type==='percent'?' ('+cd.value+'%)':' (fixed)')+'</td><td>\u2212 '+money(cd.amount)+'</td></tr>';});
+    d.taxBreakdown.forEach(function(b){dRows+='<tr class="prn-deduction"><td>Income Tax \u2013 '+b.name+'<span class="prn-sub">Current period gross: '+money(b.amount)+'</span></td><td>'+moneySgn(-b.tax)+'</td></tr>';});
+    d.niBreakdown.forEach(function(b){dRows+='<tr class="prn-deduction"><td>National Insurance \u2013 '+b.name+'</td><td>'+moneySgn(-b.ni)+'</td></tr>';});
     if(!dRows)dRows='<tr><td>No deductions at this income</td><td>'+money(0)+'</td></tr>';
-    var empName=d.employerName||'WageWise';
+    var empName=escapeHTML(d.employerName)||'WageWise';
     var poweredBy=d.employerName?'<div class="prn-powered">Powered by WageWise</div>':'';
-    return'<div class="prn-header"><div><div class="prn-company">'+empName+'</div>'+poweredBy+'</div><div class="prn-hdr-right"><div class="prn-badge">PAYSLIP</div><div class="prn-hdr-sub">'+TE.YEAR+' \u00b7 '+twStr+'</div></div></div>'+
+    return'<div class="prn-header"><div><div class="prn-company">'+empName+'</div>'+poweredBy+'</div><div class="prn-hdr-right"><div class="prn-badge">PAYSLIP</div><div class="prn-hdr-sub">'+yearLabel+' \u00b7 '+twStr+'</div></div></div>'+
       '<div class="prn-meta"><div class="prn-meta-row"><span class="prn-ml">Employee</span><span class="prn-mv">'+name+'</span></div><div class="prn-meta-row"><span class="prn-ml">Pay period</span><span class="prn-mv">'+dateStr+'</span></div><div class="prn-meta-row"><span class="prn-ml">Tax week</span><span class="prn-mv">'+twStr+'</span></div><div class="prn-meta-row"><span class="prn-ml">Personal allowance</span><span class="prn-mv">'+money(d.allowance)+'</span></div></div>'+
       '<div class="prn-section"><div class="prn-section-hdr">Earnings</div><table class="prn-table"><tbody>'+eRows+'</tbody><tfoot><tr class="prn-total"><td>Gross Pay</td><td>'+money(d.gross)+'</td></tr></tfoot></table></div>'+
       '<div class="prn-section"><div class="prn-section-hdr">Deductions</div><table class="prn-table"><tbody>'+dRows+'</tbody><tfoot><tr class="prn-total prn-deduction"><td>Total Deductions</td><td>\u2212 '+money(totalDed)+'</td></tr></tfoot></table></div>'+
       '<div class="prn-net"><span class="prn-net-label">NET PAY</span><span class="prn-net-val">'+money(d.net)+'</span></div>'+
-      '<div class="prn-footer">Scottish Income Tax rates apply \u00b7 Tax year '+TE.YEAR+' \u00b7 '+twStr+' \u00b7 Personal allowance '+money(d.allowance)+'<br>NI calculated on weekly gross using Class 1 thresholds. Estimate only. Not an official payslip.</div>';
+      '<div class="prn-section"><div class="prn-section-hdr">To-date totals (tax year '+yearLabel+')</div><table class="prn-table"><tbody><tr><td>Gross pay t/d</td><td>'+money(d.ytdGross)+'</td></tr><tr><td>Tax paid t/d</td><td>'+money(d.ytdTax)+'</td></tr><tr><td>Employee NI t/d</td><td>'+money(d.ytdNi)+'</td></tr></tbody></table></div>'+
+      '<div class="prn-footer">Scottish Income Tax rates apply \u00b7 Tax year '+yearLabel+' \u00b7 '+twStr+' \u00b7 Personal allowance '+money(d.allowance)+'<br>NI calculated on weekly gross using Class 1 thresholds. Estimate only. Not an official payslip.</div>';
   }else{
-    var empDisp=d.employerName||'WageWise';
+    var empDisp=escapeHTML(d.employerName)||'WageWise';
     var viaBadge=d.employerName?'<div style="font-size:10px;opacity:.6;margin-top:2px;">via WageWise</div>':'';
     var h='<div class="psl-header"><div><div class="psl-wordmark">'+empDisp+'</div><div style="font-size:11px;opacity:.8;margin-top:3px;">'+dateStr+'</div>'+viaBadge+'</div><div style="text-align:right;"><div class="psl-badge">PAYSLIP</div><div style="font-size:10px;opacity:.7;margin-top:4px;">'+twStr+'</div></div></div>';
-    h+='<div class="psl-meta"><div class="psl-meta-row"><span class="psl-meta-label">Employee</span><span class="psl-meta-value">'+name+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Tax week</span><span class="psl-meta-value">'+twStr+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Tax year</span><span class="psl-meta-value">'+TE.YEAR+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Personal allowance</span><span class="psl-meta-value">'+money(d.allowance)+'</span></div></div>';
+    h+='<div class="psl-meta"><div class="psl-meta-row"><span class="psl-meta-label">Employee</span><span class="psl-meta-value">'+name+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Tax week</span><span class="psl-meta-value">'+twStr+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Tax year</span><span class="psl-meta-value">'+yearLabel+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Personal allowance</span><span class="psl-meta-value">'+money(d.allowance)+'</span></div></div>';
     h+='<div class="psl-section-hdr">Earnings</div><div class="psl-row"><span class="psl-row-label">Basic Pay</span><span class="psl-row-val">'+money(d.basic)+'</span></div>';
     groups.forEach(function(g){
       h+='<div class="psl-ot-group-hdr">Overtime @ '+money(g.rate)+'/hr</div>';
@@ -1440,13 +1584,17 @@ function buildPayslipHTML(d,forPrint){
     });
     h+='<div class="psl-total-row"><span class="psl-total-label">Gross Pay</span><span class="psl-total-val">'+money(d.gross)+'</span></div>';
     h+='<div class="psl-section-hdr">Deductions</div>';
-    (d.customDedRes&&d.customDedRes.breakdown||[]).forEach(function(cd){h+='<div class="psl-row deduction"><span class="psl-row-label">'+cd.name+(cd.type==='percent'?' ('+cd.value+'%)':'')+'</span><span class="psl-row-val">\u2212 '+money(cd.amount)+'</span></div>';});
-    d.taxBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">Tax \u2013 '+b.name+' ('+Math.round(b.rate*100)+'%)<span class="psl-row-sub">Cumulative YTD: '+money(b.amount)+'</span></span><span class="psl-row-val">\u2212 '+money(b.tax)+'</span></div>';});
-    d.niBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">NI \u2013 '+b.name+'</span><span class="psl-row-val">\u2212 '+money(b.ni)+'</span></div>';});
+    (d.customDedRes&&d.customDedRes.breakdown||[]).forEach(function(cd){h+='<div class="psl-row deduction"><span class="psl-row-label">'+escapeHTML(cd.name)+(cd.type==='percent'?' ('+cd.value+'%)':'')+'</span><span class="psl-row-val">\u2212 '+money(cd.amount)+'</span></div>';});
+    d.taxBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">Tax \u2013 '+b.name+'<span class="psl-row-sub">Current period gross: '+money(b.amount)+'</span></span><span class="psl-row-val">'+moneySgn(-b.tax)+'</span></div>';});
+    d.niBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">NI \u2013 '+b.name+'</span><span class="psl-row-val">'+moneySgn(-b.ni)+'</span></div>';});
     if(!d.taxBreakdown.length&&!d.niBreakdown.length)h+='<div class="psl-row"><span class="psl-row-label">No deductions at this income</span><span class="psl-row-val">'+money(0)+'</span></div>';
-    h+='<div class="psl-total-row deduction-total"><span class="psl-total-label">Total Deductions</span><span class="psl-total-val">\u2212 '+money(totalDed)+'</span></div>';
+h+='<div class="psl-total-row deduction-total"><span class="psl-total-label">Total Deductions</span><span class="psl-total-val">\u2212 '+money(totalDed)+'</span></div>';
     h+='<div class="psl-net"><span class="psl-net-label">NET PAY</span><span class="psl-net-val">'+money(d.net)+'</span></div>';
-    h+='<div class="psl-footer">Scottish IT \u00b7 '+TE.YEAR+' \u00b7 '+twStr+' \u00b7 Allowance '+money(d.allowance)+' \u00b7 Estimate only.</div>';
+    h+='<div class="psl-section-hdr">To-date totals (tax year '+yearLabel+')</div>';
+    h+='<div class="psl-row"><span class="psl-row-label">Gross pay t/d</span><span class="psl-row-val">'+money(d.ytdGross)+'</span></div>';
+    h+='<div class="psl-row"><span class="psl-row-label">Tax paid t/d</span><span class="psl-row-val">'+money(d.ytdTax)+'</span></div>';
+    h+='<div class="psl-row"><span class="psl-row-label">Employee NI t/d</span><span class="psl-row-val">'+money(d.ytdNi)+'</span></div>';
+    h+='<div class="psl-footer">Scottish IT \u00b7 '+yearLabel+' \u00b7 '+twStr+' \u00b7 Allowance '+money(d.allowance)+' \u2014 Estimate only.</div>';
     return h;
   }
 }
@@ -1458,7 +1606,7 @@ function renderPayslipScreen(){
   }else{$('ps-hist-list').innerHTML='';$('ps-hist-empty').hidden=false;}
   $('ps-preview').innerHTML=buildPayslipHTML(getPayslipData(),'');
 }
-function doPrint(){var d=getPayslipData();$('print-payslip').innerHTML=buildPayslipHTML(d,true);window.print();}
+function doPrint(){var d=getPayslipData();if(!d){showToast('Correct the calculator inputs before printing.');return;}$('print-payslip').innerHTML=buildPayslipHTML(d,true);window.print();}
 $('ps-name').addEventListener('input',function(){state.employeeName=this.value;persist();renderPayslipScreen();});
 $('ps-employer').addEventListener('input',function(){state.employerName=this.value;persist();renderPayslipScreen();});
 $('ps-src-calc').addEventListener('click',function(){_psSource='current';$('ps-src-calc').classList.add('on');$('ps-src-hist').classList.remove('on');$('ps-hist-picker').hidden=true;renderPayslipScreen();});
@@ -1483,8 +1631,8 @@ document.querySelectorAll('[data-ac]').forEach(function(b){b.addEventListener('c
 
 /* ── PWA ── */
 (function(){
-  var mf={name:'WageWise',short_name:'WageWise',display:'standalone',orientation:'portrait',background_color:'#1f5c43',theme_color:'#1f5c43',start_url:'.',icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231f5c43'/%3E%3Ctext x='256' y='360' font-family='monospace' font-size='280' font-weight='700' fill='%23fbfcf7' text-anchor='middle'%3E%C2%A3%3C/text%3E%3C/svg%3E",sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}]};
-  var lnk=document.createElement('link');lnk.rel='manifest';lnk.href='data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(mf));document.head.appendChild(lnk);
+  var lnk=document.createElement('link');lnk.rel='manifest';lnk.href='/manifest.webmanifest';document.head.appendChild(lnk);
+
   var apns=[['apple-mobile-web-app-capable','yes'],['apple-mobile-web-app-status-bar-style','black-translucent'],['apple-mobile-web-app-title','WageWise']];
   apns.forEach(function(p){var m=document.createElement('meta');m.name=p[0];m.content=p[1];document.head.appendChild(m);});
   var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -1493,7 +1641,8 @@ document.querySelectorAll('[data-ac]').forEach(function(b){b.addEventListener('c
   window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_dp=e;$('pwa-block').hidden=false;$('pwa-install-btn').hidden=false;$('ios-hint').hidden=true;});
   $('pwa-install-btn').addEventListener('click',function(){if(!_dp)return;_dp.prompt();_dp.userChoice.then(function(r){if(r.outcome==='accepted')showToast('\u2713 WageWise installed!');_dp=null;$('pwa-block').hidden=true;});});
   window.addEventListener('appinstalled',function(){$('pwa-block').hidden=true;showToast('\u2713 Added to Home Screen');});
-  if('serviceWorker' in navigator){try{var swSrc='self.addEventListener("install",function(e){self.skipWaiting();});self.addEventListener("activate",function(e){e.waitUntil(clients.claim());});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request);}).catch(function(){return caches.match(e.request);}));});';var b=new Blob([swSrc],{type:'application/javascript'});navigator.serviceWorker.register(URL.createObjectURL(b)).catch(function(){});}catch(e){}}
+  if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('/sw.js').catch(function(){showToast('Offline mode unavailable; online calculator still works.');});
+
 })();
 
 /* ── NAVIGATION ── */
@@ -1513,6 +1662,10 @@ document.querySelectorAll('.navbtn').forEach(function(b){b.addEventListener('cli
 $('allowance').value=state.allowance;
 if(state.employeeName)$('ps-name').value=state.employeeName;
 if(state.employerName)$('ps-employer').value=state.employerName;
+$('pay-date').value=state.payDate||todayISO();state.payDate=$('pay-date').value;
+var savedYtd=state.ytd||{};
+['gross','tax','ni','week'].forEach(function(key){$('ytd-'+key).value=savedYtd[key]==null?'':savedYtd[key];});
+$('ytd-enabled').checked=!!savedYtd.enabled;
 syncBasicDisplay();
 renderDedList();
 renderPresetList();
@@ -1521,6 +1674,15 @@ renderBandTable();
 renderResults();
 applyTheme();
 showScreen('calculator');
+function saveYtd(){
+  if(!state.payDate||!getTaxWeek(state.payDate)){showToast('Choose a valid pay date first.');return;}
+  state.ytd={enabled:$('ytd-enabled').checked,gross:$('ytd-gross').value,tax:$('ytd-tax').value,ni:$('ytd-ni').value,week:$('ytd-week').value,year:Payroll.year(state.payDate)};
+  renderResults();
+}
+['ytd-gross','ytd-tax','ytd-ni','ytd-week','ytd-enabled'].forEach(function(id){$(id).addEventListener('input',saveYtd);});
+$('pay-date').addEventListener('input',function(){state.payDate=this.value;renderResults();});
+
+
 })();
 </script>
 </body>
