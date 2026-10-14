@@ -23,6 +23,19 @@ function app(saved){
   vm.runInNewContext(script,ctx,{timeout:2000});
   return {api:ctx.api,element,storage,fire:(id,type='click')=>element(id).listeners[type].call(element(id),{target:element(id),preventDefault(){}})};
 }
+test('3% salary increase updates the weekly default',()=>{
+ const a=app();assert.equal(a.api.state.basic,566.14);assert.equal(a.api.state.basic,Payroll.round(549.65*1.03));
+ assert.equal(a.element('settings-basic').value,566.14);
+});
+test('salary increase migrates old defaults once and preserves history and OT',()=>{
+ for(const basic of [549.65,549.66]){
+  const a=app({basic,history:[{id:1,date:'2026-09-18',basic:549.65,gross:549.65,net:460}],otEntries:[{mode:'manual',hours:1,rate:14.96}]});
+  assert.equal(a.api.state.basic,566.14);assert.equal(a.api.state.history[0].basic,549.65);assert.equal(a.api.state.otEntries[0].rate,14.96);
+  const saved=JSON.parse(a.storage.get('wagewise-v5'));assert.equal(app(saved).api.state.basic,566.14);
+  saved.basic=549.65;assert.equal(app(saved).api.state.basic,549.65);
+ }
+ assert.equal(app({basic:600}).api.state.basic,600);
+});
 test('app boots and keeps empty overtime after reload',()=>{const a=app({otEntries:[],payDate:'2026-09-18'});assert.equal(a.api.state.otEntries.length,0);assert.ok(a.element('out-net').textContent.startsWith('£'));});
 test('shift rollover, equal times and break handling',()=>{const a=app();assert.equal(a.api.shiftResult({startTime:'22:00',endTime:'06:00',breakMins:30}).hours,7.5);assert.equal(a.api.shiftResult({startTime:'08:00',endTime:'08:00'}).hours,0);assert.equal(a.api.shiftResult({startTime:'08:00',endTime:'09:00',breakMins:90}).hours,0);});
 test('saved manual payslip does not recalculate with current settings',()=>{

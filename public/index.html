@@ -640,7 +640,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
         <h3>Basic pay</h3>
         <div class="field" style="margin-bottom:0;">
           <label for="settings-basic">Weekly basic pay</label>
-          <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="settings-basic" value="549.66"></div>
+          <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="settings-basic" value="566.14"></div>
         </div>
         <p style="font-size:12px;color:var(--ink-soft);margin:8px 0 0;line-height:1.5;">Set once here. Used automatically in every calculation.</p>
       </div>
@@ -899,7 +899,7 @@ function effHours(e){if(e.mode==='shift'){var r=shiftResult(e);return r?r.hours:
 
 /* ── STATE ── */
 var DEF={
-  basic:549.65,
+  basic:566.14,salaryRevision:'2026-10-14-3pct',
   otEntries:[{mode:'manual',hours:5,rate:14.96,date:'',startTime:'',endTime:'',breakMins:0}],
   allowance:12570,theme:'light',accent:'pine',history:[],employeeName:'',employerName:'',customDeductions:[],deductionPresets:[],activePresetId:null
 };
@@ -907,6 +907,9 @@ var state=JSON.parse(JSON.stringify(DEF));
 (function(){
   var s=loadPersisted();if(!s)return;
   if(typeof s.basic==='number')state.basic=s.basic;
+  // Apply the requested rise once to the previous default only. Do not
+  // rewrite historical payslips, overtime rates or customised basic pay.
+  if(s.salaryRevision!==DEF.salaryRevision&&(s.basic===549.65||s.basic===549.66))state.basic=DEF.basic;
   if(typeof s.allowance==='number')state.allowance=s.allowance;
   if(s.theme)state.theme=s.theme;if(s.accent)state.accent=s.accent;
   if(Array.isArray(s.otEntries))state.otEntries=s.otEntries;
