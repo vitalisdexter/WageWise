@@ -456,7 +456,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
           <div class="basic-display">
             <div>
               <div class="basic-display-lbl">Basic pay (weekly)</div>
-              <div class="basic-display-val" id="basic-display-val">&pound;549.66</div>
+              <div class="basic-display-val" id="basic-display-val">&pound;604.13</div>
             </div>
             <button type="button" class="basic-display-link" id="basic-goto-settings">Change in Settings &#9881;</button>
           </div>
@@ -640,7 +640,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
         <h3>Basic pay</h3>
         <div class="field" style="margin-bottom:0;">
           <label for="settings-basic">Weekly basic pay</label>
-          <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="settings-basic" value="566.14"></div>
+          <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="0.01" min="0" id="settings-basic" value="604.13"></div>
         </div>
         <p style="font-size:12px;color:var(--ink-soft);margin:8px 0 0;line-height:1.5;">Set once here. Used automatically in every calculation.</p>
       </div>
@@ -898,21 +898,24 @@ function shiftResult(e){
 function effHours(e){if(e.mode==='shift'){var r=shiftResult(e);return r?r.hours:0;}return e.hours;}
 
 /* ── STATE ── */
+var DEFAULT_OT1_RATE=16.50;
 var DEF={
-  basic:566.14,salaryRevision:'2026-10-14-3pct',
-  otEntries:[{mode:'manual',hours:5,rate:14.96,date:'',startTime:'',endTime:'',breakMins:0}],
+  basic:604.13,salaryRevision:'2026-11-06',
+  otEntries:[{mode:'manual',hours:5,rate:DEFAULT_OT1_RATE,date:'',startTime:'',endTime:'',breakMins:0}],
   allowance:12570,theme:'light',accent:'pine',history:[],employeeName:'',employerName:'',customDeductions:[],deductionPresets:[],activePresetId:null
 };
 var state=JSON.parse(JSON.stringify(DEF));
 (function(){
   var s=loadPersisted();if(!s)return;
   if(typeof s.basic==='number')state.basic=s.basic;
-  // Apply the requested rise once to the previous default only. Do not
-  // rewrite historical payslips, overtime rates or customised basic pay.
-  if(s.salaryRevision!==DEF.salaryRevision&&(s.basic===549.65||s.basic===549.66))state.basic=DEF.basic;
   if(typeof s.allowance==='number')state.allowance=s.allowance;
   if(s.theme)state.theme=s.theme;if(s.accent)state.accent=s.accent;
   if(Array.isArray(s.otEntries))state.otEntries=s.otEntries;
+  // Migrate previous default rates in the calculator draft once.
+  if(s.salaryRevision!==DEF.salaryRevision){
+    if([549.65,549.66,566.14].includes(s.basic))state.basic=DEF.basic;
+    state.otEntries.forEach(function(entry){if(entry.rate===14.96)entry.rate=DEFAULT_OT1_RATE;});
+  }
   if(Array.isArray(s.history))state.history=s.history;
   if(typeof s.employeeName==='string')state.employeeName=s.employeeName;
   if(typeof s.employerName==='string')state.employerName=s.employerName;
@@ -1046,7 +1049,7 @@ function renderBandTable(){
 }
 function blendedOtRate(){
   var hours=0,pay=0;state.otEntries.forEach(function(e){var h=effHours(e);hours+=h;pay+=h*e.rate;});
-  return hours?pay/hours:14.96;
+  return hours?pay/hours:DEFAULT_OT1_RATE;
 }
 function renderSweetSpot(){
   if(!_ssRateTouched)$('ss-rate').value=blendedOtRate().toFixed(2);
@@ -1083,7 +1086,7 @@ $('ot-list').addEventListener('click',function(e){
 });
 $('add-ot').addEventListener('click',function(){
   var last=state.otEntries.length?state.otEntries[state.otEntries.length-1]:null;
-  state.otEntries.push({mode:'manual',hours:0,rate:last?last.rate:14.96,date:'',startTime:'',endTime:'',breakMins:0});
+  state.otEntries.push({mode:'manual',hours:0,rate:last?last.rate:DEFAULT_OT1_RATE,date:'',startTime:'',endTime:'',breakMins:0});
   renderOtRows();renderResults();
 });
 $('allowance').addEventListener('input',function(){state.allowance=clamp(this.value);renderResults();renderBandTable();});
@@ -1513,7 +1516,7 @@ $('de-ot-list').addEventListener('click',function(e){
   var rb=e.target.closest?e.target.closest('.de-remove'):null;
   if(rb){var j=parseInt(rb.getAttribute('data-i'),10);if(!isNaN(j)){_des.otEntries.splice(j,1);renderDeOtRows();updateDePreview();}}
 });
-$('de-add-ot').addEventListener('click',function(){var last=_des.otEntries.length?_des.otEntries[_des.otEntries.length-1]:null;_des.otEntries.push({mode:'manual',hours:0,rate:last?last.rate:14.96,date:'',startTime:'',endTime:'',breakMins:0});renderDeOtRows();updateDePreview();});
+$('de-add-ot').addEventListener('click',function(){var last=_des.otEntries.length?_des.otEntries[_des.otEntries.length-1]:null;_des.otEntries.push({mode:'manual',hours:0,rate:last?last.rate:DEFAULT_OT1_RATE,date:'',startTime:'',endTime:'',breakMins:0});renderDeOtRows();updateDePreview();});
 $('de-basic').addEventListener('input',function(){_des.basic=clamp(this.value);updateDePreview();});
 $('de-date').addEventListener('input',function(){_des.date=this.value;$('dsheet-title').textContent=_des.date?fmtISO(_des.date):'Edit entry';updateDePreview();});
 $('de-save-btn').addEventListener('click',function(){

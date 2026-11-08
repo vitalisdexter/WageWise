@@ -23,16 +23,30 @@ function app(saved){
   vm.runInNewContext(script,ctx,{timeout:2000});
   return {api:ctx.api,element,storage,fire:(id,type='click')=>element(id).listeners[type].call(element(id),{target:element(id),preventDefault(){}})};
 }
-test('3% salary increase updates the weekly default',()=>{
- const a=app();assert.equal(a.api.state.basic,566.14);assert.equal(a.api.state.basic,Payroll.round(549.65*1.03));
- assert.equal(a.element('settings-basic').value,566.14);
+test('weekly pay and OT1 use the updated defaults',()=>{
+ const a=app();
+ assert.equal(a.api.state.basic,604.13);
+ assert.equal(a.element('settings-basic').value,604.13);
+ assert.equal(a.api.state.otEntries[0].rate,16.50);
+ a.api.state.otEntries=[];
+ a.fire('add-ot');
+ assert.equal(a.api.state.otEntries[0].rate,16.50);
 });
-test('salary increase migrates old defaults once and preserves history and OT',()=>{
- for(const basic of [549.65,549.66]){
-  const a=app({basic,history:[{id:1,date:'2026-09-18',basic:549.65,gross:549.65,net:460}],otEntries:[{mode:'manual',hours:1,rate:14.96}]});
-  assert.equal(a.api.state.basic,566.14);assert.equal(a.api.state.history[0].basic,549.65);assert.equal(a.api.state.otEntries[0].rate,14.96);
-  const saved=JSON.parse(a.storage.get('wagewise-v5'));assert.equal(app(saved).api.state.basic,566.14);
-  saved.basic=549.65;assert.equal(app(saved).api.state.basic,549.65);
+test('pay rise migrates previous defaults once and preserves history and custom rates',()=>{
+ for(const basic of [549.65,549.66,566.14]){
+  const oldOt={mode:'manual',hours:1,rate:14.96};
+  const a=app({basic,history:[{id:1,date:'2026-09-18',basic,otEntries:[oldOt]}],otEntries:[oldOt,{mode:'manual',hours:2,rate:20}]});
+  assert.equal(a.api.state.basic,604.13);
+  assert.equal(a.api.state.history[0].basic,basic);
+  assert.equal(a.api.state.history[0].otEntries[0].rate,14.96);
+  assert.equal(a.api.state.otEntries[0].rate,16.50);
+  assert.equal(a.api.state.otEntries[1].rate,20);
+  const saved=JSON.parse(a.storage.get('wagewise-v5'));
+  saved.basic=566.14;
+  saved.otEntries[0].rate=14.96;
+  const reloaded=app(saved);
+  assert.equal(reloaded.api.state.basic,566.14);
+  assert.equal(reloaded.api.state.otEntries[0].rate,14.96);
  }
  assert.equal(app({basic:600}).api.state.basic,600);
 });
