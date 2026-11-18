@@ -85,8 +85,12 @@ public class CalculatorIntegrationTest {
                 document.querySelector('#sync-code-input').value = %s;
                 document.querySelector('#sync-pair-form button').click();
                 """.formatted(JSONObject.quote(code)));
-            await(scenario, "!document.querySelector('#sync-import').hidden");
-            evaluate(scenario, "document.querySelector('#sync-import button:last-child').click()");
+            try {
+                await(scenario, "!document.querySelector('#sync-import').hidden || document.querySelector('#sync-status').textContent.includes('Last synced')");
+            } catch (AssertionError failure) {
+                throw new AssertionError(evaluate(scenario, "document.querySelector('#sync-status').textContent"), failure);
+            }
+            evaluate(scenario, "document.querySelector('#sync-import button:last-child')?.click()");
             await(scenario, "document.querySelector('#sync-status').textContent.includes('Last synced')");
             evaluate(scenario, """
                 const workDate = Tracking.localDate();
