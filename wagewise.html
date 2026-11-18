@@ -588,8 +588,15 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
           <button type="button" class="cal-nav-btn" id="cal-next">&#9654;</button>
         </div>
       </div>
+      <ul class="cal-key" aria-label="Calendar markers">
+        <li><strong>OT</strong> Overtime recorded</li>
+        <li><strong>Pay</strong> Saved pay entry</li>
+        <li><strong>Off</strong> Day off</li>
+        <li><strong>0</strong> No overtime</li>
+        <li><strong>!</strong> Workday to log</li>
+      </ul>
       <div id="cal-body"></div>
-      <div id="cal-day-panel" hidden></div>
+      <div id="cal-day-panel" class="cal-day-panel" hidden></div>
 <article class="card day-card" id="daily-log">
         <label class="row spread" for="log-date"><strong>Work date</strong><input type="date" id="log-date" required></label>
         <p class="status" id="day-status"></p>
@@ -621,7 +628,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
       </article>
 
       <div id="cal-month-sum"></div>
-      <div class="cal-print-wrap"><button type="button" id="cal-print-btn" class="primary-btn" hidden>&#128438; Print monthly payslip</button></div>
+      <div class="cal-print-wrap"><button type="button" id="cal-print-btn" class="primary-btn" hidden>Print monthly payslip</button></div>
       <div style="height:20px;"></div>
     </section>
 
@@ -1486,6 +1493,10 @@ function renderCalendarScreen(){if(features&&!_calSelDate)_calSelDate=todayISO()
 function logBadge(info){
   return info.hasOT?'OT':info.logged?.status==='off'?'Off':info.logged?.status==='none'?'0':'';
 }
+function calendarMarkers(date,info){
+  var work=(info&&logBadge(info))||(features?.dayStatus(date)==='missing'?'!':'');
+  return [info?.hasEntry?'Pay':'',work].filter(Boolean);
+}
 function renderMonthly(map){
   var y=_calYear,m=_calMonth;
   $('cal-period-lbl').textContent=MNAMES[m]+' '+y;
@@ -1503,7 +1514,7 @@ function renderMonthly(map){
     if(c.iso===_calSelDate)cls+=' cal-sel';
     if(c.info&&c.info.hasEntry)cls+=' cal-has-entry';
     else if(c.info&&c.info.hasOT)cls+=' cal-has-ot';
-    var label=c.info?.hasEntry?(c.info.hasOT?'✓ OT':'✓'):c.info?logBadge(c.info):features?.dayStatus(c.iso)==='missing'?'!':'';
+    var label=calendarMarkers(c.iso,c.info).join(' ');
     var tag=label?'<span class="cal-tag">'+label+'</span>':'';
     h+='<div class="'+cls+'" data-cd="'+c.iso+'"><span class="cal-num">'+c.d+'</span>'+tag+'</div>';
   });
@@ -1521,10 +1532,10 @@ function renderWeekly(map){
     var d=new Date(mon);d.setDate(mon.getDate()+i);
     var iso=isoD(d);var info=map[iso];
     var dl=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    var badges='';
-    if(info&&info.hasEntry)badges+='<span class="wr-badge wr-en">\u2713</span>';
-    if(!info&&features?.dayStatus(iso)==='missing')badges+='<span class="wr-badge">Missing</span>';
-    if(info&&logBadge(info))badges+='<span class="wr-badge wr-ot">'+logBadge(info)+'</span>';
+    var badges=calendarMarkers(iso,info).map(function(marker){
+      var cls=marker==='Pay'?' wr-en':marker==='OT'?' wr-ot':'';
+      return '<span class="wr-badge'+cls+'">'+(marker==='!'?'Workday to log':marker==='0'?'No overtime':marker)+'</span>';
+    }).join('');
     h+='<div class="week-row'+(iso===_calSelDate?' wsel':'')+(iso===today?' cal-today':'')+'" data-cd="'+iso+'"><span class="wr-day">'+DNAMES[i]+'</span><span class="wr-date">'+dl+'</span>'+badges+'</div>';
   }
   h+='</div>';
@@ -1583,8 +1594,8 @@ function renderMonthSummary(map){
   if(!entries.length){sm.innerHTML=loggedSummary;if(pb)pb.hidden=true;return;}
   var tG=0,tN=0,tT=0,tI=0,tO=0;
   entries.forEach(function(e){tG+=e.gross;tN+=e.net;tT+=(e.tax||0);tI+=(e.ni||0);tO+=(e.otTotal||0);});
-  sm.innerHTML=loggedSummary+'<div class="cal-month-sum"><div class="cms-hdr"><span>'+MNAMES[_calMonth]+' '+_calYear+'</span><span>'+entries.length+' entr'+(entries.length===1?'y':'ies')+'</span></div>'+
-    '<div class="cms-row"><span class="cms-lbl">Overtime</span><span class="cms-val">'+money(tO)+'</span></div>'+
+  sm.innerHTML=loggedSummary+'<div class="cal-month-sum"><div class="cms-hdr"><span>'+MNAMES[_calMonth]+' '+_calYear+'</span><span>'+entries.length+' pay entr'+(entries.length===1?'y':'ies')+'</span></div>'+
+    '<div class="cms-row"><span class="cms-lbl">Overtime in saved pay</span><span class="cms-val">'+money(tO)+'</span></div>'+
     '<div class="cms-row"><span class="cms-lbl">Gross</span><span class="cms-val">'+money(tG)+'</span></div>'+
     '<div class="cms-row"><span class="cms-lbl">Tax + NI</span><span class="cms-val ded-v">'+moneySgn(-(tT+tI))+'</span></div>'+
     '<div class="cms-row"><span class="cms-lbl">Net pay</span><span class="cms-val net-v">'+money(tN)+'</span></div></div>';
@@ -1593,7 +1604,7 @@ function renderMonthSummary(map){
 $('cal-body').addEventListener('click',function(e){
   var c=e.target.closest?e.target.closest('[data-cd]'):null;if(!c)return;
   _calSelDate=c.getAttribute('data-cd');
-  var map=buildDateMap();if(_calView==='monthly')renderMonthly(map);else renderWeekly(map);renderDayPanel(map);
+  var map=buildDateMap();if(_calView==='monthly')renderMonthly(map);else renderWeekly(map);
 });
 $('cal-monthly-btn').addEventListener('click',function(){_calView='monthly';this.classList.add('on');$('cal-weekly-btn').classList.remove('on');renderCalendarScreen();});
 $('cal-weekly-btn').addEventListener('click',function(){_calView='weekly';this.classList.add('on');$('cal-monthly-btn').classList.remove('on');renderCalendarScreen();});

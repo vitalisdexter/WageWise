@@ -32,6 +32,22 @@
 .feature-card h2:not(:first-child) { margin-top: 14px; }
 .feature-card p, .context, .feature-card .status { color: var(--ink-soft); font-size: .88rem; }
 #dash-overtime { margin-inline: 22px; }
+[data-screen="calendar"] { padding-inline: 22px; }
+[data-screen="calendar"] :is(.cal-topbar,.cal-dow-row,.cal-grid,.cal-print-wrap) { padding-inline: 0; }
+[data-screen="calendar"] :is(.week-strip,.cal-day-panel,.cal-month-sum,#daily-log) { margin-inline: 0; }
+.cal-dow-row,.cal-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.cal-tag { white-space: nowrap; }
+.cal-key { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 0; margin: 0 0 12px; list-style: none; color: var(--ink-soft); font-size: .75rem; }
+.cal-key strong { color: var(--accent-ink); }
+.cal-day-panel .link-btn { color: var(--accent-ink); }
+.cdp-label { min-width: 0; overflow-wrap: anywhere; }
+.cms-hdr,.cms-row { gap: 8px; }
+.cms-val { flex-shrink: 0; }
+@media (max-width: 390px) {
+  .cal-topbar { flex-wrap: wrap; }
+  .cal-topbar .seg,.cal-nav-row { flex-basis: 100%; }
+  .cal-nav-row { justify-content: space-between; }
+}
 #daily-log .status { display: inline-block; margin: 0; border-radius: 16px; padding: 4px 9px; background: var(--stripe); font-weight: 650; font-size: .82rem; }
 #daily-log .status.missing { color: var(--brick); }
 #checks .intro, [data-screen="planner"] .intro { padding: 14px 16px 0; }
