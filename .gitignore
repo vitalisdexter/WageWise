@@ -8,5 +8,6 @@ test-results/
 mobile/web/
 mobile/releases/
 .wagewise-sync.json
+.wagewise-vapid.json
 public/sync-config.json
 supabase/.temp/

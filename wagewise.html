@@ -783,12 +783,12 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 
     <section class="screen" data-screen="settings">
       <form id="reminder-form" class="card">
-        <h2 id="settings-heading-reminder">Working days</h2>
-        <label class="check" data-android-only><input type="checkbox" id="reminder-enabled"> Remind me to log overtime</label>
+        <h2>Workdays and reminders</h2>
+        <label class="check" data-reminder-control><input type="checkbox" id="reminder-enabled"> Remind me to log overtime</label>
         <fieldset class="weekday-choices"><legend>Working days</legend><div id="reminder-days"></div></fieldset>
-        <label data-android-only>Reminder time<input type="time" id="reminder-time"></label>
+        <label data-reminder-control>Reminder time<input type="time" id="reminder-time"></label>
         <p id="reminder-status" class="context"></p>
-        <div class="actions"><button type="submit" class="primary">Save working days</button><button type="button" id="notification-settings" hidden>Android notification settings</button></div>
+        <div class="actions"><button type="submit" class="primary">Save workdays and reminders</button><button type="button" id="test-reminder" hidden>Send a test notification</button><button type="button" id="notification-settings" hidden>Android notification settings</button></div>
       </form>
       <form id="payroll-form" class="card">
         <h2>Weekly overtime cutoff</h2>

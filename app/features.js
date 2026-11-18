@@ -63,13 +63,24 @@ function save(change, source = 'log') {
 }
 
 async function updateReminders() {
-  if (!native || !deviceReminder) return;
+  if (!deviceReminder) return;
+  if (!native) {
+    if (deviceReminder.enabled) window.WageWiseWebReminders?.update(reminderSettings()).catch(() => {});
+    return;
+  }
   try {
     await native.writeReminderProjection({json: JSON.stringify({
       reminder: {...deviceReminder, weekdays: state.log.reminder.weekdays},
       days: Object.fromEntries(Object.keys(state.log.days).map(date => [date, true]))
     })});
   } catch (error) { notice(error.message, true); }
+}
+
+function reminderSettings() {
+  const today = Tracking.localDate();
+  const from = Tracking.dateAdd(today, -1), to = Tracking.dateAdd(today, 8);
+  return {time: deviceReminder.time, weekdays: state.log.reminder.weekdays,
+    completed: Object.keys(state.log.days).filter(date => date >= from && date <= to).sort()};
 }
 
 async function useWorkspace(key) {
@@ -299,6 +310,16 @@ function loadSettings() {
 }
 
 async function reminderStatus() {
+  if (!native) {
+    const supported = window.WageWiseWebReminders?.supported();
+    $('reminder-status').hidden = false;
+    $('test-reminder').hidden = !supported || !deviceReminder.enabled;
+    $('reminder-status').textContent = !supported ? 'Open WageWise in a browser that supports Web Push.' :
+      Notification.permission === 'denied' ? 'Allow WageWise notifications in your browser settings.' :
+      deviceReminder.enabled ? 'Reminders are enabled on this device. Delivery can take a few minutes.' :
+      'Enable reminders to get a notification when it’s time to log overtime.';
+    return;
+  }
   const allowed = native && (await native.notificationStatus()).allowed;
   $('notification-settings').hidden = !native || allowed;
   $('reminder-status').hidden = !native;
@@ -441,8 +462,8 @@ async function init() {
   $('back-to-payslip').onclick = () => show('payslip');
   $('planner-totals-link').onclick = api.openPayslipTotals;
   const reminderInputs = $('reminder-form');
-  for (const element of reminderInputs.querySelectorAll('[data-android-only]')) element.hidden = !native;
-  $('settings-heading-reminder').textContent = native ? 'Workdays and reminders' : 'Working days';
+  const canNotify = Boolean(native || window.WageWiseWebReminders?.supported());
+  for (const element of reminderInputs.querySelectorAll('[data-reminder-control]')) element.hidden = !canNotify;
   $('log-date').onchange = () => api.openLogDate($('log-date').value);
   $('add-shift').onclick = () => openEditor();
   $('cancel-shift').onclick = closeEditor;
@@ -484,13 +505,20 @@ async function init() {
     const time = $('reminder-time').value;
     if (!Tracking.timeValid(time)) throw Error('Choose a valid reminder time.');
     const enabled = $('reminder-enabled').checked;
-    if (native && enabled) await native.requestNotifications();
-    deviceReminder = await storage.change('device-reminder', () => ({enabled: Boolean(native && enabled), time}));
+    if (enabled) {
+      if (native) await native.requestNotifications();
+      else await window.WageWiseWebReminders.enable({...reminderSettings(), time, weekdays});
+    } else if (!native && deviceReminder.enabled) await window.WageWiseWebReminders.disable();
+    deviceReminder = await storage.change('device-reminder', () => ({enabled, time}));
     await save(current => ({...current, log: {...current.log, reminder: {...Tracking.empty().reminder, weekdays}}}));
     await reminderStatus();
-    notice(native ? 'Reminder schedule saved' : 'Working days saved');
+    notice(enabled ? 'Reminder schedule saved' : 'Working days saved');
   });
   action('notification-settings', 'click', () => native.openNotificationSettings());
+  action('test-reminder', 'click', async () => {
+    await window.WageWiseWebReminders.test();
+    notice('Test notification sent');
+  });
   action('payroll-form', 'submit', async () => {
     const cutoff = $('anchor-cutoff').value;
     const payDate = $('anchor-pay').value;
@@ -510,16 +538,30 @@ async function init() {
     catch { throw Error('Choose a valid WageWise JSON backup.'); }
   });
   if (native) {
-    await native.addListener('openLog', ({date}) => api.openLogDate(date));
-    const launch = await native.takeLaunchDate();
-    api.launchDate = launch.date;
+    const openReminder = ({date}) => {
+      if (!Tracking.dateValid(date)) return;
+      if (window.WageWiseNavigate) api.openLogDate(date);
+      else api.launchDate = date;
+    };
+    await native.addListener('openLog', openReminder);
+    openReminder(await native.takeLaunchDate());
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) return;
       if (screen === 'settings') reminderStatus().catch(error => notice(error.message, true));
       renderScreen();
     });
-    updateReminders();
+  } else {
+    const query = new URL(location.href).searchParams.get('log');
+    if (Tracking.dateValid(query)) {
+      api.launchDate = query;
+      history.replaceState(null, '', location.pathname);
+    }
+    navigator.serviceWorker?.addEventListener('message', ({data}) => {
+      if (data?.type === 'wagewise-reminder' && Tracking.dateValid(data.date)) api.openLogDate(data.date);
+    });
+    window.addEventListener('online', updateReminders);
   }
+  updateReminders();
 }
 
 const api = window.WageWiseFeatures = {};

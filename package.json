@@ -8,6 +8,7 @@
     "check": "npm test && node scripts/build.js --check"
   },
   "dependencies": {
+    "@block65/webcrypto-web-push": "2.0.0",
     "@supabase/supabase-js": "2.119.1"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
 import {createClient} from '@supabase/supabase-js';
+import './web-reminders.js';
 
 const $ = id => document.getElementById(id);
 const storage = window.WageWiseData;

@@ -1,8 +1,13 @@
 # WageWise
 
 WageWise combines a weekly Scottish pay calculator, overtime calendar, payslip
-checks and financial planner. The same app runs at
-https://wagewise.vitalisdexter.workers.dev/ and in the signed Android build.
+checks and financial planner. Install it from
+https://wagewise.vitalisdexter.workers.dev/ using **Install app** in Android
+Chrome. The home-screen app picks up future web releases when opened online.
+
+In **Settings → Workdays and reminders**, choose your working days and time,
+enable reminders and allow browser notifications. The test button sends a push
+immediately. A daily reminder opens the relevant work date in Calendar.
 
 ## Calculation scope
 
@@ -86,6 +91,12 @@ guarantee for unmodelled payroll arrangements. Additional tests cover refunds,
 thresholds, date boundaries, invalid inputs, persistence, snapshots and escaping.
 
 ## Deployment
+
+Web reminders use the existing Worker with a five-minute Cron Trigger and the
+`wagewise-reminders` D1 database. Apply D1 migrations with
+`npx wrangler d1 migrations apply REMINDERS --remote` and set the
+`VAPID_PRIVATE_KEY` Worker secret to the private key matching the public key in
+Wrangler configuration. Keep this key pair stable across deployments.
 
 The existing Cloudflare **Worker** `wagewise` is connected to GitHub
 `vitalisdexter/WageWise`, production branch `master`. Keep that Worker to retain
