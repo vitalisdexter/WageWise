@@ -1,0 +1,84 @@
+.shell { max-width: 760px; }
+.topbar { background: linear-gradient(110deg, var(--pine), var(--accent-ink)); }
+[data-theme="dark"] .topbar { background: var(--pine); }
+.perf { height: 4px; background-image: none; }
+.screens { scroll-padding-block: 14px; }
+.bottomnav { gap: 2px; padding-inline: 5px; }
+.navbtn { min-height: 46px; justify-content: center; }
+.navbtn.is-active { background: var(--stripe); }
+.navbtn .planner-icon { font-size: 20px; height: 20px; line-height: 1; }
+.ime-open .bottomnav { display: none; }
+.notice { margin: 0; padding: 9px 16px; background: var(--stripe); font-size: .88rem; }
+.notice.error { color: var(--brick); }
+.feature-card, .linked-panel, #daily-log, #forecast-setup, #checks .card, [data-screen="planner"] .card,
+#reminder-form, #payroll-form, #sync-card, #backup-card {
+  margin: 12px 16px; padding: 14px; background: var(--paper); border: 1px solid var(--rule); border-radius: 15px;
+}
+#log-link { margin-inline: 0; padding-block: 6px; background: var(--stripe); }
+.linked-panel .link-btn { margin: 4px 0; }
+.feature-card h2, #daily-log h2, #forecast-setup h2, #checks h2, [data-screen="planner"] h2,
+#reminder-form h2, #payroll-form h2, #sync-card h2, #backup-card h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.feature-card h2:not(:first-child) { margin-top: 14px; }
+.feature-card p, .context, .feature-card .status { color: var(--ink-soft); font-size: .88rem; }
+[data-screen="dashboard"] .history-empty { padding: 12px; text-align: left; border: 1px solid var(--rule); border-radius: 12px; }
+[data-screen="dashboard"] .history-empty svg { display: none; }
+#daily-log .status { display: inline-block; margin: 0; border-radius: 16px; padding: 4px 9px; background: var(--stripe); font-weight: 650; font-size: .82rem; }
+#daily-log .status.missing { color: var(--brick); }
+#checks .intro, [data-screen="planner"] .intro { padding: 14px 16px 0; }
+#checks h1, [data-screen="planner"] h1 { font-size: 1.45rem; margin: 7px 0; letter-spacing: -.03em; }
+#daily-log .fields, #daily-log .row, #checks .fields, #forecast-setup .fields,
+[data-screen="planner"] .fields, #payroll-form .fields { display: flex; flex-wrap: wrap; gap: 8px; }
+:is(#daily-log,#checks,#forecast-setup,[data-screen="planner"],#reminder-form,#payroll-form,#sync-card) label:not(.check) {
+  display: grid; gap: 4px; margin-bottom: 11px; color: var(--ink-soft); font-size: .88rem;
+}
+.fields > label { flex: 1 1 120px; min-width: 0; }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.check { min-height: 42px; display: flex; align-items: center; gap: 7px; }
+.weekday-choices { border: 0; margin: 5px 0 9px; padding: 0; }
+#reminder-days { display: flex; gap: 8px; flex-wrap: wrap; }
+:is(#daily-log,#checks,#forecast-setup,[data-screen="planner"],#reminder-form,#payroll-form,#sync-card)
+:is(input:not([type="checkbox"]),select,textarea) {
+  width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; font: inherit; font-size: 1rem;
+  background: var(--paper); color: var(--ink); border: 1px solid var(--rule-strong); border-radius: 10px;
+}
+:is(#daily-log,#checks,#forecast-setup,[data-screen="planner"],#reminder-form,#payroll-form,#sync-card)
+:is(input,select,textarea):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+:is(#daily-log,#checks,#forecast-setup,[data-screen="planner"],#reminder-form,#payroll-form,#sync-card,#backup-card)
+button:not(.link-btn) {
+  min-height: 44px; padding: 7px 10px; background: var(--paper); color: var(--ink);
+  border: 1px solid var(--rule-strong); border-radius: 10px; font: inherit; font-size: .86rem; font-weight: 650; cursor: pointer;
+}
+:is(#daily-log,#checks,#forecast-setup,[data-screen="planner"],#reminder-form,#payroll-form,#sync-card,#backup-card)
+button.primary { background: var(--pine); color: var(--on-accent); border-color: var(--pine); }
+button:disabled { opacity: .55; cursor: default; }
+.shift-estimate, .planner-result, .backup-preview { margin: 9px 0; padding: 9px; background: var(--stripe); border-radius: 10px; }
+.shift-estimate { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: center; }
+.shift-estimate output, .planner-result strong { font-weight: 750; font-variant-numeric: tabular-nums; }
+.entries { list-style: none; padding: 0; margin: 0 0 10px; }
+.entries li, #check-shifts label, #other-shifts label { border-bottom: 1px solid var(--rule); padding: 7px 0; overflow-wrap: anywhere; }
+.entry-text { flex: 1; }
+.entry-text small { display: block; color: var(--ink-soft); }
+.entry-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+#candidate-shifts { margin: 0; border: 0; padding: 0; }
+summary { cursor: pointer; font-weight: 650; }
+.planner-tabs { display: flex; gap: 4px; margin: 12px 16px; }
+.planner-tabs button { flex: 1; }
+.planner-tabs button[aria-pressed="true"] { background: var(--stripe); color: var(--accent-ink); }
+.planner-table { width: 100%; border-collapse: collapse; font-size: .8rem; font-variant-numeric: tabular-nums; }
+.planner-table caption { text-align: left; margin: 8px 0; }
+.planner-table th, .planner-table td { padding: 6px 2px; border-bottom: 1px solid var(--rule); text-align: right; }
+.planner-table th:first-child { text-align: left; }
+.planner-table tfoot { background: var(--stripe); }
+#forecast-setup form { margin-top: 10px; }
+#sync-pair-form { margin-top: 10px; }
+#sync-created-code code { display: block; overflow-wrap: anywhere; user-select: all; margin: 8px 0; }
+#planner-totals-link { margin-left: 16px; }
+#projection-pot { flex: 1 1 140px; }
+@media (prefers-reduced-motion: no-preference) {
+  .screen.active { animation: wagewise-screen-in .16s ease-out; }
+  .navbtn { transition: background-color .16s, color .16s; }
+  @keyframes wagewise-screen-in { from { opacity: .6; } to { opacity: 1; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse { animation: none !important; }
+}

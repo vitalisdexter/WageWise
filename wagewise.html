@@ -6,9 +6,7 @@
 <meta name="theme-color" content="#1f5c43"/>
 <title>WageWise</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231f5c43'/%3E%3Ctext x='32' y='45' font-family='monospace' font-size='34' font-weight='700' fill='%23fbfcf7' text-anchor='middle'%3E%C2%A3%3C/text%3E%3C/svg%3E"/>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="referrer" content="no-referrer">
 <style>
 /* ── Tokens ── */
 :root,[data-theme="light"]{--paper:#fbfcf7;--page-bg:#e8ebe1;--ink:#16261d;--ink-soft:#4d6657;--rule:#cddbc8;--rule-strong:#a9c3a2;--on-accent:#fbfcf7;--shadow:0 1px 2px rgba(18,40,28,.06),0 24px 48px -28px rgba(18,40,28,.45);}
@@ -434,6 +432,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .ytd-override-row{display:flex;gap:8px;margin-bottom:10px;}
 .ytd-override-row .input-wrap{flex:1;}
 .ytd-override-note{font-size:11px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
+/* SHARED_STYLE */
 </style>
 </head>
 <body>
@@ -446,7 +445,8 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
     </button>
   </div>
   <div class="perf" aria-hidden="true"></div>
-  <div class="screens">
+  <p id="notice" class="notice" role="status" hidden></p>
+  <main class="screens">
 
     <!-- ═══ CALCULATOR ═══ -->
     <section class="screen active" data-screen="calculator">
@@ -467,10 +467,18 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
           </div>
         </section>
         <div class="field"><label for="pay-date">Pay date</label><input type="date" id="pay-date" min="2025-04-06" max="2027-04-05"></div>
+        <div id="log-link" class="field linked-panel" hidden>
+          <button type="button" class="link-btn" id="use-logged-ot">Use logged overtime for this payday</button>
+          <p class="note" id="log-link-status" role="status"></p>
+        </div>
         <p class="note" id="calc-status" role="status"></p>
 <details class="settings">
           <summary>Tax & National Insurance</summary>
           <div class="settings-body">
+            <div id="linked-ytd" hidden>
+              <p class="note" id="linked-ytd-status"></p>
+              <button type="button" class="link-btn" id="edit-linked-ytd">Latest payslip totals</button>
+            </div>
             <div class="field" style="margin-bottom:10px;">
               <label for="allowance">Scottish suffix-code allowance (S1257L = £12,570)</label>
               <div class="input-wrap"><span class="prefix">&pound;</span><input type="number" inputmode="decimal" step="1" min="0" id="allowance" value="12570"></div>
@@ -561,6 +569,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
         </div>
         <div class="clear-wrap"><button type="button" class="ghost-btn" id="clear-btn" hidden>Clear all history</button></div>
       </div>
+      <article id="dash-overtime" class="card feature-card" hidden></article>
     </section>
 
     <!-- ═══ CALENDAR ═══ -->
@@ -578,6 +587,36 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
       </div>
       <div id="cal-body"></div>
       <div id="cal-day-panel" hidden></div>
+<article class="card day-card" id="daily-log">
+        <label class="row spread" for="log-date"><strong>Work date</strong><input type="date" id="log-date" required></label>
+        <p class="status" id="day-status"></p>
+        <p class="context" id="suggested-pay"></p>
+        <ul id="shifts" class="entries"></ul>
+        <div class="actions" id="day-actions">
+          <button class="primary" id="add-shift">Log overtime</button>
+          <button id="no-overtime">No overtime</button>
+          <button id="day-off">Day off</button>
+          <button id="clear-day" hidden>Clear day status</button>
+        </div>
+        <form id="shift-form" hidden>
+          <h2 id="shift-heading">Log overtime</h2>
+          <label>Enter using<select id="shift-mode"><option value="duration">Hours and minutes</option><option value="clock">Start and end times</option></select></label>
+          <div class="fields" id="duration-fields">
+            <label>Hours<input type="number" id="hours" inputmode="numeric" min="0" max="24" step="1" value="0"></label>
+            <label>Minutes<input type="number" id="minutes" inputmode="numeric" min="0" max="59" step="1" value="0"></label>
+          </div>
+          <div class="fields" id="clock-fields" hidden>
+            <label>Start<input type="time" id="start"></label>
+            <label>End<input type="time" id="end"></label>
+            <label>Break (min)<input type="number" id="break" inputmode="numeric" min="0" max="1439" step="1" value="0"></label>
+          </div>
+          <label>Hourly rate (£)<input type="number" id="shift-rate" inputmode="decimal" min="0" max="99999.99" step="0.01" required></label>
+          <div class="shift-estimate"><span>Estimated overtime pay</span><output id="shift-pay" for="hours minutes start end break shift-rate">—</output></div>
+          <label>Note (optional)<textarea id="shift-note" maxlength="300" rows="2"></textarea></label>
+          <div class="actions"><button class="primary" type="submit">Save shift</button><button id="cancel-shift" type="button">Cancel</button></div>
+        </form>
+      </article>
+
       <div id="cal-month-sum"></div>
       <div class="cal-print-wrap"><button type="button" id="cal-print-btn" class="primary-btn" hidden>&#128438; Print monthly payslip</button></div>
       <div style="height:20px;"></div>
@@ -585,9 +624,15 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 
     <!-- ═══ PAYSLIP ═══ -->
     <section class="screen" data-screen="payslip">
+      <div id="payslip-preview">
       <div class="ps-topbar">
         <div><h1 class="ps-heading">Payslip</h1><p class="ps-sub">Preview, print or save as PDF.</p></div>
         <button type="button" class="primary-btn" id="ps-print-btn" style="width:auto;padding:10px 18px;font-size:14px;">&#128438; Print</button>
+      </div>
+      <div id="payslip-check-link" class="linked-panel" hidden>
+        <button type="button" class="link-btn" id="open-payslip-check">Check against my log</button>
+        <button class="link-btn" type="button" id="payslip-actual">Record actual pay</button>
+        <button class="link-btn" type="button" id="payslip-totals">Latest payslip totals</button>
       </div>
       <div class="ps-section">
         <div class="card-title">Generate from</div>
@@ -617,10 +662,166 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
         <button type="button" class="primary-btn" id="ps-print-btn2">&#128438; Print / Save as PDF</button>
         <p style="font-size:11px;color:var(--ink-soft);text-align:center;margin:10px 0 0;line-height:1.55;">Opens your device&rsquo;s print screen. Choose &ldquo;Save as PDF&rdquo; to download.</p>
       </div>
+      </div>
+        <details class="card" id="forecast-setup" hidden>
+          <summary>Latest payslip totals</summary>
+          <form id="ytd-form">
+            <p>Enter the year-to-date amounts printed on your latest payslip.</p>
+            <label>Latest payslip date<input type="date" id="planner-anchor-date" required></label>
+            <div class="fields">
+              <label>Taxable pay to date (£)<input type="number" id="planner-anchor-gross" min="0" max="9999999.99" step="0.01" inputmode="decimal" required></label>
+              <label>Tax paid to date (£)<input type="number" id="planner-anchor-tax" min="-9999999.99" max="9999999.99" step="0.01" inputmode="decimal" required></label>
+            </div>
+            <div class="actions"><button type="submit" class="primary">Save payslip totals</button><button id="clear-anchor" type="button">Clear totals</button></div>
+          </form>
+        </details>
+    <div id="checks" aria-labelledby="checks-heading" hidden>
+      <div class="intro"><button id="back-to-payslip">← Payslip preview</button><h1 id="checks-heading">Payslip check</h1><p>Enter the overtime hours and pay from your employer’s payslip, then compare them with your logged shifts.</p></div>
+      <article class="card">
+        <label>Pay date<input type="date" id="check-date" required></label>
+        <p class="context" id="check-period"></p>
+        <div id="confirmed-check" hidden>
+          <div id="confirmed-details"></div>
+          <button id="edit-check">Edit comparison</button>
+        </div>
+        <form id="check-form">
+          <fieldset id="candidate-shifts"><legend>Shifts on this payslip</legend><div id="check-shifts"></div></fieldset>
+          <details id="other-details"><summary>Pick from other logged dates</summary><div id="other-shifts"></div></details>
+          <div class="fields">
+            <label>Payslip OT hours<input type="number" id="actual-hours" inputmode="decimal" min="0" max="168" step="0.01" required></label>
+            <label>Payslip OT pay (£)<input type="number" id="actual-pay" inputmode="decimal" min="0" max="9999999.99" step="0.01" required></label>
+          </div>
+          <p class="context" id="check-preview"></p>
+          <div class="actions"><button type="submit" class="primary">Save comparison</button><button type="button" id="cancel-check" hidden>Cancel edit</button></div>
+        </form>
+      </article>
+      <article class="card" id="past-checks-card" hidden><h2>Saved comparisons</h2><ul id="past-checks" class="entries"></ul></article>
+    </div>
+
     </section>
 
     <!-- ═══ SETTINGS ═══ -->
+    <section class="screen" data-screen="planner" aria-labelledby="planner-heading">
+      <div class="intro"><h1 id="planner-heading">Planner</h1></div>
+      <div class="planner-tabs" role="group" aria-label="Planner tools">
+        <button type="button" data-planner="forecast" aria-pressed="true">Forecast</button>
+        <button type="button" data-planner="goal" aria-pressed="false">Net-pay goal</button>
+        <button type="button" data-planner="pots" aria-pressed="false">Payday pots</button>
+      </div>
+      <div id="planner-forecast">
+        <div id="forecast-list"></div>
+        <button class="link-btn" type="button" id="planner-totals-link">Latest payslip totals</button>
+        <article class="card" id="planned-card">
+          <h2>Planned overtime</h2>
+          <p>Enter the total expected overtime for a work date. Until you log the hours, the forecast counts the balance as planned overtime.</p>
+          <form id="planned-form">
+            <div class="fields"><label>Planned work date<input type="date" id="planned-date" required></label>
+            <label>Total overtime (hours)<input type="number" id="planned-hours" min="0" max="24" step="0.25" inputmode="decimal" required></label></div>
+            <button type="submit" class="primary">Save planned hours</button>
+          </form>
+          <ul id="planned-list" class="entries"></ul>
+        </article>
+      </div>
+      <div id="planner-goal" hidden>
+        <form class="card" id="goal-form">
+          <h2>Extra overtime for a payday</h2>
+          <label>Target payday<select id="goal-payday" required></select></label>
+          <p class="context" id="goal-cutoff"></p>
+          <label>Take-home target (£)<input type="number" id="goal-target" min="0.01" step="0.01" max="9999999.99" inputmode="decimal" required></label>
+          <label>Extra hours available<input type="number" id="goal-max" min="0" max="168" step="0.25" inputmode="decimal" required></label>
+          <button type="submit" id="goal-calculate" class="primary">Calculate extra hours</button>
+        </form>
+        <div id="goal-result" aria-live="polite"></div>
+      </div>
+      <div id="planner-pots" hidden>
+        <article class="card">
+          <h2>Pay for this plan</h2>
+          <label>Pay source<select id="budget-source" aria-label="Pay source"></select></label>
+          <form id="actual-net-form" hidden>
+            <label>Actual take-home pay (£)<input id="actual-net" type="number" min="-9999999.99" max="9999999.99" step="0.01" inputmode="decimal" required></label>
+            <button type="submit" class="primary">Save actual pay</button>
+          </form>
+          <div id="budget-summary" aria-live="polite"></div>
+        </article>
+        <article class="card">
+          <h2>Bills and commitments</h2>
+          <p class="context">Monthly amounts are spread across 52 weekly paydays.</p>
+          <ul id="bill-list" class="entries"></ul>
+          <form id="bill-form">
+            <label>Bill name<input id="bill-name" maxlength="60" required></label>
+            <div class="fields"><label>Bill amount (£)<input id="bill-amount" type="number" min="0.01" max="9999999.99" step="0.01" inputmode="decimal" required></label>
+            <label>Repeat<select id="bill-cadence"><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label></div>
+            <button type="submit" class="primary">Save bill</button>
+          </form>
+        </article>
+        <article class="card">
+          <h2>Split the remainder</h2>
+          <ul id="pot-list" class="entries"></ul>
+          <form id="pot-form">
+            <div class="fields"><label>Pot name<input id="pot-name" maxlength="60" required></label>
+            <label>Share (%)<input id="pot-share" type="number" min="1" max="100" step="1" inputmode="numeric" required></label></div>
+            <button type="submit" class="primary">Save pot</button>
+          </form>
+        </article>
+        <article class="card">
+          <h2>Investment scenarios</h2>
+          <form id="projection-form">
+            <div class="fields"><label>Starting balance (£)<input id="projection-balance" type="number" min="0" max="9999999.99" step="0.01" inputmode="decimal" required></label>
+            <label>Weekly contribution (£)<input id="projection-weekly" type="number" min="0" max="9999999.99" step="0.01" inputmode="decimal" required></label></div>
+            <div class="actions"><select id="projection-pot" aria-label="Choose a pot for weekly contributions"></select><button id="use-pot" type="button">Use pot amount</button></div>
+            <div class="fields"><label>Years<input id="projection-years" type="number" min="1" max="50" step="1" inputmode="numeric" required></label>
+            <label>Annual fee (%)<input id="projection-fee" type="number" min="0" max="100" step="0.01" inputmode="decimal" required></label></div>
+            <div class="fields"><label>Annual return (%)<input id="projection-return" type="number" min="-99.99" max="100" step="0.01" inputmode="decimal" required></label>
+            <label>Downside return (%)<input id="projection-downside" type="number" min="-99.99" max="100" step="0.01" inputmode="decimal" required></label></div>
+            <p class="context">Illustrations in pounds before tax and inflation. Your assumptions can produce gains or losses.</p>
+            <button type="submit" class="primary">Calculate scenarios</button>
+          </form>
+          <div id="projection-result" aria-live="polite"></div>
+        </article>
+      </div>
+    </section>
+
     <section class="screen" data-screen="settings">
+      <form id="reminder-form" class="card">
+        <h2 id="settings-heading-reminder">Working days</h2>
+        <label class="check" data-android-only><input type="checkbox" id="reminder-enabled"> Remind me to log overtime</label>
+        <fieldset class="weekday-choices"><legend>Working days</legend><div id="reminder-days"></div></fieldset>
+        <label data-android-only>Reminder time<input type="time" id="reminder-time"></label>
+        <p id="reminder-status" class="context"></p>
+        <div class="actions"><button type="submit" class="primary">Save working days</button><button type="button" id="notification-settings" hidden>Android notification settings</button></div>
+      </form>
+      <form id="payroll-form" class="card">
+        <h2>Weekly overtime cutoff</h2>
+        <p>Enter the last work date covered by one payslip, then the date that payslip was paid.</p>
+        <div class="fields"><label>Known cutoff<input type="date" id="anchor-cutoff"></label><label>Corresponding pay date<input type="date" id="anchor-pay"></label></div>
+        <label>Default OT1 rate (£/hr)<input type="number" id="default-rate" inputmode="decimal" min="0" max="99999.99" step="0.01" required></label>
+        <button type="submit" class="primary">Save payroll settings</button>
+      </form>
+      <article class="card" id="sync-card">
+        <h2>Device pairing and sync</h2>
+        <p id="sync-status" class="context" role="status">Checking sync availability…</p>
+        <div class="actions">
+          <button class="primary" id="sync-create" type="button" hidden>Create pairing code</button>
+          <button id="sync-retry" type="button" hidden>Sync now</button>
+          <button id="sync-rotate" type="button" hidden>Replace pairing code</button>
+          <button id="sync-logout" type="button" hidden>Disconnect this device</button>
+        </div>
+        <form id="sync-pair-form" hidden>
+          <label>Pairing code<input type="password" id="sync-code-input" autocomplete="off" spellcheck="false" required maxlength="46"></label>
+          <button type="submit" class="primary">Pair this device</button>
+        </form>
+        <div id="sync-created-code" class="backup-preview" hidden></div>
+        <div id="sync-import" class="backup-preview" hidden></div>
+        <div id="sync-conflicts" class="backup-preview" hidden></div>
+      </article>
+      <article class="card" id="backup-card">
+        <h2>Backups</h2>
+        <p>Keep a private copy of your records. You can also import a WageWise website export.</p>
+        <div class="actions"><button id="export">Export backup</button><button id="import">Choose a backup</button></div>
+        <input type="file" id="backup-file" accept=".json,application/json" hidden>
+        <div id="backup-preview" class="backup-preview" hidden></div>
+      </article>
+
       <div class="screen-intro"><h1>Settings</h1><p>Preferences saved on this device.</p></div>
       <div class="sblock">
         <h3>Appearance</h3>
@@ -692,9 +893,9 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
       <div class="sblock"><h3>About</h3><p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0;">WageWise &mdash; Phase 1&ndash;3 complete. Calendar, custom deductions, and basic pay settings now live.</p></div>
     </section>
 
-  </div><!-- .screens -->
+  </main><!-- .screens -->
 
-  <nav class="bottomnav">
+  <nav class="bottomnav" aria-label="WageWise">
     <button type="button" class="navbtn is-active" data-nav="calculator">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="16" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="12" y1="16" x2="12" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
       <span>Calculator</span>
@@ -711,6 +912,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l3 3v15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
       <span>Payslip</span>
     </button>
+    <button type="button" class="navbtn" data-nav="planner"><span aria-hidden="true" class="planner-icon">↗</span><span>Planner</span></button>
     <button type="button" class="navbtn" data-nav="settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/></svg>
       <span>Settings</span>
@@ -779,6 +981,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 <div class="toast" id="toast"></div>
 <noscript><p style="text-align:center;font-family:sans-serif;">WageWise needs JavaScript enabled.</p></noscript>
 <script src="payroll.js"></script><!-- PAYROLL_ENGINE -->
+<!-- SHARED_APP -->
 <script>
 (function(){
 'use strict';
@@ -790,8 +993,10 @@ function taxYearStartFor(iso){return new Date(Payroll.year(iso),3,6);}
 
 /* ── STORAGE ── */
 var SK='wagewise-v5';
-function loadPersisted(){try{var r=window.localStorage.getItem(SK);return r?JSON.parse(r):null;}catch(e){return null;}}
+var features=window.WageWiseFeatures||null;
+function loadPersisted(){if(features)return features.readCalculator();try{var r=window.localStorage.getItem(SK);return r?JSON.parse(r):null;}catch(e){return null;}}
 function persist(){
+  if(features){features.saveCalculator({...state,otEntries:state.otEntries.filter(entry=>!entry.logShiftId)});return;}
   try{window.localStorage.setItem(SK,JSON.stringify(state));}
   catch(e){showToast('Storage unavailable or full. Export a backup before closing.');}
 }
@@ -829,42 +1034,62 @@ function effHours(e){if(e.mode==='shift'){var r=shiftResult(e);return r?r.hours:
 /* ── STATE ── */
 var DEFAULT_OT1_RATE=16.50;
 var DEF={
-  basic:604.13,salaryRevision:'2026-11-06',
+  basic:Payroll.defaultSettings.basic,salaryRevision:Payroll.defaultSettings.salaryRevision,
   otEntries:[{mode:'manual',hours:5,rate:DEFAULT_OT1_RATE,date:'',startTime:'',endTime:'',breakMins:0}],
-  allowance:12570,theme:'light',accent:'pine',history:[],employeeName:'',employerName:'',customDeductions:[],deductionPresets:[],activePresetId:null
+  allowance:Payroll.defaultSettings.allowance,theme:'light',accent:'pine',history:[],employeeName:'',employerName:'',customDeductions:[],deductionPresets:[],activePresetId:null
 };
-var state=JSON.parse(JSON.stringify(DEF));
-(function(){
+var state;
+function loadCalculator(){
+  state=JSON.parse(JSON.stringify(DEF));
+  if(features){state.otEntries=[];state.useOvertimeLog=true;}
   var s=loadPersisted();if(!s)return;
-  if(typeof s.basic==='number')state.basic=s.basic;
-  if(typeof s.allowance==='number')state.allowance=s.allowance;
+  var paySettings=Payroll.calculatorSettings(s);
+  state.basic=paySettings.basic;state.allowance=paySettings.allowance;
+  state.customDeductions=paySettings.deductions;
   if(s.theme)state.theme=s.theme;if(s.accent)state.accent=s.accent;
   if(Array.isArray(s.otEntries))state.otEntries=s.otEntries;
+  if(typeof s.useOvertimeLog==='boolean')state.useOvertimeLog=s.useOvertimeLog;
   // Migrate previous default rates in the calculator draft once.
   if(s.salaryRevision!==DEF.salaryRevision){
-    if([549.65,549.66,566.14].includes(s.basic))state.basic=DEF.basic;
     state.otEntries.forEach(function(entry){if(entry.rate===14.96)entry.rate=DEFAULT_OT1_RATE;});
   }
   if(Array.isArray(s.history))state.history=s.history;
   if(typeof s.employeeName==='string')state.employeeName=s.employeeName;
   if(typeof s.employerName==='string')state.employerName=s.employerName;
-  if(Array.isArray(s.customDeductions))state.customDeductions=s.customDeductions;
   if(Array.isArray(s.deductionPresets))state.deductionPresets=s.deductionPresets;
   if(s.activePresetId!==undefined)state.activePresetId=s.activePresetId;
   if(s.payDate)state.payDate=s.payDate;
   if(s.ytd)state.ytd=s.ytd;
-})();
+}
+if(!features)loadCalculator();
 
 function roundPence(value){return Payroll.round(value);}
+function overtimeAmounts(entries){
+  var minutesByRate=new Map();
+  return entries.map(function(entry){
+    var hours=effHours(entry),rate=entry.rate;
+    if(!entry.logShiftId)return roundPence(hours*rate);
+    var before=minutesByRate.get(rate)||0;
+    var after=before+Math.round(hours*60);
+    minutesByRate.set(rate,after);
+    return roundPence(roundPence(after*rate/60)-roundPence(before*rate/60));
+  });
+}
 function currentPrior(date){
   var y=state.ytd;
+  var linked=features?.priorForPayday(date);
+  if(linked){
+    if(y?.enabled&&y.year===linked.year&&Number(y.week)===linked.week&&y.ni!=='')linked.ni=Number(y.ni);
+    return linked;
+  }
   if(!y||!y.enabled)return null;
+  if(features&&(y.year!==Payroll.year(date)||Number(y.week)!==Payroll.week(date)-1))return null;
   if(y.gross===''||y.tax===''||y.week==='')throw Error('Complete prior YTD gross, tax and week, or turn off the YTD override.');
   return {gross:Number(y.gross),tax:Number(y.tax),ni:y.ni===''?null:Number(y.ni),week:Number(y.week),year:y.year};
 }
 function calcWith(basic,otEntries,allowance,customDeds,payDateISO,excludeHistoryId,prior){
   var date=payDateISO||state.payDate||todayISO();
-  var otTotal=roundPence(otEntries.reduce(function(s,e){return s+roundPence(effHours(e)*e.rate);},0));
+  var otTotal=roundPence(overtimeAmounts(otEntries).reduce(function(sum,amount){return sum+amount;},0));
   var r=Payroll.calculate({gross:roundPence(basic+otTotal),date:date,allowance:allowance,prior:prior===undefined?null:prior,deductions:customDeds||[]});
   r.otTotal=otTotal;return r;
 }
@@ -876,7 +1101,8 @@ function guardedCalc(fn){
 /* ── GROUPED OT ── */
 function groupOtByRate(otEntries){
   var groups={},order=[];
-  otEntries.forEach(function(e){
+  var amounts=overtimeAmounts(otEntries);
+  otEntries.forEach(function(e,i){
     var hrs=effHours(e);if(hrs<=0)return;
     var rk=parseFloat(e.rate).toFixed(4);
     if(!groups[rk]){groups[rk]={rate:e.rate,totalHours:0,totalPay:0,shifts:[]};order.push(rk);}
@@ -885,9 +1111,10 @@ function groupOtByRate(otEntries){
       label=fmtDayShort(e.date);
       if(e.startTime&&e.endTime){var sr=shiftResult(e);label+=' \u00b7 '+e.startTime+'\u2192'+e.endTime+(sr&&sr.overnight?' (overnight)':'');}
     }else if(e.mode==='shift'&&e.startTime){label=e.startTime+'\u2192'+(e.endTime||'?');}
+    else if(e.date){label=fmtDayShort(e.date);}
     else{label='Manual entry';}
-    groups[rk].shifts.push({label:label,hours:hrs,pay:hrs*e.rate});
-    groups[rk].totalHours+=hrs;groups[rk].totalPay+=hrs*e.rate;
+    groups[rk].shifts.push({label:label,hours:hrs,pay:amounts[i]});
+    groups[rk].totalHours+=hrs;groups[rk].totalPay+=amounts[i];
   });
   return order.map(function(k){return groups[k];});
 }
@@ -903,6 +1130,10 @@ function chipH(entry,i,pfx){
   return '<div class="ot-chip'+(sr.overnight?' overnight':'')+'" id="'+id+'"><span class="chip-hrs">'+fmtHrs(sr.hours)+' '+tag+'</span><span class="chip-pay">'+money(sr.hours*entry.rate)+' OT pay</span></div>';
 }
 function buildOtCard(entry,i,pfx){
+  if(features&&pfx==='ot-'&&entry.logShiftId){
+    return '<div class="ot-card"><button type="button" class="link-btn" data-log-date="'+entry.date+'">'+fmtDayShort(entry.date)+'</button>'+
+      '<div class="note">'+fmtHrs(effHours(entry))+' &middot; '+money(entry.rate)+'/hr</div></div>';
+  }
   var isShift=entry.mode==='shift';
   var p=pfx;
   var manual='<div class="ot-manual-row">'+
@@ -937,8 +1168,8 @@ function renderOtRows(){
 /* ── RENDER RESULTS ── */
 var lastNet=null;
 var _ssRateTouched=false;
-function renderResults(){
-  persist();
+function renderResults(saveChanges=true){
+  if(saveChanges)persist();
   var r=guardedCalc(calc);
   $('save-pay-btn').disabled=!r;
   if(!r){
@@ -950,11 +1181,12 @@ function renderResults(){
   ['tax-year-lbl','tax-year-lbl2','tax-year-lbl3'].forEach(function(id){$(id).textContent=TE.YEAR;});
   renderBandTable();
   $('out-basic').textContent=money(state.basic);
-  $('ledger-ot').innerHTML=state.otEntries.map(function(e){
+  var overtimePay=overtimeAmounts(state.otEntries);
+  $('ledger-ot').innerHTML=state.otEntries.map(function(e,i){
     var hrs=effHours(e);
     var sub='';
-    if(e.mode==='shift'&&(e.date||e.startTime)){sub='<span class="line-sub">'+(e.date?fmtDayShort(e.date)+' \u00b7 ':'')+( e.startTime&&e.endTime?e.startTime+'\u2013'+e.endTime+' \u00b7 ':'')+fmtHrsShort(hrs)+' @ '+money(e.rate)+'</span>';}
-    return '<div class="line"><span class="line-label">'+(sub?'Overtime':'Overtime \u00b7 '+fmtHrsShort(hrs)+' @ '+money(e.rate))+sub+'</span><span class="line-value">'+money(hrs*e.rate)+'</span></div>';
+    if(e.date||e.mode==='shift'&&e.startTime){sub='<span class="line-sub">'+(e.date?fmtDayShort(e.date)+' \u00b7 ':'')+(e.startTime&&e.endTime?e.startTime+'\u2013'+e.endTime+' \u00b7 ':'')+fmtHrsShort(hrs)+' @ '+money(e.rate)+'</span>';}
+    return '<div class="line"><span class="line-label">'+(sub?'Overtime':'Overtime \u00b7 '+fmtHrsShort(hrs)+' @ '+money(e.rate))+sub+'</span><span class="line-value">'+money(overtimePay[i])+'</span></div>';
   }).join('');
   $('out-gross').textContent=money(r.gross);
   $('out-tax-lbl').textContent='Tax \u00b7 Week '+r.taxWeek;
@@ -968,7 +1200,7 @@ function renderResults(){
   $('ni-bd').innerHTML=r.niRes.breakdown.map(function(b){return'<tr><td>'+b.name+'</td><td>'+money(b.amount)+'</td><td>'+money(b.ni)+'</td></tr>';}).join('')||'<tr><td colspan="3">No NI due.</td></tr>';
   [['g',r.gross],['t',-r.taxW],['n',-r.niRes.ni],['net',r.net]].forEach(function(p){var k=p[0],w=p[1];$('tw-'+k).textContent=moneySgn(w);$('tm-'+k).textContent=moneySgn(w*52/12);$('ta-'+k).textContent=moneySgn(w*52);});
   if(lastNet!==null&&Math.abs(lastNet-r.net)>0.0001){var stamp=$('stamp');stamp.classList.remove('pulse');void stamp.offsetWidth;stamp.classList.add('pulse');}
-  lastNet=r.net;persist();
+  lastNet=r.net;
   renderSweetSpot();
 }
 function renderBandTable(){
@@ -991,6 +1223,7 @@ function renderSweetSpot(){
   }).join('');
 }
 function exportBackup(){
+  if(features){features.exportBackup();return;}
   var blob=new Blob([JSON.stringify({format:'wagewise-backup',version:1,exportedAt:new Date().toISOString(),state:state},null,2)],{type:'application/json'});
   var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='wagewise-backup-'+todayISO()+'.json';a.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);
 }
@@ -1008,6 +1241,8 @@ $('ot-list').addEventListener('input',function(e){
   if(t.classList.contains('ot-b')){en.breakMins=clamp(t.value);refreshChip(state.otEntries,i,'ot-');renderResults();}
 });
 $('ot-list').addEventListener('click',function(e){
+  var linked=e.target.closest('[data-log-date]');
+  if(linked){features.openLogDate(linked.dataset.logDate);return;}
   var mb=e.target.closest?e.target.closest('.ot-toggle'):null;
   if(mb){var i=parseInt(mb.getAttribute('data-i'),10);if(!isNaN(i)&&state.otEntries[i]){state.otEntries[i].mode=state.otEntries[i].mode==='shift'?'manual':'shift';renderOtRows();renderResults();}return;}
   var rb=e.target.closest?e.target.closest('.ot-remove'):null;
@@ -1172,14 +1407,40 @@ function buildChart(history){
   });
   svg+='</svg>';return svg;
 }
+function renderDashboardActivity(){
+  const month=todayISO().slice(0,7), totals=features.monthlyOvertime(month);
+  const card=$('dash-overtime');
+  card.hidden=false;
+  const add=(tag,text)=>{const item=document.createElement(tag);item.textContent=text;card.append(item);return item;};
+  card.replaceChildren();
+  add('h2','Overtime this month');
+  add('p',fmtHrs(totals.minutes/60)+' logged · '+money(totals.payPence/100)+' estimated overtime pay');
+  for(const shift of features.recentShifts().filter(entry=>entry.date.startsWith(month))){
+    const action=add('button',fmtDayShort(shift.date)+' · '+fmtHrs(shift.minutes/60));
+    action.type='button';action.className='link-btn';action.onclick=()=>features.openLogDate(shift.date);
+  }
+  add('h2','Next payday');
+  const period=features.nextPay();
+  const next=period?.payroll[2];
+  add('p',next?.pay?fmtDayShort(period.payDate)+' · '+money(next.pay.net)+' estimated take-home':
+    period?next.error:'Set the weekly cutoff in Settings to see your next estimate.');
+}
 function renderDashboard(){
-  var now=new Date(),ys=taxYearStartFor(todayISO());
-  var ytd=state.history.filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
+  if(features)renderDashboardActivity();
+  var ys=taxYearStartFor(todayISO());
+  var actual=state.history.filter(entry=>entry.manual);
+  var chartEntries=actual.length?actual:state.history;
+  var ytd=(features?chartEntries:state.history).filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
   var ytdNet=ytd.reduce(function(s,e){return s+e.net;},0);
   var allAvg=state.history.length?state.history.reduce(function(s,e){return s+e.net;},0)/state.history.length:0;
   $('dash-stats').innerHTML='<div class="stat-card"><div class="stat-label">YTD Net</div><div class="stat-value">'+(ytd.length?money(ytdNet):'&mdash;')+'</div><div class="stat-sub">'+ytd.length+' entr'+(ytd.length===1?'y':'ies')+'</div></div><div class="stat-card"><div class="stat-label">Avg weekly</div><div class="stat-value">'+(state.history.length?money(allAvg):'&mdash;')+'</div><div class="stat-sub">net pay</div></div><div class="stat-card"><div class="stat-label">Saved</div><div class="stat-value">'+state.history.length+'</div><div class="stat-sub">total entries</div></div>';
-  $('dash-chart').innerHTML=state.history.length?buildChart(state.history):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
-  if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
+  $('dash-chart').innerHTML=chartEntries.length?'<p class="note">'+(actual.length?'Actual take-home':'Saved take-home estimates')+'</p>'+buildChart(chartEntries):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
+  if(features){
+    $('dash-forecast').closest('.dash-section').hidden=true;
+    $('dash-stats').closest('.dash-section').hidden=!chartEntries.length;
+    $('dash-chart').closest('.dash-section').hidden=!chartEntries.length;
+  }
+  else if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
   else{
     var recent=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,8);
     var avgN=recent.reduce(function(s,e){return s+e.net;},0)/recent.length;
@@ -1191,7 +1452,7 @@ function renderDashboard(){
   he.hidden=true;cb.hidden=false;
   var sorted=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   hl.innerHTML=sorted.map(function(e){
-    var tag=e.manual?'<span class="manual-tag">Manual</span>':'';
+    var tag='<span class="manual-tag">'+(e.manual?'Actual pay':'Saved estimate')+'</span>';
     var detail='Gross '+money(e.gross)+(e.otTotal?' \u00b7 OT '+money(e.otTotal):'')+(e.note?' \u00b7 '+escapeHTML(e.note):'');
     return'<div class="hitem" data-eid="'+e.id+'"><div class="hitem-left"><div class="hdate">'+fmtISO(e.date)+tag+'</div><div class="hnet">'+money(e.net)+'</div><div class="hdetail">'+detail+'</div></div><button type="button" class="hdel" data-did="'+e.id+'" aria-label="Delete">&times;</button></div>';
   }).join('');
@@ -1213,11 +1474,22 @@ function buildDateMap(){
     if(entry.date){if(!map[entry.date])map[entry.date]={hasEntry:false,hasOT:false,eids:[]};map[entry.date].hasEntry=true;if(map[entry.date].eids.indexOf(entry.id)<0)map[entry.date].eids.push(entry.id);}
     if(entry.otEntries)entry.otEntries.forEach(function(e){if(e.date){if(!map[e.date])map[e.date]={hasEntry:false,hasOT:false,eids:[]};map[e.date].hasOT=true;if(map[e.date].eids.indexOf(entry.id)<0)map[e.date].eids.push(entry.id);}});
   });
+  if(features){
+    Object.entries(features.readLogDays()).forEach(function(pair){
+      var date=pair[0],day=pair[1];
+      if(!map[date])map[date]={hasEntry:false,hasOT:false,eids:[]};
+      map[date].logged=day;
+      map[date].hasOT=map[date].hasOT||day.shifts.length>0;
+    });
+  }
   return map;
 }
 function getMonday(iso){var d=new Date(iso+'T00:00:00');var dow=d.getDay();var diff=dow===0?-6:1-dow;d.setDate(d.getDate()+diff);return d;}
 function isoD(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
-function renderCalendarScreen(){var map=buildDateMap();if(_calView==='monthly')renderMonthly(map);else renderWeekly(map);renderMonthSummary(map);}
+function renderCalendarScreen(){if(features&&!_calSelDate)_calSelDate=todayISO();var map=buildDateMap();if(_calView==='monthly')renderMonthly(map);else renderWeekly(map);renderMonthSummary(map);}
+function logBadge(info){
+  return info.hasOT?'OT':info.logged?.status==='off'?'Off':info.logged?.status==='none'?'0':'';
+}
 function renderMonthly(map){
   var y=_calYear,m=_calMonth;
   $('cal-period-lbl').textContent=MNAMES[m]+' '+y;
@@ -1235,7 +1507,8 @@ function renderMonthly(map){
     if(c.iso===_calSelDate)cls+=' cal-sel';
     if(c.info&&c.info.hasEntry)cls+=' cal-has-entry';
     else if(c.info&&c.info.hasOT)cls+=' cal-has-ot';
-    var tag=c.info?(c.info.hasEntry?'<span class="cal-tag">\u2713</span>':'<span class="cal-tag">OT</span>'):'';
+    var label=c.info?.hasEntry?(c.info.hasOT?'✓ OT':'✓'):c.info?logBadge(c.info):features?.dayStatus(c.iso)==='missing'?'!':'';
+    var tag=label?'<span class="cal-tag">'+label+'</span>':'';
     h+='<div class="'+cls+'" data-cd="'+c.iso+'"><span class="cal-num">'+c.d+'</span>'+tag+'</div>';
   });
   h+='</div>';
@@ -1254,7 +1527,8 @@ function renderWeekly(map){
     var dl=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     var badges='';
     if(info&&info.hasEntry)badges+='<span class="wr-badge wr-en">\u2713</span>';
-    if(info&&info.hasOT)badges+='<span class="wr-badge wr-ot">OT</span>';
+    if(!info&&features?.dayStatus(iso)==='missing')badges+='<span class="wr-badge">Missing</span>';
+    if(info&&logBadge(info))badges+='<span class="wr-badge wr-ot">'+logBadge(info)+'</span>';
     h+='<div class="week-row'+(iso===_calSelDate?' wsel':'')+(iso===today?' cal-today':'')+'" data-cd="'+iso+'"><span class="wr-day">'+DNAMES[i]+'</span><span class="wr-date">'+dl+'</span>'+badges+'</div>';
   }
   h+='</div>';
@@ -1263,31 +1537,57 @@ function renderWeekly(map){
 }
 function renderDayPanel(map){
   var panel=$('cal-day-panel');
+  if(features){
+    $('daily-log').hidden=!_calSelDate||_calSelDate>todayISO();
+    if(!$('daily-log').hidden)features.selectCalendarDate(_calSelDate);
+    if(!map[_calSelDate]?.eids.length){panel.hidden=true;return;}
+  }
   if(!_calSelDate){panel.hidden=true;return;}
   var info=map[_calSelDate];
   panel.hidden=false;
   var ds=fmtISO(_calSelDate)||_calSelDate;
   if(!info){panel.innerHTML='<div class="cdp-date">'+ds+'</div><p style="font-size:13px;color:var(--ink-soft);">No activity on this day.</p>';return;}
   var h='<div class="cdp-date">'+ds+'</div>';
+  var loggedIds=new Set();
+  if(info.logged){
+    if(info.logged.status==='none')h+='<p class="note">No overtime logged for this day.</p>';
+    if(info.logged.status==='off')h+='<p class="note">Day off</p>';
+    info.logged.shifts.forEach(function(shift){
+      loggedIds.add(shift.id);
+      var hours=shift.minutes/60,rate=shift.ratePence/100;
+      h+='<div class="cdp-row"><span class="cdp-label">Logged OT &middot; '+fmtHrs(hours)+' @ '+money(rate)+'/hr</span><span class="cdp-val">'+money(roundPence(hours*rate))+'</span></div>';
+    });
+  }
   var shown=[];
   info.eids.forEach(function(eid){
     if(shown.indexOf(eid)>=0)return;shown.push(eid);
     var entry=findEntry(eid);if(!entry)return;
     if(entry.date===_calSelDate)h+='<div class="cdp-row"><span class="cdp-label">Pay period entry &ndash; Net</span><span class="cdp-val">'+money(entry.net)+'</span></div>';
-    if(entry.otEntries)entry.otEntries.forEach(function(e){if(e.date===_calSelDate){var hrs=effHours(e);h+='<div class="cdp-row"><span class="cdp-label">OT \u00b7 '+fmtHrs(hrs)+' @ '+money(e.rate)+'/hr</span><span class="cdp-val">'+money(hrs*e.rate)+'</span></div>';}});
+    if(entry.otEntries)entry.otEntries.forEach(function(e){if(e.date===_calSelDate&&!loggedIds.has(e.logShiftId)){var hrs=effHours(e);h+='<div class="cdp-row"><span class="cdp-label">OT \u00b7 '+fmtHrs(hrs)+' @ '+money(e.rate)+'/hr</span><span class="cdp-val">'+money(hrs*e.rate)+'</span></div>';}});
     h+='<div style="margin-top:8px;"><button type="button" class="link-btn" style="margin:0;" data-oe="'+eid+'">View full entry \u2192</button></div>';
   });
   panel.innerHTML=h;
+  if(features&&_calSelDate<=todayISO()){
+    var logButton=document.createElement('button');
+    logButton.type='button';logButton.className='link-btn';logButton.textContent='Open daily log';
+    logButton.addEventListener('click',function(){features.openLogDate(_calSelDate);});
+    panel.appendChild(logButton);
+  }
   panel.querySelectorAll('[data-oe]').forEach(function(btn){btn.addEventListener('click',function(){openDetailSheet(parseInt(btn.getAttribute('data-oe'),10));});});
 }
 function renderMonthSummary(map){
   var sm=$('cal-month-sum'),pb=$('cal-print-btn');
   var pfx=_calYear+'-'+p2(_calMonth+1);
   var entries=state.history.filter(function(e){return e.date&&e.date.startsWith(pfx);});
-  if(!entries.length){sm.innerHTML='';if(pb)pb.hidden=true;return;}
+  var loggedMinutes=Object.keys(map).filter(function(date){return date.startsWith(pfx)&&map[date].logged;})
+    .reduce(function(total,date){
+      return total+map[date].logged.shifts.reduce(function(minutes,shift){return minutes+shift.minutes;},0);
+    },0);
+  var loggedSummary=loggedMinutes?'<div class="cal-month-sum"><div class="cms-row"><span class="cms-lbl">Overtime logged in '+MNAMES[_calMonth]+'</span><span class="cms-val">'+fmtHrs(loggedMinutes/60)+'</span></div></div>':'';
+  if(!entries.length){sm.innerHTML=loggedSummary;if(pb)pb.hidden=true;return;}
   var tG=0,tN=0,tT=0,tI=0,tO=0;
   entries.forEach(function(e){tG+=e.gross;tN+=e.net;tT+=(e.tax||0);tI+=(e.ni||0);tO+=(e.otTotal||0);});
-  sm.innerHTML='<div class="cal-month-sum"><div class="cms-hdr"><span>'+MNAMES[_calMonth]+' '+_calYear+'</span><span>'+entries.length+' entr'+(entries.length===1?'y':'ies')+'</span></div>'+
+  sm.innerHTML=loggedSummary+'<div class="cal-month-sum"><div class="cms-hdr"><span>'+MNAMES[_calMonth]+' '+_calYear+'</span><span>'+entries.length+' entr'+(entries.length===1?'y':'ies')+'</span></div>'+
     '<div class="cms-row"><span class="cms-lbl">Overtime</span><span class="cms-val">'+money(tO)+'</span></div>'+
     '<div class="cms-row"><span class="cms-lbl">Gross</span><span class="cms-val">'+money(tG)+'</span></div>'+
     '<div class="cms-row"><span class="cms-lbl">Tax + NI</span><span class="cms-val ded-v">'+moneySgn(-(tT+tI))+'</span></div>'+
@@ -1344,7 +1644,8 @@ function openSheet(mode){
 function closeSheet(){var ov=$('sheet-overlay'),sh=$('entry-sheet');ov.classList.remove('open');sh.classList.remove('open');setTimeout(function(){ov.setAttribute('hidden','');sh.setAttribute('hidden','');},300);}
 function fillSheetPreview(){
   var date=$('edate-calc').value||todayISO();
-  var r=guardedCalc(function(){return calcWith(state.basic,state.otEntries,state.allowance,state.customDeductions,date,null,currentPrior(date));});
+  var entries=features?entriesForPayday(date):state.otEntries;
+  var r=guardedCalc(function(){return calcWith(state.basic,entries,state.allowance,state.customDeductions,date,null,currentPrior(date));});
   $('save-calc-btn').disabled=!r;window._calcSnap=r;
   if(!r){['ep-gross','ep-ot','ep-tax','ep-ni','ep-net'].forEach(function(id){$(id).textContent='Check pay date / YTD totals';});return;}
   $('calc-status').textContent=r.mode+' · weekly Scottish suffix code / NI category A';
@@ -1361,7 +1662,8 @@ $('stab-manual').addEventListener('click',function(){$('stab-manual').classList.
 $('save-calc-btn').addEventListener('click',function(){
   var date=$('edate-calc').value;if(!date){$('edate-calc').focus();return;}
   fillSheetPreview();var r=window._calcSnap;if(!r)return;
-  state.history.unshift({id:Date.now(),date:date,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:'',manual:false,allowance:state.allowance,customDeductions:JSON.parse(JSON.stringify(state.customDeductions)),snapshot:r});
+  var entries=features?entriesForPayday(date):state.otEntries;
+  state.history.unshift({id:Date.now(),date:date,basic:state.basic,otEntries:JSON.parse(JSON.stringify(entries)),otTotal:r.otTotal,gross:r.gross,tax:r.taxW,ni:r.niRes.ni,net:r.net,note:'',manual:false,allowance:state.allowance,customDeductions:JSON.parse(JSON.stringify(state.customDeductions)),snapshot:r});
   persist();closeSheet();showToast('\u2713 Pay entry saved');
   if(document.querySelector('[data-screen="dashboard"].active'))renderDashboard();
 });
@@ -1576,15 +1878,20 @@ document.querySelectorAll('[data-ac]').forEach(function(b){b.addEventListener('c
   window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_dp=e;$('pwa-block').hidden=false;$('pwa-install-btn').hidden=false;$('ios-hint').hidden=true;});
   $('pwa-install-btn').addEventListener('click',function(){if(!_dp)return;_dp.prompt();_dp.userChoice.then(function(r){if(r.outcome==='accepted')showToast('\u2713 WageWise installed!');_dp=null;$('pwa-block').hidden=true;});});
   window.addEventListener('appinstalled',function(){$('pwa-block').hidden=true;showToast('\u2713 Added to Home Screen');});
-  if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('/sw.js').catch(function(){showToast('Offline mode unavailable; online calculator still works.');});
+  if('serviceWorker' in navigator&&location.protocol!=='file:'&&window.Capacitor?.getPlatform()!=='android')navigator.serviceWorker.register('/sw.js').catch(function(){showToast('Offline mode unavailable; online calculator still works.');});
 
 })();
 
 /* ── NAVIGATION ── */
-var LBLS={calculator:'Calculator',dashboard:'Dashboard',calendar:'Calendar',payslip:'Payslip',settings:'Settings'};
+var LBLS={calculator:'Calculator',dashboard:'Dashboard',calendar:'Calendar',payslip:'Payslip',planner:'Planner',settings:'Settings'};
 function showScreen(name){
+  if(features){
+    document.querySelector('.screens')?.scrollTo(0,0);
+    if(name==='calculator'||name==='payslip')refreshPay();
+    window.dispatchEvent(new CustomEvent('wagewise-screen',{detail:name}));
+  }
   document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('active',s.getAttribute('data-screen')===name);});
-  document.querySelectorAll('.navbtn').forEach(function(b){b.classList.toggle('is-active',b.getAttribute('data-nav')===name);});
+  document.querySelectorAll('.navbtn').forEach(function(b){const active=b.dataset.nav===name;b.classList.toggle('is-active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   $('screen-label').textContent=LBLS[name]||'';
   if(name==='dashboard')renderDashboard();
   if(name==='calendar')renderCalendarScreen();
@@ -1593,29 +1900,108 @@ function showScreen(name){
 document.querySelectorAll('.navbtn').forEach(function(b){b.addEventListener('click',function(){showScreen(b.getAttribute('data-nav'));});});
 
 /* ── INIT ── */
+function hydrateCalculator(){
 ['tax-year-lbl','tax-year-lbl2','tax-year-lbl3'].forEach(function(id){$(id).textContent=TE.YEAR;});
 $('allowance').value=state.allowance;
-if(state.employeeName)$('ps-name').value=state.employeeName;
-if(state.employerName)$('ps-employer').value=state.employerName;
-$('pay-date').value=state.payDate||todayISO();state.payDate=$('pay-date').value;
+$('ps-name').value=state.employeeName||'';
+$('ps-employer').value=state.employerName||'';
+$('pay-date').value=state.payDate||(features?features.defaultPayday():todayISO());state.payDate=$('pay-date').value;
 var savedYtd=state.ytd||{};
 ['gross','tax','ni','week'].forEach(function(key){$('ytd-'+key).value=savedYtd[key]==null?'':savedYtd[key];});
 $('ytd-enabled').checked=!!savedYtd.enabled;
 syncBasicDisplay();
 renderDedList();
 renderPresetList();
+if(features)syncLoggedOvertime();
 renderOtRows();
 renderBandTable();
-renderResults();
+renderResults(!features);
 applyTheme();
-showScreen('calculator');
+}
 function saveYtd(){
   if(!state.payDate||!getTaxWeek(state.payDate)){showToast('Choose a valid pay date first.');return;}
   state.ytd={enabled:$('ytd-enabled').checked,gross:$('ytd-gross').value,tax:$('ytd-tax').value,ni:$('ytd-ni').value,week:$('ytd-week').value,year:Payroll.year(state.payDate)};
   renderResults();
 }
 ['ytd-gross','ytd-tax','ytd-ni','ytd-week','ytd-enabled'].forEach(function(id){$(id).addEventListener('input',saveYtd);});
-$('pay-date').addEventListener('input',function(){state.payDate=this.value;renderResults();});
+function refreshLogLink(){
+  if(!features)return;
+  var shifts=features.overtimeForPayday(state.payDate);
+  $('use-logged-ot').textContent=state.useOvertimeLog?'Exclude logged overtime from estimate':'Include logged overtime';
+  $('log-link-status').textContent=shifts===null?'Choose a payday from your payroll schedule in app Settings.':
+    shifts.length?fmtHrs(shifts.reduce(function(sum,shift){return sum+shift.minutes;},0)/60)+(state.useOvertimeLog?' from your log.':' available for this payday.'):
+    'No logged overtime for this payday.';
+}
+function syncLoggedOvertime(){
+  if(features)state.otEntries=entriesForPayday(state.payDate);
+}
+function entriesForPayday(date){
+  var manual=state.otEntries.filter(function(entry){return !entry.logShiftId;});
+  var shifts=state.useOvertimeLog?(features.overtimeForPayday(date)||[]):[];
+  return shifts.map(function(shift){
+    return {mode:shift.start?'shift':'manual',date:shift.date,hours:shift.minutes/60,rate:shift.ratePence/100,
+      startTime:shift.start||'',endTime:shift.end||'',breakMins:shift.breakMinutes||0,logShiftId:shift.id};
+  }).concat(manual);
+}
+function refreshLinkedYtd(){
+  if(!features)return;
+  var latest=features.latestPayslip();
+  var linked=latest&&features.priorForPayday(state.payDate)?.week>0;
+  $('linked-ytd-status').textContent=latest
+    ? (linked?'Using ':'Saved ')+fmtISO(latest.date)+' totals: '+money(latest.gross/100)+' taxable pay and '+money(latest.tax/100)+' PAYE. '+
+      (linked?'':'These totals apply to the following tax week.')
+    : 'Add your latest payslip totals to use cumulative PAYE for the following tax week.';
+}
+function bindSharedApp(){
+  $('log-link').hidden=false;
+  $('recalc-history-btn').hidden=true;
+  $('linked-ytd').hidden=false;
+  $('payslip-check-link').hidden=false;
+  $('edit-linked-ytd').onclick=features.openPayslipTotals;
+  $('open-payslip-check').onclick=function(){features.openPayslipCheck(getPayslipData()?.date||state.payDate);};
+  $('payslip-totals').onclick=features.openPayslipTotals;
+  $('payslip-actual').onclick=function(){openSheet('manual');$('edate-manual').value=getPayslipData()?.date||state.payDate;};
+  $('use-logged-ot').addEventListener('click',function(){
+    state.useOvertimeLog=!state.useOvertimeLog;
+    syncLoggedOvertime();refreshLogLink();renderOtRows();renderResults();
+  });
+  window.WageWiseNavigate=showScreen;
+  window.addEventListener('wagewise-data',event=>{
+    if(event.detail.source==='calculator')return;
+    refreshPay();
+    if(document.querySelector('[data-screen=calendar].active'))renderCalendarScreen();
+    if(document.querySelector('[data-screen=dashboard].active'))renderDashboard();
+    if(document.querySelector('[data-screen=payslip].active')&&!$('payslip-preview').hidden)renderPayslipScreen();
+  });
+  window.addEventListener('wagewise-workspace',()=>{
+    loadCalculator();
+    _psSource='current';
+    hydrateCalculator();
+    showScreen(document.querySelector('.screen.active')?.dataset.screen||'calculator');
+  });
+  window.addEventListener('wagewise-calendar-date',event=>{
+    _calSelDate=event.detail;
+    _calYear=Number(_calSelDate.slice(0,4));
+    _calMonth=Number(_calSelDate.slice(5,7))-1;
+    renderCalendarScreen();
+    $('daily-log').scrollIntoView({block:'start'});
+  });
+}
+function refreshPay(){
+  syncLoggedOvertime();renderOtRows();refreshLogLink();refreshLinkedYtd();renderResults(false);
+}
+if(features){
+  features.ready.then(()=>{
+    loadCalculator();bindSharedApp();hydrateCalculator();showScreen('calculator');
+    if(features.launchDate)features.openLogDate(features.launchDate);
+    window.dispatchEvent(new Event('wagewise-ready'));
+  }).catch(error=>{$('notice').hidden=false;$('notice').textContent=error.message;});
+}else{hydrateCalculator();showScreen('calculator');}
+$('pay-date').addEventListener('input',function(){
+  state.payDate=this.value;
+  if(features){syncLoggedOvertime();renderOtRows();}
+  renderResults();refreshLogLink();refreshLinkedYtd();
+});
 
 
 })();

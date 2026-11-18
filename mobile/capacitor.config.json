@@ -1,0 +1,7 @@
+{
+  "appId": "uk.co.wagewise.mobile",
+  "appName": "WageWise",
+  "webDir": "web",
+  "android": { "allowMixedContent": false },
+  "plugins": { "SystemBars": { "insetsHandling": "disable", "style": "DARK" } }
+}

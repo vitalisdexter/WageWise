@@ -1,7 +1,8 @@
 # WageWise
 
-A client-side weekly Scottish pay calculator and earnings tracker, hosted at
-https://wagewise.vitalisdexter.workers.dev/.
+WageWise combines a weekly Scottish pay calculator, overtime calendar, payslip
+checks and financial planner. The same app runs at
+https://wagewise.vitalisdexter.workers.dev/ and in the signed Android build.
 
 ## Calculation scope
 
@@ -35,9 +36,11 @@ References:
 
 ## Data and history
 
-Data remains in browser localStorage under the existing key `wagewise-v5`.
-There is no account or server-side financial-data storage. The site loads fonts
-from Google Fonts; offline use falls back to system fonts.
+Records are saved in IndexedDB and available offline. Version 2 imports the
+existing browser data under `wagewise-v5` and the Android installation's private
+store. Calendar is the work log, and Dashboard shows logged overtime alongside
+saved pay entries. Set a known weekly cutoff in Settings to link the log to
+Calculator, Payslip and Planner.
 
 New calculated entries save their calculation, prior totals, allowance and
 deductions. Displaying/printing history uses recorded amounts instead of silently
@@ -45,24 +48,30 @@ recalculating with today's settings. Old entries are retained as-is, not migrate
 into supposedly accurate records. Manual and legacy entries are read-only apart
 from deletion; add a corrected replacement when needed.
 
-Settings includes JSON backup export. Backups contain financial data: store them
-privately. They are not automatically synced, and there is currently no in-app
-restore/import UI. Browser data is specific to the device, browser and origin.
-Do not clear site data to refresh the app. Closing and reopening normally is enough.
+**Settings → Device pairing and sync** creates a private code for use on another
+device. Creating or entering a code opens a workspace, and the first upload
+requires a review of the local records. Keep the code private. A paired device
+can replace it. Settings also imports and exports backups on both platforms.
+
+The Supabase installation uses the schema in `supabase/migrations/` and
+anonymous device sessions. Configure the public URL and publishable key in
+`supabase/client.json`. The database stores a hash of the code and checks
+device-to-workspace membership on each read and write. Each workspace has
+its own revision so concurrent saves can be merged or reviewed.
 
 ## Development and checks
 
-Requires Node.js 22+; no application dependencies.
+Requires Node.js 22+.
 
 ```sh
+npm ci
 npm test
 npm run build
 npm run check
 ```
 
-- Edit `wagewise.html` (UI) and `payroll.js` (pure calculation engine).
-- `scripts/build.js` embeds the engine and produces identical `index.html` and
-  `public/index.html`. Do not edit generated HTML directly.
+- `wagewise.html` is the shared UI, `app/` contains browser modules and styles, and `payroll.js` is the calculation engine.
+- `scripts/build.js` produces identical `index.html` and `public/index.html`. Android packages the shared output for offline use.
 - `public/` is the **only** Cloudflare asset directory.
 - `public/sw.js` caches the self-contained app for offline use, using
   network-first HTML requests. Keep its cache version current for asset changes.

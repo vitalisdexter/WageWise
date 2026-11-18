@@ -3,3 +3,10 @@ payslips/
 node_modules/
 .wrangler/
 test-results/
+.android-toolchain/
+.android-signing/
+mobile/web/
+mobile/releases/
+.wagewise-sync.json
+public/sync-config.json
+supabase/.temp/

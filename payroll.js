@@ -8,6 +8,13 @@
   const round=n=>Math.round((n+Number.EPSILON)*100)/100;
   const down=(n,p=100)=>Math.floor(n*p+1e-7)/p;
   const valid=n=>typeof n==='number'&&Number.isFinite(n);
+  const defaultSettings=Object.freeze({basic:604.13,allowance:12570,salaryRevision:'2026-11-06'});
+  function calculatorSettings(saved){
+    let basic=saved?.basic;
+    if(!valid(basic)||(saved?.salaryRevision!==defaultSettings.salaryRevision&&[549.65,549.66,566.14].includes(basic)))basic=defaultSettings.basic;
+    return {basic,allowance:valid(saved?.allowance)?saved.allowance:defaultSettings.allowance,
+      deductions:Array.isArray(saved?.customDeductions)?saved.customDeductions:[]};
+  }
   function year(iso){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)||!Number.isFinite(Date.parse(iso))||new Date(iso).toISOString().slice(0,10)!==iso)throw Error('Choose a valid pay date.');
     return Number(iso.slice(0,4))-(iso.slice(5)<'04-06'?1:0);
@@ -65,5 +72,5 @@
     return {gross,taxW:tax,taxRes:due,niRes:nr,customDedRes:{total,breakdown},net:round(gross-tax-nr.ni-total),taxWeek:w,taxYear:y,mode,prior,
       cumulativeGross:prior?round(prior.gross+gross):null,cumulativeTaxToDate:prior?round(prior.tax+tax):null,cumulativeNiToDate:prior&&prior.ni!=null?round(prior.ni+nr.ni):null};
   }
-  return {round,year,week,bands,freePay,liability,ni,calculate};
+  return {round,year,week,bands,freePay,liability,ni,calculate,defaultSettings,calculatorSettings};
 });
