@@ -14,14 +14,24 @@
 #reminder-form, #payroll-form, #sync-card, #backup-card {
   margin: 12px 16px; padding: 14px; background: var(--paper); border: 1px solid var(--rule); border-radius: 15px;
 }
-#log-link { margin-inline: 0; padding-block: 6px; background: var(--stripe); }
+#calc-form { padding-inline: 22px; }
+#calc-form > :is(.card, .save-cta, .actions), #calc-form .ledger-heading { padding-inline: 0; }
+#calc-form :is(.basic-display, .settings, .mini-table, .mini-table-cap, #log-link) { margin-inline: 0; }
+#calc-form .basic-display { flex-wrap: wrap; gap: 6px 12px; }
+#calc-form :is(.basic-display-link, .link-btn) { color: var(--accent-ink); }
+#calc-form .ledger { padding: 0; border: 1px solid var(--rule); border-radius: 10px; }
+#calc-form .line { padding-inline: 12px; gap: 8px; }
+#calc-form .line-label { overflow-wrap: anywhere; }
+#calc-form :is(.mini-table, .band-table) { overflow-x: auto; }
+#calc-form .ytd-override-row .input-wrap { min-width: 0; }
+#log-link { padding-block: 8px; background: var(--stripe); }
+#log-link-status { padding: 0; }
 .linked-panel .link-btn { margin: 4px 0; }
 .feature-card h2, #daily-log h2, #forecast-setup h2, #checks h2, [data-screen="planner"] h2,
 #reminder-form h2, #payroll-form h2, #sync-card h2, #backup-card h2 { font-size: 1.05rem; margin: 0 0 8px; }
 .feature-card h2:not(:first-child) { margin-top: 14px; }
 .feature-card p, .context, .feature-card .status { color: var(--ink-soft); font-size: .88rem; }
-[data-screen="dashboard"] .history-empty { padding: 12px; text-align: left; border: 1px solid var(--rule); border-radius: 12px; }
-[data-screen="dashboard"] .history-empty svg { display: none; }
+#dash-overtime { margin-inline: 22px; }
 #daily-log .status { display: inline-block; margin: 0; border-radius: 16px; padding: 4px 9px; background: var(--stripe); font-weight: 650; font-size: .82rem; }
 #daily-log .status.missing { color: var(--brick); }
 #checks .intro, [data-screen="planner"] .intro { padding: 14px 16px 0; }

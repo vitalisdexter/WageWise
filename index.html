@@ -448,14 +448,24 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 #reminder-form, #payroll-form, #sync-card, #backup-card {
   margin: 12px 16px; padding: 14px; background: var(--paper); border: 1px solid var(--rule); border-radius: 15px;
 }
-#log-link { margin-inline: 0; padding-block: 6px; background: var(--stripe); }
+#calc-form { padding-inline: 22px; }
+#calc-form > :is(.card, .save-cta, .actions), #calc-form .ledger-heading { padding-inline: 0; }
+#calc-form :is(.basic-display, .settings, .mini-table, .mini-table-cap, #log-link) { margin-inline: 0; }
+#calc-form .basic-display { flex-wrap: wrap; gap: 6px 12px; }
+#calc-form :is(.basic-display-link, .link-btn) { color: var(--accent-ink); }
+#calc-form .ledger { padding: 0; border: 1px solid var(--rule); border-radius: 10px; }
+#calc-form .line { padding-inline: 12px; gap: 8px; }
+#calc-form .line-label { overflow-wrap: anywhere; }
+#calc-form :is(.mini-table, .band-table) { overflow-x: auto; }
+#calc-form .ytd-override-row .input-wrap { min-width: 0; }
+#log-link { padding-block: 8px; background: var(--stripe); }
+#log-link-status { padding: 0; }
 .linked-panel .link-btn { margin: 4px 0; }
 .feature-card h2, #daily-log h2, #forecast-setup h2, #checks h2, [data-screen="planner"] h2,
 #reminder-form h2, #payroll-form h2, #sync-card h2, #backup-card h2 { font-size: 1.05rem; margin: 0 0 8px; }
 .feature-card h2:not(:first-child) { margin-top: 14px; }
 .feature-card p, .context, .feature-card .status { color: var(--ink-soft); font-size: .88rem; }
-[data-screen="dashboard"] .history-empty { padding: 12px; text-align: left; border: 1px solid var(--rule); border-radius: 12px; }
-[data-screen="dashboard"] .history-empty svg { display: none; }
+#dash-overtime { margin-inline: 22px; }
 #daily-log .status { display: inline-block; margin: 0; border-radius: 16px; padding: 4px 9px; background: var(--stripe); font-weight: 650; font-size: .82rem; }
 #daily-log .status.missing { color: var(--brick); }
 #checks .intro, [data-screen="planner"] .intro { padding: 14px 16px 0; }
@@ -550,7 +560,10 @@ summary { cursor: pointer; font-weight: 650; }
             <button type="button" class="link-btn" id="add-ot">+ Add overtime entry</button>
           </div>
         </section>
-        <div class="field"><label for="pay-date">Pay date</label><input type="date" id="pay-date" min="2025-04-06" max="2027-04-05"></div>
+        <div class="field">
+          <label for="pay-date">Pay date</label>
+          <div class="input-wrap sm"><input type="date" id="pay-date" min="2025-04-06" max="2027-04-05"></div>
+        </div>
         <div id="log-link" class="field linked-panel" hidden>
           <button type="button" class="link-btn" id="use-logged-ot">Use logged overtime for this payday</button>
           <p class="note" id="log-link-status" role="status"></p>
@@ -3057,19 +3070,12 @@ function renderDashboardActivity(){
 function renderDashboard(){
   if(features)renderDashboardActivity();
   var ys=taxYearStartFor(todayISO());
-  var actual=state.history.filter(entry=>entry.manual);
-  var chartEntries=actual.length?actual:state.history;
-  var ytd=(features?chartEntries:state.history).filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
+  var ytd=state.history.filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
   var ytdNet=ytd.reduce(function(s,e){return s+e.net;},0);
   var allAvg=state.history.length?state.history.reduce(function(s,e){return s+e.net;},0)/state.history.length:0;
   $('dash-stats').innerHTML='<div class="stat-card"><div class="stat-label">YTD Net</div><div class="stat-value">'+(ytd.length?money(ytdNet):'&mdash;')+'</div><div class="stat-sub">'+ytd.length+' entr'+(ytd.length===1?'y':'ies')+'</div></div><div class="stat-card"><div class="stat-label">Avg weekly</div><div class="stat-value">'+(state.history.length?money(allAvg):'&mdash;')+'</div><div class="stat-sub">net pay</div></div><div class="stat-card"><div class="stat-label">Saved</div><div class="stat-value">'+state.history.length+'</div><div class="stat-sub">total entries</div></div>';
-  $('dash-chart').innerHTML=chartEntries.length?'<p class="note">'+(actual.length?'Actual take-home':'Saved take-home estimates')+'</p>'+buildChart(chartEntries):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
-  if(features){
-    $('dash-forecast').closest('.dash-section').hidden=true;
-    $('dash-stats').closest('.dash-section').hidden=!chartEntries.length;
-    $('dash-chart').closest('.dash-section').hidden=!chartEntries.length;
-  }
-  else if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
+  $('dash-chart').innerHTML=state.history.length?buildChart(state.history):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
+  if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
   else{
     var recent=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,8);
     var avgN=recent.reduce(function(s,e){return s+e.net;},0)/recent.length;

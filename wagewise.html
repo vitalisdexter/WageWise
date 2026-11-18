@@ -466,7 +466,10 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
             <button type="button" class="link-btn" id="add-ot">+ Add overtime entry</button>
           </div>
         </section>
-        <div class="field"><label for="pay-date">Pay date</label><input type="date" id="pay-date" min="2025-04-06" max="2027-04-05"></div>
+        <div class="field">
+          <label for="pay-date">Pay date</label>
+          <div class="input-wrap sm"><input type="date" id="pay-date" min="2025-04-06" max="2027-04-05"></div>
+        </div>
         <div id="log-link" class="field linked-panel" hidden>
           <button type="button" class="link-btn" id="use-logged-ot">Use logged overtime for this payday</button>
           <p class="note" id="log-link-status" role="status"></p>
@@ -1428,19 +1431,12 @@ function renderDashboardActivity(){
 function renderDashboard(){
   if(features)renderDashboardActivity();
   var ys=taxYearStartFor(todayISO());
-  var actual=state.history.filter(entry=>entry.manual);
-  var chartEntries=actual.length?actual:state.history;
-  var ytd=(features?chartEntries:state.history).filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
+  var ytd=state.history.filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
   var ytdNet=ytd.reduce(function(s,e){return s+e.net;},0);
   var allAvg=state.history.length?state.history.reduce(function(s,e){return s+e.net;},0)/state.history.length:0;
   $('dash-stats').innerHTML='<div class="stat-card"><div class="stat-label">YTD Net</div><div class="stat-value">'+(ytd.length?money(ytdNet):'&mdash;')+'</div><div class="stat-sub">'+ytd.length+' entr'+(ytd.length===1?'y':'ies')+'</div></div><div class="stat-card"><div class="stat-label">Avg weekly</div><div class="stat-value">'+(state.history.length?money(allAvg):'&mdash;')+'</div><div class="stat-sub">net pay</div></div><div class="stat-card"><div class="stat-label">Saved</div><div class="stat-value">'+state.history.length+'</div><div class="stat-sub">total entries</div></div>';
-  $('dash-chart').innerHTML=chartEntries.length?'<p class="note">'+(actual.length?'Actual take-home':'Saved take-home estimates')+'</p>'+buildChart(chartEntries):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
-  if(features){
-    $('dash-forecast').closest('.dash-section').hidden=true;
-    $('dash-stats').closest('.dash-section').hidden=!chartEntries.length;
-    $('dash-chart').closest('.dash-section').hidden=!chartEntries.length;
-  }
-  else if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
+  $('dash-chart').innerHTML=state.history.length?buildChart(state.history):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
+  if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
   else{
     var recent=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,8);
     var avgN=recent.reduce(function(s,e){return s+e.net;},0)/recent.length;
