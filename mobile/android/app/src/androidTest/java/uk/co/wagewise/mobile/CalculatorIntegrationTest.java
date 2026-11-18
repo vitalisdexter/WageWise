@@ -40,7 +40,6 @@ public class CalculatorIntegrationTest {
     public void upgradeKeepsRecordsAndUsesOneInterfaceOffline() throws Exception {
         var target = InstrumentationRegistry.getInstrumentation().getTargetContext();
         JSONObject legacy = new JSONObject(WageWiseStore.read(target));
-        JSONObject oldLog = legacy.getJSONObject("log");
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             await(scenario, "typeof window.WageWiseNavigate === 'function'");
             await(scenario, """
@@ -71,6 +70,39 @@ public class CalculatorIntegrationTest {
             await(scenario, "!document.querySelector('#checks').hidden");
             evaluate(scenario, "document.querySelector('[data-nav=settings]').click()");
             await(scenario, "document.querySelector('#reminder-time').value === '19:15' && document.querySelector('#reminder-enabled').checked");
+        }
+    }
+
+    @Test
+    public void pairsWithBrowserWorkspace() throws Exception {
+        String code = InstrumentationRegistry.getArguments().getString("pairingCode");
+        org.junit.Assume.assumeTrue(code != null && code.matches("WW-[a-zA-Z0-9_-]{43}"));
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            await(scenario, "typeof window.WageWiseNavigate === 'function'");
+            evaluate(scenario, "WageWiseNavigate('settings')");
+            await(scenario, "document.querySelector('#sync-pair-form').hidden === false");
+            evaluate(scenario, """
+                document.querySelector('#sync-code-input').value = %s;
+                document.querySelector('#sync-pair-form button').click();
+                """.formatted(JSONObject.quote(code)));
+            await(scenario, "!document.querySelector('#sync-import').hidden");
+            evaluate(scenario, "document.querySelector('#sync-import button:last-child').click()");
+            await(scenario, "document.querySelector('#sync-status').textContent.includes('Last synced')");
+            evaluate(scenario, """
+                const workDate = Tracking.localDate();
+                WageWiseFeatures.openLogDate(workDate);
+                """);
+            await(scenario, "document.querySelector('#shifts').textContent.includes('2h 0m at £16.50/hr')");
+            evaluate(scenario, """
+                document.querySelector('#add-shift').click();
+                document.querySelector('#hours').value = '1';
+                document.querySelector('#shift-note').value = 'QA Android paired device';
+                document.querySelector('#shift-form').requestSubmit();
+                """);
+            await(scenario, "document.querySelector('#shifts').textContent.includes('QA Android paired device')");
+            await(scenario, "document.querySelector('#sync-status').textContent.includes('Last synced')");
+            evaluate(scenario, "document.querySelector('#sync-logout').click()");
+            await(scenario, "WageWiseFeatures.getWorkspace() === 'guest'");
         }
     }
 }
