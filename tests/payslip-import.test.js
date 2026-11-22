@@ -48,6 +48,16 @@ test('unreadable amounts stay blank and mixed-payday documents cannot create a c
   assert.equal(d.net,null);assert.equal(d.gross,null);assert.equal(d.date,'');
   assert.throws(()=>parse([[[0,'Pay date: 06/11/2026']],[[0,'Pay date: 13/11/2026']]]),/one file per payslip/);
 });
+test('OCR preprocessing preserves tall glyphs on borderless crops and removes rules in tables',()=>{
+  const {removeRules}=require('../app/payslip-reader');
+  const width=400,height=180,data=new Uint8ClampedArray(width*height*4).fill(255);
+  const pixel=(x,y)=>4*(y*width+x);
+  for(let y=30;y<90;y++)data.fill(0,pixel(40,y),pixel(40,y)+3);
+  const canvas={width,height,getContext:()=>({getImageData:()=>({data}),putImageData(){}})};
+  removeRules(canvas);assert.equal(data[pixel(40,50)],0);
+  for(const y of [20,110])for(let x=20;x<380;x++)data.fill(0,pixel(x,y),pixel(x,y)+3);
+  removeRules(canvas);assert.equal(data[pixel(100,20)],255);assert.equal(data[pixel(40,50)],0);
+});
 test('imported records round trip in backups with signed refunds and explicit missing values',()=>{
   const d={...P.blank(),hash:'a'.repeat(64),date:'2026-06-12',frequency:'weekly',period:'10',gross:300,net:400,
     lines:[{label:'PAYE refund',kind:'refund',pence:100,hours:null,rate:null}]};

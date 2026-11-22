@@ -40,6 +40,19 @@
     for(let i=0;i<ink.length;i++){
       const p=i*4;ink[i]=Math.min(data[p],data[p+1],data[p+2])<130 && Math.max(data[p],data[p+1],data[p+2])<225;
     }
+    // Short, borderless screenshots can have tall uninterrupted strokes in a
+    // single letter. Only run table cleanup after finding two separate rules.
+    let bands=0,previous=false;
+    for(let y=0;y<height&&bands<2;y++){
+      let run=0,ruled=false;
+      for(let x=0;x<width;x++){
+        run=ink[y*width+x]?run+1:0;
+        if(run>=Math.max(80,width*.24)){ruled=true;break;}
+      }
+      if(ruled&&!previous)bands++;
+      previous=ruled;
+    }
+    if(bands<2)return;
     function erase(start,stride,length,min) {
       let first=-1;
       for(let i=0;i<=length;i++){
@@ -51,7 +64,7 @@
       }
     }
     for(let y=0;y<height;y++)erase(y*width,1,width,Math.max(45,width*.07));
-    for(let x=0;x<width;x++)erase(x,width,height,Math.max(45,height*.05));
+    for(let x=0;x<width;x++)erase(x,width,height,Math.max(80,height*.05));
     ctx.putImageData(pixels,0,0);
   }
   async function extract(file,status) {
@@ -150,5 +163,6 @@
     }
     return clear;
   }
-  window.WageWiseReader={extract,preview,prepareOffline};
+  if(typeof module==='object'&&module.exports)module.exports={removeRules};
+  else window.WageWiseReader={extract,preview,prepareOffline};
 })();

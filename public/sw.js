@@ -1,5 +1,5 @@
 // The HTML includes its matching payroll engine, avoiding mixed-version calculations.
-const CACHE='wagewise-v11-payslip-import';
+const CACHE='wagewise-v12-payslip-import';
 const READER='wagewise-reader-v1';
 const ASSETS=['/','/index.html','/icon.svg','/manifest.webmanifest','/sync-config.json'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
