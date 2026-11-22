@@ -640,10 +640,15 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
         <button type="button" class="primary-btn" id="ps-print-btn" style="width:auto;padding:10px 18px;font-size:14px;">&#128438; Print</button>
       </div>
       <div id="payslip-check-link" class="linked-panel" hidden>
+        <button type="button" class="primary-btn" id="import-choose">Import payslips</button>
+        <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp" id="import-files" multiple hidden>
+        <p class="context">Choose PDFs, photos or screenshots. Originals stay on this device.</p>
         <button type="button" class="link-btn" id="open-payslip-check">Check against my log</button>
         <button class="link-btn" type="button" id="payslip-actual">Record actual pay</button>
         <button class="link-btn" type="button" id="payslip-totals">Latest payslip totals</button>
       </div>
+      <section id="import-review" hidden aria-label="Review payslip"></section>
+      <dialog id="import-original"><button type="button" id="import-close-original">Close original</button><div id="import-original-pages"></div></dialog>
       <div class="ps-section">
         <div class="card-title">Generate from</div>
         <div class="seg" id="ps-src-seg">
@@ -1440,12 +1445,18 @@ function renderDashboard(){
   var ys=taxYearStartFor(todayISO());
   var ytd=state.history.filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
   var ytdNet=ytd.reduce(function(s,e){return s+e.net;},0);
-  var allAvg=state.history.length?state.history.reduce(function(s,e){return s+e.net;},0)/state.history.length:0;
+  var weeklyByDate=new Map();
+  state.history.filter(e=>!e.imported||e.imported.frequency==='weekly').forEach(e=>{
+    var day=weeklyByDate.get(e.date)||{date:e.date,net:0,gross:0};
+    day.net+=e.net;day.gross+=e.gross;weeklyByDate.set(e.date,day);
+  });
+  var weekly=Array.from(weeklyByDate.values());
+  var allAvg=weekly.length?weekly.reduce((s,e)=>s+e.net,0)/weekly.length:null;
   $('dash-stats').innerHTML='<div class="stat-card"><div class="stat-label">YTD Net</div><div class="stat-value">'+(ytd.length?money(ytdNet):'&mdash;')+'</div><div class="stat-sub">'+ytd.length+' entr'+(ytd.length===1?'y':'ies')+'</div></div><div class="stat-card"><div class="stat-label">Avg weekly</div><div class="stat-value">'+(state.history.length?money(allAvg):'&mdash;')+'</div><div class="stat-sub">net pay</div></div><div class="stat-card"><div class="stat-label">Saved</div><div class="stat-value">'+state.history.length+'</div><div class="stat-sub">total entries</div></div>';
   $('dash-chart').innerHTML=state.history.length?buildChart(state.history):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
-  if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
+  if(!weekly.length){$('dash-forecast').innerHTML='<p class="forecast-note">Save a weekly pay entry to generate a weekly forecast.</p>';}
   else{
-    var recent=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,8);
+    var recent=weekly.sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,8);
     var avgN=recent.reduce(function(s,e){return s+e.net;},0)/recent.length;
     var avgG=recent.reduce(function(s,e){return s+e.gross;},0)/recent.length;
     $('dash-forecast').innerHTML='<div class="forecast-grid"><div class="fcard"><div class="f-label">Weekly avg</div><div class="f-value">'+money(avgN)+'</div><div class="f-sub">net pay</div></div><div class="fcard"><div class="f-label">Monthly</div><div class="f-value">'+money(avgN*52/12)+'</div><div class="f-sub">net pay</div></div><div class="fcard hi"><div class="f-label">Annual net</div><div class="f-value">'+money(avgN*52)+'</div><div class="f-sub">projected</div></div><div class="fcard"><div class="f-label">Annual gross</div><div class="f-value">'+money(avgG*52)+'</div><div class="f-sub">projected</div></div></div><p class="forecast-note">Based on last '+recent.length+' entr'+(recent.length===1?'y':'ies')+'. Assumes the same pay every week.</p>';
@@ -1625,6 +1636,11 @@ $('cal-print-btn').addEventListener('click',function(){
   var tG=0,tN=0,tT=0,tI=0,tO=0;
   entries.forEach(function(e){tG+=e.gross;tN+=e.net;tT+=(e.tax||0);tI+=(e.ni||0);tO+=(e.otTotal||0);});
   var ml=MNAMES[_calMonth]+' '+_calYear,name=escapeHTML(state.employeeName)||'&mdash;';
+  if(entries.some(e=>e.imported)){
+    var parts=entries.map(e=>e.imported?PayslipReview.summary(e):'<p>'+fmtISO(e.date)+' · '+(e.manual?'Recorded pay':'Saved estimate')+' · Gross '+money(e.gross)+' · Net '+money(e.net)+'</p>');
+    $('print-payslip').innerHTML='<h1>'+ml+' earnings</h1>'+parts.join('')+'<p>Total gross '+money(tG)+' · Total take-home '+money(tN)+'</p>';
+    window.print();return;
+  }
   var calEmpName=escapeHTML(state.employerName)||'WageWise';
   var calPBy=state.employerName?'<div class="prn-powered">Powered by WageWise</div>':'';
   $('print-payslip').innerHTML='<div class="prn-header"><div><div class="prn-company">'+calEmpName+'</div>'+calPBy+'</div><div class="prn-hdr-right"><div class="prn-badge">MONTHLY PAYSLIP</div><div class="prn-hdr-sub">'+TE.YEAR+'</div></div></div>'+
@@ -1699,6 +1715,7 @@ function openDetailSheet(id){
 }
 function closeDetailSheet(){var ov=$('dsheet-overlay'),sh=$('dsheet');ov.classList.remove('open');sh.classList.remove('open');setTimeout(function(){ov.setAttribute('hidden','');sh.setAttribute('hidden','');},300);}
 function renderDetailView(entry){
+  if(entry.imported){$('dv-body').innerHTML=PayslipReview.summary(entry);return;}
   var h='<div class="dv-eyebrow">This Week</div><div class="dv-divider"></div><div class="dv-row"><span class="dv-label">Basic Pay</span><span class="dv-value">'+money(entry.basic||0)+'</span></div>';
   if(entry.otEntries&&entry.otEntries.length){
     h+='<div class="dv-divider"></div><div class="dv-section-title">Overtime Shifts</div>';
@@ -1776,6 +1793,7 @@ var _psSource='current';
 function getPayslipData(){
   if(_psSource==='current'){var r=guardedCalc(calc);if(!r)return null;return{date:state.payDate||todayISO(),employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r.customDedRes,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,taxW:r.taxW,taxBreakdown:r.taxRes.breakdown,niW:r.niRes.ni,niBreakdown:r.niRes.breakdown,net:r.net,allowance:state.allowance,taxWeek:r.taxWeek,ytdGross:r.cumulativeGross,ytdTax:r.cumulativeTaxToDate,ytdNi:r.cumulativeNiToDate};}
   var entry=findEntry(_psSource);if(!entry)return null;
+  if(entry.imported)return entry;
   var ot=entry.otEntries&&entry.otEntries.length?entry.otEntries:[];
   var snap=entry.snapshot||{},other=roundPence(entry.gross-entry.net-(entry.tax||0)-(entry.ni||0));
   return {date:entry.date,employeeName:state.employeeName||'',employerName:state.employerName||'',basic:entry.manual?entry.gross:entry.basic||0,otEntries:ot,otTotal:entry.otTotal||0,gross:entry.gross,taxW:entry.tax,niW:entry.ni,net:entry.net,
@@ -1785,6 +1803,7 @@ function getPayslipData(){
 
 
 function buildPayslipHTML(d,forPrint){
+  if(d?.imported)return PayslipReview.summary(d);
   if(!d)return'<p style="text-align:center;padding:24px;color:var(--ink-soft);">No data available.</p>';
   var name=escapeHTML(d.employeeName)||'&mdash;',dateStr=fmtISO(d.date)||'&mdash;';
   var tw=getTaxWeek(d.date),twStr=tw?'Tax Week '+tw:'&mdash;';
@@ -1849,6 +1868,9 @@ function renderPayslipScreen(){
     $('ps-hist-list').innerHTML=sorted.map(function(e){var sel=_psSource===e.id;return'<div class="ps-hitem'+(sel?' selected':'')+'" data-psid="'+e.id+'"><div><div class="ps-hi-date">'+fmtISO(e.date)+'</div><div class="ps-hi-net">'+money(e.net)+'</div></div>'+(sel?'<span style="font-size:18px;font-weight:700">&#10003;</span>':'')+'</div>';}).join('');
   }else{$('ps-hist-list').innerHTML='';$('ps-hist-empty').hidden=false;}
   $('ps-preview').innerHTML=buildPayslipHTML(getPayslipData(),'');
+  $('ps-preview').removeAttribute('data-original-for');
+  var selected=findEntry(_psSource);
+  if(selected?.imported)PayslipReview.originalButton(selected,$('ps-preview'));
 }
 function doPrint(){var d=getPayslipData();if(!d){showToast('Correct the calculator inputs before printing.');return;}$('print-payslip').innerHTML=buildPayslipHTML(d,true);window.print();}
 $('ps-name').addEventListener('input',function(){state.employeeName=this.value;persist();renderPayslipScreen();});
@@ -1975,10 +1997,16 @@ function bindSharedApp(){
   window.WageWiseNavigate=showScreen;
   window.addEventListener('wagewise-data',event=>{
     if(event.detail.source==='calculator')return;
+    if(event.detail.source==='payslip-import')state.history=features.readCalculator().history;
     refreshPay();
     if(document.querySelector('[data-screen=calendar].active'))renderCalendarScreen();
     if(document.querySelector('[data-screen=dashboard].active'))renderDashboard();
     if(document.querySelector('[data-screen=payslip].active')&&!$('payslip-preview').hidden)renderPayslipScreen();
+  });
+  window.addEventListener('wagewise-payslip-imported',event=>{
+    _psSource=event.detail;
+    $('ps-src-calc').classList.remove('on');$('ps-src-hist').classList.add('on');$('ps-hist-picker').hidden=false;
+    renderPayslipScreen();
   });
   window.addEventListener('wagewise-workspace',()=>{
     loadCalculator();

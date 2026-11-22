@@ -29,7 +29,7 @@
       const request = records.get(key);
       request.onsuccess = () => {
         try {
-          next = update(request.result);
+          next = update(request.result, records);
           if (next === undefined) records.delete(key);
           else records.put(next, key);
         } catch (reason) {

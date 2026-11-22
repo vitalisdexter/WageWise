@@ -48,8 +48,8 @@ function notice(text = '', error = false) {
 function save(change, source = 'log') {
   const key = workspace;
   const write = pending.then(async () => {
-    const record = await storage.change(key, stored => {
-      const next = change(stored?.data ?? state);
+    const record = await storage.change(key, (stored, records) => {
+      const next = change(stored?.data ?? state, records);
       if (new TextEncoder().encode(encode(next)).length > Tracking.MAX_BACKUP_BYTES) throw Error('Storage limit reached. Export a backup.');
       return {...stored, data: next};
     });
@@ -277,8 +277,11 @@ function renderCheck() {
     $('other-shifts').replaceChildren(...remaining.map(shift => option(shift, false)));
     $('other-details').hidden = !remaining.length;
     $('other-details').open = remaining.length > 0 && !main.length;
-    $('actual-hours').value = check ? (check.actualHours / 100).toFixed(2) : '';
-    $('actual-pay').value = check ? (check.actualPay / 100).toFixed(2) : '';
+    const imported = (state.calculator?.history??[]).filter(e=>e.date===date && e.imported?.frequency==='weekly')
+      .flatMap(e=>e.imported.lines).filter(row=>row.kind==='overtime');
+    const totals = PayslipImport.totals(imported);
+    $('actual-hours').value = check ? (check.actualHours / 100).toFixed(2) : imported.length && totals.hours!=null ? totals.hours.toFixed(2) : '';
+    $('actual-pay').value = check ? (check.actualPay / 100).toFixed(2) : imported.length ? (totals.overtime/100).toFixed(2) : '';
     renderPreview();
   }
   const payDates = Object.keys(state.log.checks).sort().reverse();
@@ -415,6 +418,24 @@ async function init() {
     latestPayslip: () => structuredClone(state.log.planner?.anchor ?? null),
     read: () => structuredClone(state),
     getWorkspace: () => workspace,
+    importPayslip: ({entry,file,replace,anchor,mapping,workspaceKey,expectedMatches}) => save((current,records)=>{
+      if(workspace!==workspaceKey)throw Error('The workspace changed. Open the file again.');
+      const history=current.calculator?.history??[];
+      const matches=window.PayslipReview.matches(history,entry);
+      if(matches.some(e=>e.imported?.hash===entry.imported.hash))throw Error('This file already has a saved pay entry.');
+      if(JSON.stringify(matches)!==expectedMatches)throw Error('Pay history changed during review. Review the matching records again.');
+      if(!Tracking.dateValid(entry.date)||!PayslipImport.valid(entry.imported))throw Error('Check the pay date, figures and line categories.');
+      const updated=[{...entry,id:replace??entry.id},...history.filter(e=>e.id!==replace)];
+      const log={...current.log};
+      if(anchor){
+        const planner=log.planner??Planner.empty();
+        if(planner.anchor?.date>entry.date)throw Error('A newer YTD starting point already exists.');
+        log.planner={...planner,anchor:{date:entry.date,gross:entry.imported.ytdGross,tax:entry.imported.ytdTax}};
+      }
+      records.put(file,'payslip-file:'+entry.imported.hash);
+      if(mapping)records.put(mapping.rules,mapping.key);
+      return {...current,calculator:{...current.calculator,history:updated},log};
+    },'payslip-import'),
     useWorkspace,
     selectCalendarDate: date => { if (date !== selectedDate) selectDate(date); else renderDay(); },
     priorForPayday: date => {

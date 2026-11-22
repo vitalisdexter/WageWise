@@ -10,4 +10,5 @@ mobile/releases/
 .wagewise-sync.json
 .wagewise-vapid.json
 public/sync-config.json
+public/payslip-reader/
 supabase/.temp/

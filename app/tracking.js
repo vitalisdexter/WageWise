@@ -159,8 +159,9 @@
   const entry = value => isObject(value) && safeId(value.id) && dateValid(value.date) &&
     number(value.gross) && signedAmount(value.net) && optional(value, 'otEntries', items => list(items, legacyShift)) &&
     optional(value, 'basic', number) && optional(value, 'otTotal', number) && optional(value, 'tax', signedAmount) &&
-    optional(value, 'ni', number) && optional(value, 'allowance', number) && optional(value, 'note', text) &&
-    optional(value, 'customDeductions', deductions) && optional(value, 'snapshot', snapshot);
+    optional(value, 'ni', value.imported ? signedAmount : number) && optional(value, 'allowance', number) && optional(value, 'note', text) &&
+    optional(value, 'customDeductions', deductions) && optional(value, 'snapshot', snapshot) &&
+    optional(value, 'imported', d => (typeof module==='object' ? require('./payslip-import') : globalThis.PayslipImport).valid(d) && d.date===value.date);
   const numberText = value => text(value) && (value === '' || /^-?\d+(\.\d+)?$/.test(value));
 
   function validateCalculator(value) {

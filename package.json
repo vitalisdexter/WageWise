@@ -9,7 +9,10 @@
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "2.0.0",
-    "@supabase/supabase-js": "2.119.1"
+    "@supabase/supabase-js": "2.119.1",
+    "@tesseract.js-data/eng": "1.0.0",
+    "pdfjs-dist": "6.5.438",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

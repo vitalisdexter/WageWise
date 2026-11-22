@@ -534,6 +534,26 @@ summary { cursor: pointer; font-weight: 650; }
 #sync-created-code code { display: block; overflow-wrap: anywhere; user-select: all; margin: 8px 0; }
 #planner-totals-link { margin-left: 16px; }
 #projection-pot { flex: 1 1 140px; }
+#import-review, #import-result { margin: 12px 22px; overflow-wrap:anywhere; }
+#import-review { padding:16px; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
+#import-review h2, #import-review h3, .import-summary h3 { margin:8px 0; }
+.import-form,.import-layout,.import-fields,.import-line { display:grid; gap:10px; min-width:0; }
+.import-fields,.import-line { grid-template-columns:repeat(auto-fit,minmax(min(135px,100%),1fr)); }
+.import-line { margin:10px 0; padding:12px; border:1px solid var(--rule); border-radius:10px; }
+.import-form label { display:grid; gap:4px; color:var(--ink-soft); font-size:.85rem; min-width:0; }
+.import-form :is(input:not([type=checkbox]),select), #import-original select { width:100%; min-width:0; padding:8px; border:1px solid var(--rule-strong); background:var(--paper); color:var(--ink); border-radius:8px; min-height:42px; font:inherit; }
+.import-form .import-choice { display:flex; flex-direction:row-reverse; justify-content:flex-end; align-items:center; gap:8px; }
+.import-form [hidden] { display:none; }
+.import-form .import-needs-review { border-color:var(--brick); border-style:dashed; }
+.import-feedback { background:var(--stripe); padding:10px; border-radius:8px; }
+#import-review button:not(.primary-btn),#import-original button,#ps-preview>button { font:inherit; color:var(--accent-ink); padding:8px; border-radius:8px; border:1px solid var(--rule); background:var(--paper); cursor:pointer; }
+.import-source img,.import-source canvas,#import-original :is(img,canvas) { display:block; width:100%; height:auto; }
+#import-original { width:min(92vw,850px); max-height:88vh; padding:16px; border:1px solid var(--rule); border-radius:12px; background:var(--paper); color:var(--ink); }
+#import-original::backdrop { background:#102820aa; }
+.import-summary { padding:12px; }
+.import-summary-row { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dotted var(--rule); overflow-wrap:anywhere; }
+.import-summary-row strong { text-align:right; }
+@media (min-width:760px) { .import-layout { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); align-items:start; } }
 @media (prefers-reduced-motion: no-preference) {
   .screen.active { animation: wagewise-screen-in .16s ease-out; }
   .navbtn { transition: background-color .16s, color .16s; }
@@ -750,10 +770,15 @@ summary { cursor: pointer; font-weight: 650; }
         <button type="button" class="primary-btn" id="ps-print-btn" style="width:auto;padding:10px 18px;font-size:14px;">&#128438; Print</button>
       </div>
       <div id="payslip-check-link" class="linked-panel" hidden>
+        <button type="button" class="primary-btn" id="import-choose">Import payslips</button>
+        <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp" id="import-files" multiple hidden>
+        <p class="context">Choose PDFs, photos or screenshots. Originals stay on this device.</p>
         <button type="button" class="link-btn" id="open-payslip-check">Check against my log</button>
         <button class="link-btn" type="button" id="payslip-actual">Record actual pay</button>
         <button class="link-btn" type="button" id="payslip-totals">Latest payslip totals</button>
       </div>
+      <section id="import-review" hidden aria-label="Review payslip"></section>
+      <dialog id="import-original"><button type="button" id="import-close-original">Close original</button><div id="import-original-pages"></div></dialog>
       <div class="ps-section">
         <div class="card-title">Generate from</div>
         <div class="seg" id="ps-src-seg">
@@ -1180,6 +1205,223 @@ summary { cursor: pointer; font-weight: 650; }
 
 </script>
 <script>
+(function(root, factory) {
+  if (typeof module === 'object') module.exports = factory();
+  else root.PayslipImport = factory();
+})(globalThis, function() {
+  'use strict';
+  const categories = {basic:'Basic pay', overtime:'Overtime', backpay:'Back pay', bonus:'Bonus',
+    earning:'Other gross earnings', tax:'PAYE', ni:'Employee NI', deduction:'Other deduction',
+    reimbursement:'Reimbursement after tax', refund:'PAYE refund', unknown:'Choose treatment'};
+  const moneyFields = ['gross','net','ytdGross','ytdTax','ytdNi','ytdTotal'];
+  const textKey = text => text.trim().toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const blank = () => ({employer:'',date:'',frequency:'',period:'',taxCode:'',niCode:'',
+    gross:null,net:null,ytdGross:null,ytdTax:null,ytdNi:null,ytdTotal:null,lines:[],layout:''});
+  const periodFor = (date, frequency) => {
+    if (!/^\d{4}-\d\d-\d\d$/.test(date) || !Number.isFinite(Date.parse(date))) return '';
+    const year = Number(date.slice(0,4)) - (date.slice(5) < '04-06');
+    if (frequency === 'weekly') return String(1 + Math.floor((Date.parse(date)-Date.UTC(year,3,6))/604800000));
+    if (frequency === 'monthly') return String(1 + (Number(date.slice(5,7)) - 4 - (Number(date.slice(8)) < 6) + 12) % 12);
+    return '';
+  };
+  const parseDate = value => {
+    const m = value.match(/\b(\d{1,2})[./-](\d{1,2})[./-](\d{4}|\d{2})\b/);
+    const iso = m ? (m[3].length===2?'20':'')+m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')
+      : value.match(/\b\d{4}-\d\d-\d\d\b/)?.[0];
+    if (iso && Number.isFinite(Date.parse(iso)) && new Date(iso).toISOString().slice(0,10)===iso) return iso;
+    const named = value.match(/\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}\b/i);
+    return named && Number.isFinite(Date.parse(named[0]+' UTC')) ? new Date(named[0]+' UTC').toISOString().slice(0,10) : '';
+  };
+  const toPence = value => {
+    const s = String(value).replace(/[£,\s]/g,'').replace(/[−–]/g,'-');
+    if (!/^(?:-?\d+(?:\.\d{1,2})?|\(\d+(?:\.\d{1,2})?\)|\d+(?:\.\d{1,2})?-)$/.test(s)) return null;
+    const n = Math.round(Number(s.replace(/[()-]/g,''))*100) * (/[-(]/.test(s)?-1:1);
+    return Number.isSafeInteger(n) && Math.abs(n)<=999999999 ? n : null;
+  };
+  const ytd = /\b(?:ytd|year[ -]to[ -]date|to[ -]date|t[/'’]?d|t\/date)\b/i;
+  function kind(label,section) {
+    if (/\b(?:tax|paye).*(?:refund|reimburse|rebate)|(?:refund|rebate).*tax/i.test(label)) return 'refund';
+    if (/^(?:income tax|tax|paye(?: tax)?)$/i.test(label)) return 'tax';
+    if (/^(?:(?:employee|ees?)'?s?\s*)?(?:national insurance|n\.?i\.?(?:c(?:s)?)?)(?:\s+(?:employee|ees?))?$/i.test(label)) return 'ni';
+    if (/\b(?:overtime|ot\s*\d*)\b/i.test(label)) return 'overtime';
+    if (/\b(?:back ?pay|arrears)\b/i.test(label)) return 'backpay';
+    if (/\bbonus\b/i.test(label)) return 'bonus';
+    if (/\b(?:basic|salary|ordinary pay|standard pay)\b/i.test(label)) return 'basic';
+    if (/\b(?:expenses?|reimbursements?)\b/i.test(label)) return 'reimbursement';
+    if (/\b(?:pension|union|student loan)\b/i.test(label)||section==='deduction') return 'deduction';
+    return section==='earning'?'earning':'unknown';
+  }
+  function field(label) {
+    const s = label.trim().replace(/[:.]+$/,'').toLowerCase();
+    if (ytd.test(s)) {
+      if (/taxable|pay for tax/.test(s)) return 'ytdGross';
+      if (/\btax\b|paye/.test(s)) return 'ytdTax';
+      if (/employee ni|employee national insurance/.test(s)) return 'ytdNi';
+      if (/gross pay|total pay/.test(s)) return 'ytdTotal';
+      return 'ignore';
+    }
+    if (/^(?:total (?:gross(?: pay)?|earnings|pay)|gross(?: pay| earnings)?)(?: this period)?$/.test(s)) return 'gross';
+    if (/^(?:net(?: pay| wages| payment)?|take[ -]home(?: pay)?|amount paid|payment to (?:you|bank))$/.test(s)) return 'net';
+    if (/^(?:taxable (?:gross|pay)|gross pay for tax|total (?:deductions|ni)|rounding|contracted out|employer|tax code|employee number)/.test(s)) return 'ignore';
+    return '';
+  }
+  // Coordinates are in page units, with y measured downwards. Preserve the gaps between table cells.
+  function groupPage(words) {
+    const rows=[];
+    for (const w of [...words].filter(w=>w.text.trim()).sort((a,b)=>a.y-b.y||a.x-b.x)) {
+      const row=rows.at(-1);
+      if (row && Math.abs(w.y-row.y)<=Math.max(2,Math.min(row.h,w.h)*0.62)) row.words.push(w);
+      else rows.push({y:w.y,h:w.h,words:[w]});
+    }
+    return rows.map(row=>{
+      const cells=[];
+      for (const w of row.words.sort((a,b)=>a.x-b.x)) {
+        const prev=cells.at(-1);
+        if (prev && w.x-prev.end < Math.max(1,w.h*0.8)) {
+          prev.text+=' '+w.text; prev.end=Math.max(prev.end,w.x+w.w);
+        } else cells.push({text:w.text,x:w.x,end:w.x+w.w});
+      }
+      return {...row,cells,text:cells.map(c=>c.text).join('  ')};
+    });
+  }
+  const price = /(?<![\d.])(?:[-−–]?\s*£?\s*\d[\d,]*\.\d{2}(?:-|\b)|\(\s*£?\d[\d,]*\.\d{2}\s*\))(?![\d.])/g;
+  function parse(pages) {
+    const draft=blank(), headings=new Set(), seenDates=new Set();
+    for (const words of pages) {
+      const rows=groupPage(words);
+      let section='',columns=null, stopLedger=false,sections=[],units=null;
+      for (let i=0;i<rows.length;i++) {
+        const {text,cells,h}=rows[i];
+        const beneath=c=>{
+          const index=cells.indexOf(c), left=c.x-h, right=cells[index+1]?.x??Infinity;
+          for(const next of rows.slice(i+1,i+7)){
+            if(next.y-rows[i].y>h*7)break;
+            const candidates=next.cells.filter(v=>(v.x+v.end)/2>=left && (v.x+v.end)/2<right && /[\da-z]/i.test(v.text));
+            if(candidates.length)return candidates.map(v=>v.text).join(' ');
+          }
+          return '';
+        };
+        for (const c of cells) {
+          const s=c.text.trim(), norm=textKey(s);
+          if (/^(?:employer|company)(?: name)?\s*[:\-]/i.test(s)) draft.employer=s.replace(/^.*?[:\-]\s*/,'').slice(0,120);
+          if (!draft.employer && i<6 && /\b(?:ltd|limited|plc)\b/i.test(s)) draft.employer=s.replace(/^e[- ]?payslip\s*/i,'').slice(0,120);
+          if (/\b(?:pay ?date|payment date|date paid)\b/i.test(s)) {
+            const date=parseDate(s)||parseDate((cells[cells.indexOf(c)+1]?.text??''))||parseDate(beneath(c));
+            if(date) seenDates.add(date);
+          }
+          if (/\b(?:weekly|monthly|fortnightly|four.weekly|4.weekly)\b/i.test(s) && !/pension/i.test(s))
+            draft.frequency=/fortnightly|four.weekly|4.weekly/i.test(s)?'other':/monthly/i.test(s)?'monthly':'weekly';
+          const period=s.match(/\b(tax week|tax month|pay period|period)\s*[:#]?\s*(\d{1,2})\b/i);
+          if(period){draft.period=period[2];if(/week|month/i.test(period[1]))draft.frequency=/month/i.test(period[1])?'monthly':'weekly';}
+          if (/^(?:period|tax week|tax month|pay period)$/i.test(s)) {
+            const n=beneath(c).match(/^\s*(\d{1,2})\b/); if(n) draft.period=n[1];
+          }
+          const code=s.match(/\b([SC]?\d{1,4}[LMNT](?:\s+(?:W1|M1|X))?)\b/i);
+          if(code && !draft.taxCode) draft.taxCode=code[1].toUpperCase();
+          if (/^ni(?: (?:code|category|letter)|$)/i.test(s) && !draft.niCode) draft.niCode=(s.match(/[: ]([A-Z])$/)?.[1]||beneath(c).match(/^\s*([A-Z])\b/)?.[1]||'');
+          if (/^(earnings|payments|pay & allowances|deductions|this period|current|current period|year to date|ytd|description|amount|narrative|rate|units|hours)$/.test(norm)||/^pay (?:and )?allowances$/.test(norm)) {
+            headings.add(norm+'@'+cells.indexOf(c));
+            if (/^(earnings|payments|pay (?:and )?allowances|deductions)$/.test(norm)) {
+              section=norm==='deductions'?'deduction':'earning';
+              if(sections.length && c.x<=sections.at(-1).x+h) sections=[];
+              sections.push({x:c.x,section}); stopLedger=false;
+            }
+          }
+        }
+        if (/\b(?:current|this (?:period|month|week))\b/i.test(text) && cells.some(c=>ytd.test(c.text))) {
+          const mid=c=>(c.x+c.end)/2;
+          columns={current:mid(cells.find(c=>/\bcurrent|this (?:period|month|week)/i.test(c.text))),
+            ytd:mid(cells.find(c=>ytd.test(c.text)))};
+          headings.add('parallel ytd'); continue;
+        }
+        if (/^\s*(?:year[ -]to[ -]date(?: totals)?|to[ -]date totals|ytd totals)\s*$/i.test(text)) {stopLedger=true;columns=null;}
+        if(cells.some(c=>/^(?:hours|units|quantity)$/i.test(c.text)) && cells.some(c=>/^rate$/i.test(c.text))){
+          units={hours:cells.find(c=>/^(?:hours|units|quantity)$/i.test(c.text)).x,
+            rate:cells.find(c=>/^rate$/i.test(c.text)).x,amount:cells.find(c=>/amount|current|this period/i.test(c.text))?.x};
+          continue;
+        }
+        // Header bands can put figures directly beneath their labels, as in OneAdvanced.
+        for (const c of cells) {
+          const key=field(c.text);
+          if (key && key!=='ignore' && draft[key]==null) {
+            const m=beneath(c).trim().match(/^[-£(]?\s*\d[\d,]*\.\d\d[)-]?(?=\s|$)/);
+            if(m) draft[key]=toPence(m[0]);
+          }
+        }
+        let pendingLabel='', qty=null,rate=null,labelX=0,previousLabel='';
+        const setValue=(label,amount,x)=>{
+          if(!label||amount==null)return;
+          let key=field(label);
+          if((columns && Math.abs(x-columns.ytd)<Math.abs(x-columns.current))||stopLedger) {
+            key=field(label+' YTD'); if(key && key!=='ignore')draft[key]=amount; return;
+          }
+          if(key){if(key!=='ignore')draft[key]=amount;return;}
+          if(stopLedger||/^(?:total|balance|taxable|employer|period|pay date|pension t|rate|amount|narrative|to.date|rounding|contracted)/i.test(label)||ytd.test(label))return;
+          const local=sections.filter(col=>col.x<=labelX+h).at(-1)?.section || section;
+          if(!local && kind(label,'')==='unknown' && !columns)return;
+          draft.lines.push({label:label.slice(0,100),kind:kind(label,local),pence:amount,hours:qty,rate});
+        };
+        for(const c of cells){
+          if(units && units.amount!=null && /^£?[\d,.]+$/.test(c.text.trim())){
+            const center=(c.x+c.end)/2;
+            const closest=Object.entries(units).sort((a,b)=>Math.abs(a[1]-center)-Math.abs(b[1]-center))[0][0];
+            if(closest==='hours'){qty=Number(c.text.replace(/,/g,''));continue;}
+            if(closest==='rate'){rate=Number(c.text.replace(/[£,]/g,''));continue;}
+          }
+          const mult=c.text.match(/(\d+(?:\.\d+)?)\s*[x×@]\s*£?(\d+(?:\.\d+)?)/i);
+          let s=c.text;
+          if(mult){qty=Number(mult[1]);rate=Number(mult[2]);s=s.replace(mult[0],' ');}
+          const matches=[...s.matchAll(price)];
+          if(!matches.length){
+            if(s.trim() && /[a-z]/i.test(s)){pendingLabel=s.trim();labelX=c.x;}
+            continue;
+          }
+          let end=0;
+          for(const m of matches){
+            const prefix=s.slice(end,m.index).trim().replace(/[:£\s]+$/,'');
+            if(/[a-z]/i.test(prefix)){pendingLabel=prefix;labelX=c.x;}
+            const label=pendingLabel || (columns?previousLabel:'');
+            setValue(label,toPence(m[0]),c.x+(c.end-c.x)*m.index/Math.max(1,s.length));
+            if(label)previousLabel=label;
+            pendingLabel='';qty=null;rate=null;end=m.index+m[0].length;
+          }
+          if(/[a-z]/i.test(s.slice(end))) pendingLabel=s.slice(end).trim();
+        }
+      }
+    }
+    if(seenDates.size>1)throw Error('Several pay dates were found. Select one file per payslip.');
+    if(seenDates.size===1)draft.date=[...seenDates][0];
+    draft.layout=[...headings].join('|').slice(0,600);
+    return draft;
+  }
+  function totals(lines) {
+    const result={gross:0,deductions:0,credits:0,basic:0,overtime:0,hours:0,tax:null,ni:null};
+    for(const row of lines) {
+      const n=row.pence;
+      if(['basic','overtime','backpay','bonus','earning'].includes(row.kind)) result.gross+=n;
+      if(row.kind==='basic')result.basic+=n;
+      if(row.kind==='overtime'){result.overtime+=n;result.hours=row.hours==null||result.hours==null?null:result.hours+row.hours;}
+      if(row.kind==='reimbursement')result.credits+=n;
+      if(['ni','tax','refund','deduction'].includes(row.kind))result.deductions+=row.kind==='refund'?-Math.abs(n):n;
+      if(row.kind==='ni')result.ni=(result.ni??0)+n;
+      if(['tax','refund'].includes(row.kind))result.tax=(result.tax??0)+(row.kind==='refund'?-Math.abs(n):n);
+    }
+    return result;
+  }
+  const differences = d => {
+    const t=totals(d.lines);
+    return {gross:d.gross==null?null:d.gross-t.gross,net:d.net==null||d.gross==null?null:d.net-(d.gross+t.credits-t.deductions)};
+  };
+  const valid = d => d && typeof d==='object' && ['employer','period','taxCode','niCode','layout'].every(k=>typeof d[k]==='string'&&d[k].length<=600)
+    && ['weekly','monthly','other'].includes(d.frequency) && typeof d.date==='string'
+    && moneyFields.every(k=>d[k]===null||Number.isSafeInteger(d[k])&&Math.abs(d[k])<=999999999)
+    && d.gross!=null && d.gross>=0 && d.net!=null && /^[a-f0-9]{64}$/.test(d.hash)
+    && Array.isArray(d.lines)&&d.lines.length<=300&&d.lines.every(r=>r && typeof r.label==='string'&&r.label.trim()&&r.label.length<=100
+      && Object.hasOwn(categories,r.kind)&&r.kind!=='unknown'&&Number.isSafeInteger(r.pence)&&Math.abs(r.pence)<=999999999
+      && ['hours','rate'].every(k=>r[k]===null||Number.isFinite(r[k])&&r[k]>=0&&r[k]<=999999));
+  return {blank,parse,kind,categories,toPence,textKey,totals,differences,periodFor,valid,moneyFields};
+});
+
 (function (root, factory) {
   if (typeof module === 'object') module.exports = factory();
   else root.Tracking = factory();
@@ -1341,8 +1583,9 @@ summary { cursor: pointer; font-weight: 650; }
   const entry = value => isObject(value) && safeId(value.id) && dateValid(value.date) &&
     number(value.gross) && signedAmount(value.net) && optional(value, 'otEntries', items => list(items, legacyShift)) &&
     optional(value, 'basic', number) && optional(value, 'otTotal', number) && optional(value, 'tax', signedAmount) &&
-    optional(value, 'ni', number) && optional(value, 'allowance', number) && optional(value, 'note', text) &&
-    optional(value, 'customDeductions', deductions) && optional(value, 'snapshot', snapshot);
+    optional(value, 'ni', value.imported ? signedAmount : number) && optional(value, 'allowance', number) && optional(value, 'note', text) &&
+    optional(value, 'customDeductions', deductions) && optional(value, 'snapshot', snapshot) &&
+    optional(value, 'imported', d => (typeof module==='object' ? require('./payslip-import') : globalThis.PayslipImport).valid(d) && d.date===value.date);
   const numberText = value => text(value) && (value === '' || /^-?\d+(\.\d+)?$/.test(value));
 
   function validateCalculator(value) {
@@ -1980,7 +2223,7 @@ const plannerView = (() => {
       const request = records.get(key);
       request.onsuccess = () => {
         try {
-          next = update(request.result);
+          next = update(request.result, records);
           if (next === undefined) records.delete(key);
           else records.put(next, key);
         } catch (reason) {
@@ -2094,8 +2337,8 @@ function notice(text = '', error = false) {
 function save(change, source = 'log') {
   const key = workspace;
   const write = pending.then(async () => {
-    const record = await storage.change(key, stored => {
-      const next = change(stored?.data ?? state);
+    const record = await storage.change(key, (stored, records) => {
+      const next = change(stored?.data ?? state, records);
       if (new TextEncoder().encode(encode(next)).length > Tracking.MAX_BACKUP_BYTES) throw Error('Storage limit reached. Export a backup.');
       return {...stored, data: next};
     });
@@ -2323,8 +2566,11 @@ function renderCheck() {
     $('other-shifts').replaceChildren(...remaining.map(shift => option(shift, false)));
     $('other-details').hidden = !remaining.length;
     $('other-details').open = remaining.length > 0 && !main.length;
-    $('actual-hours').value = check ? (check.actualHours / 100).toFixed(2) : '';
-    $('actual-pay').value = check ? (check.actualPay / 100).toFixed(2) : '';
+    const imported = (state.calculator?.history??[]).filter(e=>e.date===date && e.imported?.frequency==='weekly')
+      .flatMap(e=>e.imported.lines).filter(row=>row.kind==='overtime');
+    const totals = PayslipImport.totals(imported);
+    $('actual-hours').value = check ? (check.actualHours / 100).toFixed(2) : imported.length && totals.hours!=null ? totals.hours.toFixed(2) : '';
+    $('actual-pay').value = check ? (check.actualPay / 100).toFixed(2) : imported.length ? (totals.overtime/100).toFixed(2) : '';
     renderPreview();
   }
   const payDates = Object.keys(state.log.checks).sort().reverse();
@@ -2461,6 +2707,24 @@ async function init() {
     latestPayslip: () => structuredClone(state.log.planner?.anchor ?? null),
     read: () => structuredClone(state),
     getWorkspace: () => workspace,
+    importPayslip: ({entry,file,replace,anchor,mapping,workspaceKey,expectedMatches}) => save((current,records)=>{
+      if(workspace!==workspaceKey)throw Error('The workspace changed. Open the file again.');
+      const history=current.calculator?.history??[];
+      const matches=window.PayslipReview.matches(history,entry);
+      if(matches.some(e=>e.imported?.hash===entry.imported.hash))throw Error('This file already has a saved pay entry.');
+      if(JSON.stringify(matches)!==expectedMatches)throw Error('Pay history changed during review. Review the matching records again.');
+      if(!Tracking.dateValid(entry.date)||!PayslipImport.valid(entry.imported))throw Error('Check the pay date, figures and line categories.');
+      const updated=[{...entry,id:replace??entry.id},...history.filter(e=>e.id!==replace)];
+      const log={...current.log};
+      if(anchor){
+        const planner=log.planner??Planner.empty();
+        if(planner.anchor?.date>entry.date)throw Error('A newer YTD starting point already exists.');
+        log.planner={...planner,anchor:{date:entry.date,gross:entry.imported.ytdGross,tax:entry.imported.ytdTax}};
+      }
+      records.put(file,'payslip-file:'+entry.imported.hash);
+      if(mapping)records.put(mapping.rules,mapping.key);
+      return {...current,calculator:{...current.calculator,history:updated},log};
+    },'payslip-import'),
     useWorkspace,
     selectCalendarDate: date => { if (date !== selectedDate) selectDate(date); else renderDay(); },
     priorForPayday: date => {
@@ -2613,6 +2877,385 @@ async function init() {
 const api = window.WageWiseFeatures = {};
 api.ready = init();
 api.ready.catch(error => notice('WageWise could not open its saved data. ' + error.message, true));
+})();
+
+(() => {
+  'use strict';
+  // Version the asset directory together with the dependency lockfile and service worker.
+  const base='/payslip-reader/v1/';
+  let pdfModule,ocrScript,preparing;
+  function prepareOffline(){
+    if(!('caches' in window))return Promise.resolve(false);
+    return preparing??=(async()=>{
+      const cache=await caches.open('wagewise-reader-v1');
+      const manifest=await cache.match(base+'offline.json')||await fetch(base+'offline.json');
+      const files=await manifest.clone().json();
+      for(const name of files){
+        const path=base+name;
+        if(!await cache.match(path))await cache.add(path);
+      }
+      await cache.put(base+'offline.json',manifest);
+      return true;
+    })().catch(()=>{preparing=null;return false;});
+  }
+  async function pdfLibrary(){
+    const pdf=await (pdfModule??=import(base+'pdf.min.mjs').catch(e=>{pdfModule=null;throw e;}));
+    pdf.GlobalWorkerOptions.workerSrc=base+'pdf.worker.min.mjs';
+    return pdf;
+  }
+  async function ocrLibrary(){
+    if(window.Tesseract)return window.Tesseract;
+    await (ocrScript??=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');script.src=base+'tesseract.min.js';
+      script.onload=resolve;script.onerror=()=>{ocrScript=null;script.remove();reject(Error('Go online once to download the image reader.'));};
+      document.head.append(script);
+    }));
+    return window.Tesseract;
+  }
+  // Ruled payroll tables often touch the digits in the amount column. Remove long
+  // straight rules before OCR, retaining the original bitmap for the review pane.
+  function removeRules(canvas) {
+    const ctx=canvas.getContext('2d'),width=canvas.width,height=canvas.height;
+    const pixels=ctx.getImageData(0,0,width,height),data=pixels.data;
+    const ink=new Uint8Array(width*height);
+    for(let i=0;i<ink.length;i++){
+      const p=i*4;ink[i]=Math.min(data[p],data[p+1],data[p+2])<130 && Math.max(data[p],data[p+1],data[p+2])<225;
+    }
+    function erase(start,stride,length,min) {
+      let first=-1;
+      for(let i=0;i<=length;i++){
+        if(i<length&&ink[start+i*stride]){if(first<0)first=i;continue;}
+        if(first>=0&&i-first>=min){
+          for(let j=first;j<i;j++){const k=4*(start+j*stride);data[k]=data[k+1]=data[k+2]=255;}
+        }
+        first=-1;
+      }
+    }
+    for(let y=0;y<height;y++)erase(y*width,1,width,Math.max(45,width*.07));
+    for(let x=0;x<width;x++)erase(x,width,height,Math.max(45,height*.05));
+    ctx.putImageData(pixels,0,0);
+  }
+  async function extract(file,status) {
+    const pages=[];
+    let worker,doc;
+    async function recognise(source) {
+      removeRules(source);
+      const T=await ocrLibrary();
+      worker??=await T.createWorker('eng',1,{workerPath:base+'worker.min.js',workerBlobURL:false,
+        corePath:base+'tesseract-core-lstm.wasm.js',langPath:base,logger:m=>{
+          status(m.status==='recognizing text'?'Reading image · '+Math.round(m.progress*100)+'%':'Preparing image reader…');
+        }});
+      await worker.setParameters({tessedit_pageseg_mode:T.PSM.SPARSE_TEXT});
+      const {data}=await worker.recognize(source,{}, {blocks:true});
+      const words=(data.blocks??[]).flatMap(b=>b.paragraphs.flatMap(p=>p.lines.flatMap(l=>l.words.map(w=>({
+        text:w.text,x:w.bbox.x0,y:(w.bbox.y0+w.bbox.y1)/2,w:w.bbox.x1-w.bbox.x0,h:w.bbox.y1-w.bbox.y0
+      })))));
+      // A narrow second digit can disappear among table rules. Re-read the period
+      // cell on its own when the first pass disagrees with the dated tax period.
+      const draft=PayslipImport.parse([words]),expected=PayslipImport.periodFor(draft.date,draft.frequency);
+      if(expected&&draft.period&&draft.period!==expected){
+        const header=words.find(w=>/^period$/i.test(w.text));
+        const value=header&&words.find(w=>w.text===draft.period&&w.y>header.y&&w.y-header.y<header.h*7&&Math.abs(w.x-header.x)<header.w);
+        if(value){
+          const pad=value.h;
+          const left=Math.max(0,Math.floor(value.x-pad*.6)),top=Math.max(0,Math.floor(value.y-pad*.9));
+          const rectangle={left,top,width:Math.min(source.width-left,Math.ceil(value.w+pad*2)),height:Math.min(source.height-top,Math.ceil(pad*1.8))};
+          await worker.setParameters({tessedit_pageseg_mode:T.PSM.SINGLE_WORD,tessedit_char_whitelist:'0123456789'});
+          const retry=await worker.recognize(source,{rectangle});
+          if(retry.data.text.trim()===expected)value.text=expected;
+          await worker.setParameters({tessedit_char_whitelist:''});
+        }
+      }
+      return words;
+    }
+    try {
+      if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
+        const pdf=await pdfLibrary();
+        doc=await pdf.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,
+          useSystemFonts:true,wasmUrl:base+'wasm/'}).promise;
+        if(doc.numPages>20)throw Error('Choose a PDF with up to 20 pages for one payslip.');
+        for(let n=1;n<=doc.numPages;n++){
+          status('Reading PDF page '+n+' of '+doc.numPages+'…');
+          const page=await doc.getPage(n),vp=page.getViewport({scale:1});
+          const content=await page.getTextContent();
+          let words=content.items.filter(item=>item.str?.trim()).map(item=>{
+            const m=pdf.Util.transform(vp.transform,item.transform);
+            const h=Math.hypot(m[2],m[3])||item.height||10;
+            return {text:item.str,x:m[4],y:m[5]-h/2,w:item.width,h};
+          });
+          if(!words.some(w=>/\d[.,]\d{2}\b/.test(w.text))){
+            const viewport=page.getViewport({scale:Math.min(3,2400/Math.max(vp.width,vp.height))});
+            const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+            try{await page.render({canvas,viewport}).promise;words=await recognise(canvas);}
+            finally{canvas.width=canvas.height=0;}
+          }
+          pages.push(words);page.cleanup();
+        }
+      }else{
+        const bitmap=await createImageBitmap(file);
+        const scale=Math.min(3,2800/Math.max(bitmap.width,bitmap.height));
+        const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);
+        const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+        try{pages.push(await recognise(canvas));}finally{canvas.width=canvas.height=0;}
+      }
+      return PayslipImport.parse(pages);
+    }finally{await worker?.terminate();await doc?.loadingTask.destroy();}
+  }
+  async function preview(file,host) {
+    const url=URL.createObjectURL(file);
+    let doc,closed=false;
+    const clear=()=>{closed=true;URL.revokeObjectURL(url);doc?.loadingTask.destroy();};
+    if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){
+      const img=document.createElement('img');img.alt='Original payslip';img.src=url;host.replaceChildren(img);
+    }else{
+      const display=async()=>{
+        const pdf=await pdfLibrary();if(closed)return;
+        doc=await pdf.getDocument({url,isEvalSupported:false,wasmUrl:base+'wasm/'}).promise;
+        if(closed){await doc.loadingTask.destroy();return;}
+        const select=document.createElement('select');select.setAttribute('aria-label','Original page');
+        for(let n=1;n<=doc.numPages;n++)select.add(new Option('Page '+n+' of '+doc.numPages,String(n)));
+        const canvas=document.createElement('canvas');host.replaceChildren(select,canvas);
+        const render=async()=>{
+          select.disabled=true;
+          try{
+            const page=await doc.getPage(Number(select.value));
+            const baseViewport=page.getViewport({scale:1}),viewport=page.getViewport({scale:Math.min(2,1600/Math.max(baseViewport.width,baseViewport.height))});
+            canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+            await page.render({canvas,viewport}).promise;
+          }finally{select.disabled=false;}
+        };
+        select.onchange=()=>render().catch(fail);await render();
+      };
+      const fail=()=>{if(!closed)host.textContent='This PDF could not be previewed. Open the source file on your device to check its figures.';};
+      display().catch(fail);
+    }
+    return clear;
+  }
+  window.WageWiseReader={extract,preview,prepareOffline};
+})();
+
+(() => {
+  'use strict';
+  const P=PayslipImport, F=window.WageWiseFeatures, store=window.WageWiseData;
+  const $=id=>document.getElementById(id);
+  const el=(tag,text='')=>{const n=document.createElement(tag);n.textContent=text;return n;};
+  const button=(name,fn)=>{const b=el('button',name);b.type='button';b.onclick=fn;return b;};
+  const gbp=new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'});
+  const money=p=>gbp.format(p/100);
+  const asInput=p=>p==null?'':(p/100).toFixed(2);
+  const labels={gross:'Gross pay',net:'Take-home pay',ytdGross:'Taxable pay to date',ytdTotal:'Gross pay to date',ytdTax:'PAYE paid to date',ytdNi:'Employee NI to date'};
+  const description=d=>[d.employer,d.frequency==='other'?'Pay period':d.frequency==='weekly'?'Tax week':'Tax month',d.period].filter(Boolean).join(' ');
+  let queue=[],token=0,total=0,cleanPreview=null,cleanDialog=null;
+  function matches(history,entry){
+    const d=entry.imported;
+    return history.filter(e=>e.imported?.hash===d.hash || (e.date===entry.date && (!e.imported ||
+      ((!d.employer||!e.imported.employer||P.textKey(e.imported.employer)===P.textKey(d.employer)) &&
+        e.imported.frequency===d.frequency && (!e.imported.period||!d.period||e.imported.period===d.period)))));
+  }
+  function summary(entry){
+    const d=entry.imported, html=document.createElement('article');html.className='import-summary';
+    html.append(el('h3',d.employer||'Actual payslip'),el('p',entry.date+' · '+description({...d,employer:''})));
+    function row(label,value){
+      const r=el('div');r.className='import-summary-row';r.append(el('span',label),el('strong',value));html.append(r);
+    }
+    for(const line of d.lines){
+      const info=line.hours!=null?' · '+line.hours+'h'+(line.rate!=null?' at '+gbp.format(line.rate)+'/hr':''):'';
+      row(line.label+info,money(line.pence)+' · '+P.categories[line.kind]);
+    }
+    row(labels.gross,money(d.gross));row(labels.net,money(d.net));
+    for(const key of P.moneyFields.slice(2))if(d[key]!=null)row(labels[key],money(d[key]));
+    const diff=P.differences(d);if(diff.gross||diff.net||!d.lines.length)html.append(el('small','Partially itemised · recorded payslip totals'));
+    return html.outerHTML;
+  }
+  function input(type,value,attrs={}){
+    const i=el('input');i.type=type;i.value=value??'';Object.assign(i,attrs);return i;
+  }
+  function field(parent,name,control){
+    const label=el('label',name);label.append(control);parent.append(label);return control;
+  }
+  function options(items,value){
+    const sel=el('select');for(const [k,v] of Object.entries(items))sel.add(new Option(v,k));
+    sel.value=value;return sel;
+  }
+  function checkbox(parent,label){
+    const i=input('checkbox','');field(parent,label,i).className='';i.parentNode.className='import-choice';return i;
+  }
+  function makeEntry(d){
+    const t=P.totals(d.lines);
+    return {id:Date.now(),date:d.date,manual:true,basic:Math.max(0,t.basic)/100,otEntries:[],otTotal:Math.max(0,t.overtime)/100,
+      gross:d.gross/100,net:d.net/100,tax:t.tax==null?null:t.tax/100,ni:t.ni==null?null:t.ni/100,note:description(d),imported:d};
+  }
+  function mappingKey(d,workspace){
+    return d.layout && P.textKey(d.employer) ? 'payslip-rules:'+JSON.stringify([workspace,P.textKey(d.employer),d.layout]) : '';
+  }
+  function readyForAnchor(d) {
+    let supported=false;
+    try{Payroll.bands(Payroll.year(d.date));supported=P.periodFor(d.date,'weekly')===d.period;}catch{}
+    return supported && d.frequency==='weekly' && /^S\d{1,4}[LMNT]$/i.test(d.taxCode) && d.niCode==='A' &&
+      d.ytdGross!=null&&d.ytdGross>=0&&d.ytdTax!=null&&d.date<=Tracking.localDate()&&!(F.latestPayslip()?.date>d.date);
+  }
+  function reset(){
+    token++;queue=[];cleanPreview?.();cleanPreview=null;
+    $('import-review').hidden=true;$('import-review').replaceChildren();$('import-files').value='';$('import-choose').disabled=false;
+    if($('import-original').open)$('import-original').close();
+  }
+  async function originalButton(entry,host){
+    const content=await store.get('payslip-file:'+entry.imported.hash).catch(()=>null);
+    if(!host.isConnected||host.dataset.originalFor!==String(entry.id))return;
+    if(!content){host.append(el('p','The original is held on the importing device.'));return;}
+    host.append(button('View original payslip',async()=>{
+      const dialog=$('import-original');dialog.showModal();
+      cleanDialog=await WageWiseReader.preview(content,$('import-original-pages'));
+    }));
+  }
+  async function next(){
+    cleanPreview?.();cleanPreview=null;
+    if(!queue.length){reset();return;}
+    const generation=++token, workspace=F.getWorkspace(),file=queue.shift();
+    const box=$('import-review');box.hidden=false;box.replaceChildren();
+    const title=el('h2','Review payslip '+(total-queue.length)+' of '+total);
+    const filename=el('p',file.name),status=el('p','Reading payslip…');status.setAttribute('role','status');
+    box.append(title,filename,status);box.scrollIntoView({block:'start'});
+    let d=P.blank(),hash;
+    const skip=button(queue.length?'Skip this file':'Cancel',next);box.append(skip);
+    if(file.size>30*1024*1024){status.textContent='This file exceeds 30 MB. Choose a smaller copy.';return;}
+    try{
+      const bytes=await file.arrayBuffer(),sig=new Uint8Array(bytes,0,Math.min(12,bytes.byteLength));
+      const ascii=String.fromCharCode(...sig);
+      if(!ascii.startsWith('%PDF-') && !(sig[0]===137&&ascii.slice(1,4)==='PNG') && !(sig[0]===255&&sig[1]===216) && !(ascii.startsWith('RIFF')&&ascii.endsWith('WEBP'))){
+        status.textContent='Choose a PDF, PNG, JPEG or WebP file.';return;
+      }
+      hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');
+      if(generation!==token)return;
+      if((F.readCalculator()?.history??[]).some(e=>e.imported?.hash===hash)){
+        await store.change('payslip-file:'+hash,()=>file);status.textContent='Already in pay history. The original is available on this device.';return;
+      }
+      d=await WageWiseReader.extract(file,message=>{if(token===generation)status.textContent=message;});
+      if(token!==generation)return;
+      status.textContent='Check the figures against your original before saving.';
+    }catch(error){
+      if(token!==generation)return;
+      if(error.message?.startsWith('Several pay dates')){status.textContent=error.message;return;}
+      status.textContent='Could not read all fields. Enter the printed figures or skip this file. '+(error.message||'');
+      if(!hash)return;
+    }
+    d.hash=hash;
+    const offline=el('small','Preparing the reader for offline use…');box.append(offline);
+    WageWiseReader.prepareOffline().then(ok=>{offline.textContent=ok?'Reader available offline.':'Connect to finish preparing the offline reader.';});
+    const key=mappingKey(d,workspace),rules=key?await store.get(key):null;
+    if(generation!==token)return;
+    for(const line of d.lines){const learned=rules?.[P.textKey(line.label)];if(Object.hasOwn(P.categories,learned))line.kind=learned;}
+    skip.remove();
+    const layout=el('div');layout.className='import-layout';box.append(layout);
+    const original=el('details');original.className='import-source';original.open=matchMedia('(min-width: 760px)').matches;
+    original.append(el('summary','View original'));const preview=el('div');original.append(preview);
+    const showPreview=async()=>{if(original.open&&!preview.childNodes.length){preview.textContent='Loading original…';const clean=await WageWiseReader.preview(file,preview);if(token===generation)cleanPreview=clean;else clean();}};
+    original.ontoggle=showPreview;layout.append(original);showPreview();
+    const form=el('form');form.className='import-form';layout.append(form);
+    const fields=el('div');fields.className='import-fields';form.append(fields);
+    const employer=field(fields,'Employer',input('text',d.employer,{maxLength:120}));
+    const date=field(fields,'Pay date',input('date',d.date,{required:true}));
+    const freq=field(fields,'Pay frequency',options({'':'Choose frequency',weekly:'Weekly',monthly:'Monthly',other:'Other printed period'},d.frequency));
+    freq.required=true;
+    const period=field(fields,'Printed tax week or period',input('text',d.period||P.periodFor(d.date,d.frequency),{maxLength:30}));
+    let suggested=!d.period;
+    period.oninput=()=>{suggested=false;};
+    for(const ctrl of [date,freq])ctrl.onchange=()=>{if(suggested||!period.value){period.value=P.periodFor(date.value,freq.value);suggested=true;}};
+    const taxCode=field(fields,'Tax code',input('text',d.taxCode,{maxLength:20}));
+    const niCode=field(fields,'NI category',input('text',d.niCode,{maxLength:5}));
+    const values={};
+    for(const k of P.moneyFields){
+      values[k]=field(fields,labels[k]+' (£)',input('number',asInput(d[k]),{step:'0.01',required:['net','gross'].includes(k)}));
+    }
+    form.append(el('h3','Payslip lines'));
+    const rows=el('div');form.append(rows);
+    const controls=[];
+    function addRow(line={}){
+      const row=el('fieldset');row.className='import-line';
+      const label=field(row,'Printed description',input('text',line.label,{required:true,maxLength:100}));
+      const category=field(row,'Category',options(P.categories,line.kind||'unknown'));
+      const amount=field(row,'Printed amount (£)',input('number',asInput(line.pence),{step:'0.01',required:true}));
+      const hours=field(row,'Hours',input('number',line.hours,{step:'any',min:'0'}));
+      const rate=field(row,'Hourly rate (£)',input('number',line.rate,{step:'any',min:'0'}));
+      function read(){return {label:label.value.trim(),kind:category.value,pence:P.toPence(amount.value),
+        hours:hours.value===''?null:Number(hours.value),rate:rate.value===''?null:Number(rate.value)};}
+      controls.push(read);row.append(button('Remove line',()=>{controls.splice(controls.indexOf(read),1);row.remove();update();}));
+      rows.append(row);
+    }
+    d.lines.forEach(addRow);
+    form.append(button('Add payslip line',()=>{addRow();update();}));
+    const notes=el('p');notes.className='import-feedback';form.append(notes);
+    const acknowledgement=checkbox(form,'I checked the differences and want to use the printed figures.');
+    const remember=checkbox(form,'Remember these categories for this employer and layout');
+    const anchor=checkbox(form,'Use these YTD figures for my next weekly estimate');
+    const capability=el('small');form.append(capability);
+    const dupeBox=el('div');form.append(dupeBox);
+    const error=el('p');error.setAttribute('role','alert');form.append(error);
+    const save=el('button','Save actual payslip');save.type='submit';save.className='primary-btn';form.append(save,skip);
+    let priorMatches='',choice;
+    function read(){
+      return {...d,employer:employer.value.trim(),date:date.value,frequency:freq.value,period:period.value.trim(),
+        taxCode:taxCode.value.trim().toUpperCase(),niCode:niCode.value.trim().toUpperCase(),
+        ...Object.fromEntries(P.moneyFields.map(k=>[k,P.toPence(values[k].value)])),lines:controls.map(fn=>fn())};
+    }
+    function update(){
+      const draft=read(),diff=P.differences(draft),messages=[];
+      for(const control of [date,freq,values.gross,values.net])control.classList.toggle('import-needs-review',!control.value);
+      if(diff.gross)messages.push('Printed gross is '+money(Math.abs(diff.gross))+(diff.gross>0?' above':' below')+' the listed gross earnings.');
+      if(diff.net)messages.push('Printed take-home is '+money(Math.abs(diff.net))+(diff.net>0?' above':' below')+' gross plus reimbursements minus deductions.');
+      if(!draft.lines.length)messages.push('Totals only. This entry will be partially itemised.');
+      const expected=P.periodFor(draft.date,draft.frequency);
+      if(expected && period.value && period.value!==expected)messages.push('Pay date suggests period '+expected+'. Check the printed period.');
+      notes.textContent=messages.join(' ')||(suggested&&expected?'Period '+expected+' is suggested from the pay date.':'Check each line and the printed totals.');
+      acknowledgement.parentNode.hidden=!messages.length;
+      remember.parentNode.hidden=!mappingKey(draft,workspace);
+      anchor.parentNode.hidden=!readyForAnchor(draft);
+      capability.textContent=readyForAnchor(draft)?'':draft.frequency==='weekly'&&/^S\d+[LMNT]$/i.test(draft.taxCode)&&draft.niCode==='A'
+        ? 'To update the weekly forecast, confirm taxable pay to date and PAYE to date on your latest eligible payslip.'
+        : 'Forecasting supports weekly Scottish suffix tax codes and employee NI category A. Other payroll setups can be recorded as actual pay.';
+      const matchesNow=matches(F.readCalculator()?.history??[],makeEntry(draft));
+      const fingerprint=JSON.stringify(matchesNow);
+      if(fingerprint!==priorMatches){
+        dupeBox.replaceChildren();choice=null;priorMatches=fingerprint;
+        if(matchesNow.length){
+          dupeBox.append(el('h3','Existing pay entries'),el('p','This payslip shows '+money(draft.net??0)+' take-home.'));
+          const opts={'':'Choose how to save',extra:'Keep as a separate supplementary payment'};
+          for(const e of matchesNow)opts[e.id]='Replace '+(e.manual?'actual pay':'estimate')+' · '+gbp.format(e.gross)+' gross · '+gbp.format(e.net)+' net';
+          choice=field(dupeBox,'Matching payday',options(opts,''));choice.required=true;
+        }
+      }
+    }
+    form.addEventListener('input',e=>{if(e.target!==acknowledgement)acknowledgement.checked=false;update();});
+    form.addEventListener('change',update);update();
+    form.onsubmit=async ev=>{
+      ev.preventDefault();if(save.disabled)return;
+      update();const draft=read();error.textContent='';
+      if(!Tracking.dateValid(draft.date)||!P.valid(draft)){error.textContent='Check the pay date and amounts, and choose a category for every line.';return;}
+      if(draft.frequency!=='other'&&!/^[1-9]\d?$/.test(draft.period) || (draft.frequency==='monthly'&&+draft.period>12)||(draft.frequency==='weekly'&&+draft.period>53)){error.textContent='Enter a valid printed tax week or month.';return;}
+      if(!acknowledgement.parentNode.hidden&&!acknowledgement.checked){error.textContent='Review and confirm the differences before saving.';return;}
+      if(choice&&!choice.value){error.textContent='Choose whether to replace the matching entry or record a supplementary payment.';return;}
+      save.disabled=true;skip.disabled=true;
+      try{
+        const key=mappingKey(draft,workspace);
+        const mapping=key&&remember.checked?{key,rules:Object.fromEntries(draft.lines.map(row=>[P.textKey(row.label),row.kind]))}:null;
+        const entry=makeEntry(draft),replace=choice&&choice.value!=='extra'?Number(choice.value):null;
+        await F.importPayslip({entry,file,replace,anchor:anchor.checked&&readyForAnchor(draft),mapping,workspaceKey:workspace,expectedMatches:priorMatches});
+        if(token!==generation)return;
+        window.dispatchEvent(new CustomEvent('wagewise-payslip-imported',{detail:replace??entry.id}));
+        $('import-result').textContent='Saved '+draft.date+' · '+money(draft.net)+' take-home.';
+        await next();
+      }catch(e){error.textContent=e.message;save.disabled=false;skip.disabled=false;}
+    };
+  }
+  window.PayslipReview={matches,summary,originalButton:(entry,host)=>{host.dataset.originalFor=String(entry.id);return originalButton(entry,host);}};
+  window.addEventListener('wagewise-ready',()=>{
+    const result=el('p');result.id='import-result';result.setAttribute('role','status');$('import-review').before(result);
+    $('import-choose').onclick=()=>$('import-files').click();
+    $('import-files').onchange=()=>{queue=Array.from($('import-files').files);total=queue.length;$('import-choose').disabled=true;result.textContent='';next();};
+    $('import-close-original').onclick=()=>$('import-original').close();
+    $('import-original').onclose=()=>{cleanDialog?.();cleanDialog=null;$('import-original-pages').replaceChildren();};
+    window.addEventListener('wagewise-workspace',reset);
+  },{once:true});
 })();
 
 </script><script>
@@ -3095,12 +3738,18 @@ function renderDashboard(){
   var ys=taxYearStartFor(todayISO());
   var ytd=state.history.filter(function(e){return new Date(e.date+'T00:00:00')>=ys&&e.date<=todayISO();});
   var ytdNet=ytd.reduce(function(s,e){return s+e.net;},0);
-  var allAvg=state.history.length?state.history.reduce(function(s,e){return s+e.net;},0)/state.history.length:0;
+  var weeklyByDate=new Map();
+  state.history.filter(e=>!e.imported||e.imported.frequency==='weekly').forEach(e=>{
+    var day=weeklyByDate.get(e.date)||{date:e.date,net:0,gross:0};
+    day.net+=e.net;day.gross+=e.gross;weeklyByDate.set(e.date,day);
+  });
+  var weekly=Array.from(weeklyByDate.values());
+  var allAvg=weekly.length?weekly.reduce((s,e)=>s+e.net,0)/weekly.length:null;
   $('dash-stats').innerHTML='<div class="stat-card"><div class="stat-label">YTD Net</div><div class="stat-value">'+(ytd.length?money(ytdNet):'&mdash;')+'</div><div class="stat-sub">'+ytd.length+' entr'+(ytd.length===1?'y':'ies')+'</div></div><div class="stat-card"><div class="stat-label">Avg weekly</div><div class="stat-value">'+(state.history.length?money(allAvg):'&mdash;')+'</div><div class="stat-sub">net pay</div></div><div class="stat-card"><div class="stat-label">Saved</div><div class="stat-value">'+state.history.length+'</div><div class="stat-sub">total entries</div></div>';
   $('dash-chart').innerHTML=state.history.length?buildChart(state.history):'<div class="chart-empty">Save some pay entries to see your monthly trend here.</div>';
-  if(!state.history.length){$('dash-forecast').innerHTML='<p style="font-size:13px;color:var(--ink-soft);margin:8px 0 0;line-height:1.55;">Save at least one pay entry to generate a personalised forecast.</p>';}
+  if(!weekly.length){$('dash-forecast').innerHTML='<p class="forecast-note">Save a weekly pay entry to generate a weekly forecast.</p>';}
   else{
-    var recent=state.history.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,8);
+    var recent=weekly.sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,8);
     var avgN=recent.reduce(function(s,e){return s+e.net;},0)/recent.length;
     var avgG=recent.reduce(function(s,e){return s+e.gross;},0)/recent.length;
     $('dash-forecast').innerHTML='<div class="forecast-grid"><div class="fcard"><div class="f-label">Weekly avg</div><div class="f-value">'+money(avgN)+'</div><div class="f-sub">net pay</div></div><div class="fcard"><div class="f-label">Monthly</div><div class="f-value">'+money(avgN*52/12)+'</div><div class="f-sub">net pay</div></div><div class="fcard hi"><div class="f-label">Annual net</div><div class="f-value">'+money(avgN*52)+'</div><div class="f-sub">projected</div></div><div class="fcard"><div class="f-label">Annual gross</div><div class="f-value">'+money(avgG*52)+'</div><div class="f-sub">projected</div></div></div><p class="forecast-note">Based on last '+recent.length+' entr'+(recent.length===1?'y':'ies')+'. Assumes the same pay every week.</p>';
@@ -3280,6 +3929,11 @@ $('cal-print-btn').addEventListener('click',function(){
   var tG=0,tN=0,tT=0,tI=0,tO=0;
   entries.forEach(function(e){tG+=e.gross;tN+=e.net;tT+=(e.tax||0);tI+=(e.ni||0);tO+=(e.otTotal||0);});
   var ml=MNAMES[_calMonth]+' '+_calYear,name=escapeHTML(state.employeeName)||'&mdash;';
+  if(entries.some(e=>e.imported)){
+    var parts=entries.map(e=>e.imported?PayslipReview.summary(e):'<p>'+fmtISO(e.date)+' · '+(e.manual?'Recorded pay':'Saved estimate')+' · Gross '+money(e.gross)+' · Net '+money(e.net)+'</p>');
+    $('print-payslip').innerHTML='<h1>'+ml+' earnings</h1>'+parts.join('')+'<p>Total gross '+money(tG)+' · Total take-home '+money(tN)+'</p>';
+    window.print();return;
+  }
   var calEmpName=escapeHTML(state.employerName)||'WageWise';
   var calPBy=state.employerName?'<div class="prn-powered">Powered by WageWise</div>':'';
   $('print-payslip').innerHTML='<div class="prn-header"><div><div class="prn-company">'+calEmpName+'</div>'+calPBy+'</div><div class="prn-hdr-right"><div class="prn-badge">MONTHLY PAYSLIP</div><div class="prn-hdr-sub">'+TE.YEAR+'</div></div></div>'+
@@ -3354,6 +4008,7 @@ function openDetailSheet(id){
 }
 function closeDetailSheet(){var ov=$('dsheet-overlay'),sh=$('dsheet');ov.classList.remove('open');sh.classList.remove('open');setTimeout(function(){ov.setAttribute('hidden','');sh.setAttribute('hidden','');},300);}
 function renderDetailView(entry){
+  if(entry.imported){$('dv-body').innerHTML=PayslipReview.summary(entry);return;}
   var h='<div class="dv-eyebrow">This Week</div><div class="dv-divider"></div><div class="dv-row"><span class="dv-label">Basic Pay</span><span class="dv-value">'+money(entry.basic||0)+'</span></div>';
   if(entry.otEntries&&entry.otEntries.length){
     h+='<div class="dv-divider"></div><div class="dv-section-title">Overtime Shifts</div>';
@@ -3431,6 +4086,7 @@ var _psSource='current';
 function getPayslipData(){
   if(_psSource==='current'){var r=guardedCalc(calc);if(!r)return null;return{date:state.payDate||todayISO(),employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r.customDedRes,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,taxW:r.taxW,taxBreakdown:r.taxRes.breakdown,niW:r.niRes.ni,niBreakdown:r.niRes.breakdown,net:r.net,allowance:state.allowance,taxWeek:r.taxWeek,ytdGross:r.cumulativeGross,ytdTax:r.cumulativeTaxToDate,ytdNi:r.cumulativeNiToDate};}
   var entry=findEntry(_psSource);if(!entry)return null;
+  if(entry.imported)return entry;
   var ot=entry.otEntries&&entry.otEntries.length?entry.otEntries:[];
   var snap=entry.snapshot||{},other=roundPence(entry.gross-entry.net-(entry.tax||0)-(entry.ni||0));
   return {date:entry.date,employeeName:state.employeeName||'',employerName:state.employerName||'',basic:entry.manual?entry.gross:entry.basic||0,otEntries:ot,otTotal:entry.otTotal||0,gross:entry.gross,taxW:entry.tax,niW:entry.ni,net:entry.net,
@@ -3440,6 +4096,7 @@ function getPayslipData(){
 
 
 function buildPayslipHTML(d,forPrint){
+  if(d?.imported)return PayslipReview.summary(d);
   if(!d)return'<p style="text-align:center;padding:24px;color:var(--ink-soft);">No data available.</p>';
   var name=escapeHTML(d.employeeName)||'&mdash;',dateStr=fmtISO(d.date)||'&mdash;';
   var tw=getTaxWeek(d.date),twStr=tw?'Tax Week '+tw:'&mdash;';
@@ -3504,6 +4161,9 @@ function renderPayslipScreen(){
     $('ps-hist-list').innerHTML=sorted.map(function(e){var sel=_psSource===e.id;return'<div class="ps-hitem'+(sel?' selected':'')+'" data-psid="'+e.id+'"><div><div class="ps-hi-date">'+fmtISO(e.date)+'</div><div class="ps-hi-net">'+money(e.net)+'</div></div>'+(sel?'<span style="font-size:18px;font-weight:700">&#10003;</span>':'')+'</div>';}).join('');
   }else{$('ps-hist-list').innerHTML='';$('ps-hist-empty').hidden=false;}
   $('ps-preview').innerHTML=buildPayslipHTML(getPayslipData(),'');
+  $('ps-preview').removeAttribute('data-original-for');
+  var selected=findEntry(_psSource);
+  if(selected?.imported)PayslipReview.originalButton(selected,$('ps-preview'));
 }
 function doPrint(){var d=getPayslipData();if(!d){showToast('Correct the calculator inputs before printing.');return;}$('print-payslip').innerHTML=buildPayslipHTML(d,true);window.print();}
 $('ps-name').addEventListener('input',function(){state.employeeName=this.value;persist();renderPayslipScreen();});
@@ -3630,10 +4290,16 @@ function bindSharedApp(){
   window.WageWiseNavigate=showScreen;
   window.addEventListener('wagewise-data',event=>{
     if(event.detail.source==='calculator')return;
+    if(event.detail.source==='payslip-import')state.history=features.readCalculator().history;
     refreshPay();
     if(document.querySelector('[data-screen=calendar].active'))renderCalendarScreen();
     if(document.querySelector('[data-screen=dashboard].active'))renderDashboard();
     if(document.querySelector('[data-screen=payslip].active')&&!$('payslip-preview').hidden)renderPayslipScreen();
+  });
+  window.addEventListener('wagewise-payslip-imported',event=>{
+    _psSource=event.detail;
+    $('ps-src-calc').classList.remove('on');$('ps-src-hist').classList.add('on');$('ps-hist-picker').hidden=false;
+    renderPayslipScreen();
   });
   window.addEventListener('wagewise-workspace',()=>{
     loadCalculator();
