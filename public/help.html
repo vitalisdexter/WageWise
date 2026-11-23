@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f5c43">
+  <title>How to use WageWise</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #edf1e8;
+      --surface: #fbfcf7;
+      --ink: #16261d;
+      --muted: #445c4e;
+      --line: #ccd9cc;
+      --accent: #1f5c43;
+      --tint: #e4eee2;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #111a15;
+        --surface: #1b2821;
+        --ink: #edf4ee;
+        --muted: #b4c7bb;
+        --line: #3a5044;
+        --accent: #a1dbbd;
+        --tint: #293b32;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--background); color: var(--ink); font: 1rem/1.65 system-ui, sans-serif; }
+    a { color: var(--accent); text-underline-offset: .22em; }
+    a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+    h1, h2, h3 { margin: 0; line-height: 1.2; }
+    p, ol, dl { margin: .75rem 0 0; }
+    ol { padding-inline-start: 1.4rem; }
+    ol li + li { margin-top: .45rem; }
+    .wrap { width: min(100% - 2rem, 66rem); margin-inline: auto; }
+    .site-header { background: #194834; color: #fbfcf7; }
+    .site-header .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding-block: .65rem; }
+    .wordmark { font: 750 1.1rem/1.4 ui-monospace, Consolas, monospace; }
+    .site-header a { color: inherit; padding: .45rem .7rem; border: 1px solid #8fb6a2; border-radius: .5rem; font-weight: 650; }
+    .site-header a:hover { background: #2c5d47; }
+    .intro { padding-block: clamp(1.6rem, 4vw, 3.5rem) 1.6rem; }
+    h1 { font-size: clamp(2rem, 6vw, 3.25rem); letter-spacing: -.04em; }
+    .intro p { max-width: 55ch; color: var(--muted); }
+    .layout { display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: clamp(1rem, 3vw, 2rem); align-items: start; }
+    nav { position: sticky; top: 1rem; padding: .9rem; background: var(--tint); border-radius: .85rem; }
+    nav ul { list-style: none; margin: 0; padding: 0; }
+    nav a { display: block; padding: .55rem .65rem; border-radius: .4rem; font-weight: 600; }
+    nav a:hover { background: var(--surface); }
+    section {
+      padding: clamp(1rem, 3.2vw, 2rem);
+      margin-bottom: .9rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: .85rem;
+      scroll-margin-top: 1rem;
+    }
+    section:target { border-color: var(--accent); }
+    h2 { font-size: clamp(1.3rem, 3vw, 1.65rem); }
+    h3 { margin-top: 1.15rem; font-size: 1.06rem; }
+    .note { padding: .8rem 1rem; border-inline-start: 3px solid var(--accent); background: var(--tint); }
+    dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .3rem .9rem; }
+    dt { color: var(--accent); font-weight: 750; }
+    dd { margin: 0; }
+    footer { padding-block: .4rem 2rem; }
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      nav { position: static; padding: .45rem; }
+      nav ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      nav a { font-size: .9rem; }
+    }
+  </style>
+</head>
+<body id="top">
+  <header class="site-header">
+    <div class="wrap">
+      <span class="wordmark">WageWise</span>
+      <a href="/">Open WageWise</a>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="intro">
+      <h1>How to use WageWise</h1>
+      <p>Set up your pay, log overtime by work date and check what you were paid. Use the Planner to see what upcoming paydays could look like.</p>
+    </div>
+    <div class="layout">
+      <nav aria-label="Guide contents">
+        <ul>
+          <li><a href="#setup">Set up your pay</a></li>
+          <li><a href="#calendar">Log overtime</a></li>
+          <li><a href="#calculator">Estimate take-home</a></li>
+          <li><a href="#payslips">Import and check payslips</a></li>
+          <li><a href="#planner">Plan your pay</a></li>
+          <li><a href="#reminders">Install and get reminders</a></li>
+          <li><a href="#account">Account and backups</a></li>
+        </ul>
+      </nav>
+      <div>
+        <section id="setup">
+          <h2>Set up your pay</h2>
+          <ol>
+            <li>Choose <strong>Create account</strong>, pick a username and set a password of at least 12 characters. If you already have WageWise records, <a href="#account">move them into your account</a> during setup or from Settings.</li>
+            <li>Go to <strong>Settings → Basic pay</strong> and enter your weekly basic pay. Use <strong>Active deductions</strong> for amounts taken after tax and National Insurance.</li>
+            <li>In <strong>Weekly overtime cutoff</strong>, enter the last work date covered by a known payslip and the date that payslip was paid. Set your <strong>Default OT1 rate</strong> and save.</li>
+          </ol>
+          <p class="note">The cutoff date itself is included. Work from the day after the cutoff goes into the next weekly pay period. Confirmed shift selections from a payslip check take priority.</p>
+        </section>
+        <section id="calendar">
+          <h2>Log the overtime you worked</h2>
+          <ol>
+            <li>In <strong>Calendar</strong>, tap the date you worked, then <strong>Log overtime</strong>.</li>
+            <li>Enter hours and minutes, or enter start and end times with any unpaid break. An overnight shift is recorded against its start date.</li>
+            <li>Check the hourly rate and tap <strong>Save shift</strong>. You can add several shifts to one date. Each saved shift keeps its own rate.</li>
+          </ol>
+          <h3>What the calendar markers mean</h3>
+          <dl>
+            <dt>OT</dt><dd>You saved overtime for that work date.</dd>
+            <dt>Pay</dt><dd>You have a saved pay entry dated that day. A date can show both <strong>Pay</strong> and <strong>OT</strong>.</dd>
+            <dt>Off</dt><dd>You marked the date as a day off.</dd>
+            <dt>0</dt><dd>You marked the date as worked without overtime.</dd>
+            <dt>!</dt><dd>A workday in your schedule still needs a log entry.</dd>
+          </dl>
+        </section>
+        <section id="calculator">
+          <h2>Estimate your take-home pay</h2>
+          <ol>
+            <li>In <strong>Calculator</strong>, choose the date you expect to be paid. Use the logged overtime for that payday or add hours manually to try a scenario. If hours are already included from your log, leave them out of the manual entries to avoid counting them twice.</li>
+            <li>Under <strong>Tax &amp; National Insurance</strong>, check your Scottish suffix-code allowance. For example, S1257L uses £12,570.</li>
+            <li>Review gross pay, PAYE, National Insurance and net pay under <strong>Your earnings</strong>. <strong>Save this week’s pay</strong> adds an estimate to <strong>Dashboard → Earnings history</strong>.</li>
+          </ol>
+          <h3>Which year-to-date figures to enter</h3>
+          <p>Use <strong>Payslip → Latest payslip totals</strong> to enter the pay date, taxable pay to date and PAYE paid to date exactly as printed on your latest payslip. WageWise uses those totals for eligible upcoming calculations.</p>
+          <p>When using the calculator’s <strong>YTD override</strong> to reproduce a payslip, use totals from <strong>before</strong> the payment. Subtract that period’s taxable pay and PAYE from its printed YTD amounts, then enter the preceding tax week. Prior NI is optional.</p>
+          <p class="note">The calculator estimates weekly Scottish PAYE and category A National Insurance for 2025/26 and 2026/27. It shows a Week 1 estimate when it lacks complete prior totals. You can still record actual payslips with other pay schedules or tax codes.</p>
+        </section>
+        <section id="payslips">
+          <h2>Import and check a payslip</h2>
+          <ol>
+            <li>Open <strong>Payslip → Import payslips</strong> and choose a PDF, photo or screenshot. A PDF with selectable text or a clear, straight image makes the figures easier to read.</li>
+            <li>Use <strong>View original</strong> to check the extracted pay date, pay frequency, printed tax week or period, gross and take-home pay. Correct any missing or misread fields.</li>
+            <li>Use <strong>Add payslip line</strong> for missing items. Keep the printed description and choose a category that matches how the employer treated it. For example, choose <strong>Back pay</strong>, <strong>Bonus</strong>, <strong>Other deduction</strong> for a service charge, or <strong>PAYE refund</strong> for returned income tax. Use <strong>Reimbursement after tax</strong> for expenses added to take-home pay.</li>
+            <li>Choose <strong>Save actual payslip</strong>. If WageWise finds an entry for that payday, review it and choose whether to replace it or keep the new one as a separate supplementary payment.</li>
+          </ol>
+          <p>Saved figures appear in <strong>Dashboard → Earnings history</strong> and on the calendar pay date. You can enter figures yourself with <strong>Record actual pay</strong>. To print a WageWise summary, choose <strong>Current calculation</strong> or <strong>Saved entry</strong> and tap <strong>Print</strong>.</p>
+          <h3>Check the overtime against your log</h3>
+          <p>Choose <strong>Check against my log</strong>, select the payslip’s pay date, and review the suggested shifts. Use <strong>Pick from other logged dates</strong> for exceptions. Enter the overtime hours and amount on the payslip, then tap <strong>Save comparison</strong> to see any difference.</p>
+        </section>
+        <section id="planner">
+          <h2>Plan your next paydays</h2>
+          <h3>Forecast</h3>
+          <p>Compare up to four upcoming weekly paydays with basic pay only, logged overtime, and logged plus planned overtime. Enter planned hours as a <strong>total</strong> for each work date. As you record hours in Calendar, WageWise reduces the remaining plan for that date.</p>
+          <h3>Net-pay goal</h3>
+          <p>Choose a payday and enter your take-home target and the extra overtime you can work. WageWise checks 15-minute increments and shows the smallest addition that reaches the target or the estimated shortfall. Select <strong>Add to plan</strong> to assign the extra time to eligible dates before confirming.</p>
+          <h3>Payday pots</h3>
+          <p>Choose a forecast or enter your actual take-home pay. Add weekly and monthly bills, then split the remainder across named pots. Monthly bills are converted to a weekly reserve using the monthly amount × 12 ÷ 52. Pot percentages can add up to 100%, with any unused share shown separately.</p>
+          <p>Under <strong>Investment scenarios</strong>, enter your contribution, time horizon, annual return and fee assumptions. Compare contributions alone, your chosen return and a downside case.</p>
+        </section>
+        <section id="reminders">
+          <h2>Install WageWise and get reminders</h2>
+          <ol>
+            <li>On Android, open WageWise in Chrome and use <strong>Settings → Install app → Add to Home Screen</strong> when available. On iPhone or iPad, use <strong>Share → Add to Home Screen</strong> in Safari.</li>
+            <li>Go to <strong>Settings → Workdays and reminders</strong>. Select your working days and reminder time, tick <strong>Remind me to log overtime</strong>, allow notifications and save.</li>
+            <li>Tap <strong>Send a test notification</strong> to check delivery. A daily reminder opens the relevant work date. Saving overtime, marking <strong>No overtime</strong> or marking <strong>Day off</strong> completes that day.</li>
+          </ol>
+          <p>The installed web app picks up updates when opened online. Sign in online to access your records.</p>
+        </section>
+        <section id="account">
+          <h2>Move records, back up or recover access</h2>
+          <h3>Move older WageWise records</h3>
+          <p>If you used a pairing code, choose <strong>Use this paired device</strong> from account setup on that device, or enter the previous code. Review the record counts before moving the workspace. For records kept only on the original browser, start a new workspace, then open <strong>Settings → Your account → Move my local records</strong> on that browser.</p>
+          <h3>Sync and back up your work</h3>
+          <p>Sign in with the same username on your other devices. Check the sync status under <strong>Settings → Your account</strong>. Original payslip files stay on the device where you imported them. To download or restore records, use <strong>Settings → Backups</strong> and review the preview before confirming a restore.</p>
+          <h3>Reset your password</h3>
+          <p>On the sign-in page, choose <strong>Forgot password</strong> and enter your username. Contact the administrator privately to verify your request. After receiving the single-use code, choose <strong>I have a reset code</strong> and enter it within 30 minutes to set a new password.</p>
+        </section>
+      </div>
+    </div>
+    <footer><a href="#top">Back to top</a></footer>
+  </main>
+</body>
+</html>

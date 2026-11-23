@@ -1,6 +1,14 @@
 .shell { max-width: 760px; }
 .topbar { background: linear-gradient(110deg, var(--pine), var(--accent-ink)); }
 [data-theme="dark"] .topbar { background: var(--pine); }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.topbar-help {
+  display: inline-flex; align-items: center; min-height: 44px; padding-inline: 10px;
+  color: inherit; border-radius: 8px; font-size: .875rem; font-weight: 650;
+  text-underline-offset: .2em; white-space: nowrap;
+}
+.topbar-help:hover { background: rgba(251,252,247,.14); }
+.topbar-help:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
 .perf { height: 4px; background-image: none; }
 .screens { scroll-padding-block: 14px; }
 .bottomnav { gap: 2px; padding-inline: 5px; }
@@ -129,5 +137,6 @@ summary { cursor: pointer; font-weight: 650; }
   .pulse { animation: none !important; }
 }
 #account-lock { display:none; padding:2rem; text-align:center; }
+#account-lock a { color: var(--accent-ink); }
 .account-locked body > :not(#account-lock), .account-locked dialog { display:none !important; }
 .account-locked #account-lock { display:block; }

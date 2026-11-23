@@ -436,13 +436,20 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 </style>
 </head>
 <body>
-<p id="account-lock" role="status">Checking your account…</p><div class="shell">
+<div id="account-lock">
+  <p id="account-lock-message" role="status">Checking your account…</p>
+  <a href="/help">How to use WageWise</a>
+</div>
+<div class="shell">
   <div class="topbar">
     <div><div class="wordmark">WageWise</div><div class="screen-label" id="screen-label">Calculator</div></div>
-    <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
+    <div class="topbar-actions">
+      <a class="topbar-help" href="/help">How to</a>
+      <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
       <svg id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4" y1="12" x2="2" y2="12"/><line x1="22" y1="12" x2="20" y2="12"/><line x1="5" y1="5" x2="6.5" y2="6.5"/><line x1="19" y1="19" x2="17.5" y2="17.5"/><line x1="5" y1="19" x2="6.5" y2="17.5"/><line x1="19" y1="5" x2="17.5" y2="6.5"/></svg>
       <svg id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" hidden><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
-    </button>
+      </button>
+    </div>
   </div>
   <div class="perf" aria-hidden="true"></div>
   <p id="notice" class="notice" role="status" hidden></p>
@@ -887,7 +894,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
       </div>
       <div class="sblock">
         <h3>Data</h3>
-        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0 0 12px;">All data stored locally on this device only.</p>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0 0 12px;">Records sync to your WageWise account. Original payslip files and notification permissions stay on the device where you added them.</p>
         <button type="button" class="ghost-btn" id="clear-settings-btn">Clear earnings history</button>
       </div>
       <div class="sblock" id="pwa-block" hidden>
@@ -896,7 +903,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
         <button type="button" class="primary-btn" id="pwa-install-btn" style="width:auto;padding:11px 20px;font-size:14px;">+ Add to Home Screen</button>
         <div id="ios-hint" hidden style="margin-top:10px;font-size:12px;color:var(--ink-soft);line-height:1.6;background:var(--stripe);padding:10px 12px;border-radius:8px;">On iPhone/iPad: tap the <strong>Share</strong> button in Safari, then <strong>Add to Home Screen</strong>.</div>
       </div>
-      <div class="sblock"><h3>About</h3><p style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0;">WageWise &mdash; Phase 1&ndash;3 complete. Calendar, custom deductions, and basic pay settings now live.</p></div>
+      <div class="sblock"><h3>Help</h3><a class="link-btn" href="/help">How to use WageWise</a></div>
     </section>
 
   </main><!-- .screens -->

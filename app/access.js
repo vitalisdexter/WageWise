@@ -1,7 +1,7 @@
 (() => {
  'use strict';
  let identity=null,valid=false,checking;
- const lock=document.getElementById('account-lock');
+ const lock=document.getElementById('account-lock-message');
  const cover=(text='Checking your account…')=>{
    valid=false;document.documentElement.classList.add('account-locked');lock.textContent=text;
    for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
