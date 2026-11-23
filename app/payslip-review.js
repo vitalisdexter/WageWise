@@ -64,7 +64,7 @@
     if($('import-original').open)$('import-original').close();
   }
   async function originalButton(entry,host){
-    const content=await store.get('payslip-file:'+entry.imported.hash).catch(()=>null);
+    const content=await store.get(F.getWorkspace()+':payslip-file:'+entry.imported.hash).catch(()=>null);
     if(!host.isConnected||host.dataset.originalFor!==String(entry.id))return;
     if(!content){host.append(el('p','The original is held on the importing device.'));return;}
     host.append(button('View original payslip',async()=>{
@@ -92,7 +92,7 @@
       hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');
       if(generation!==token)return;
       if((F.readCalculator()?.history??[]).some(e=>e.imported?.hash===hash)){
-        await store.change('payslip-file:'+hash,()=>file);status.textContent='Already in pay history. The original is available on this device.';return;
+        await store.change(F.getWorkspace()+':payslip-file:'+hash,()=>file);status.textContent='Already in pay history. The original is available on this device.';return;
       }
       d=await WageWiseReader.extract(file,message=>{if(token===generation)status.textContent=message;});
       if(token!==generation)return;

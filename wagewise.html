@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-GB" data-theme="light" data-accent="pine">
+<html class="account-locked" lang="en-GB" data-theme="light" data-accent="pine">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
@@ -436,7 +436,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 </style>
 </head>
 <body>
-<div class="shell">
+<p id="account-lock" role="status">Checking your account…</p><div class="shell">
   <div class="topbar">
     <div><div class="wordmark">WageWise</div><div class="screen-label" id="screen-label">Calculator</div></div>
     <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
@@ -813,20 +813,11 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
         <button type="submit" class="primary">Save payroll settings</button>
       </form>
       <article class="card" id="sync-card">
-        <h2>Device pairing and sync</h2>
-        <p id="sync-status" class="context" role="status">Checking sync availability…</p>
-        <div class="actions">
-          <button class="primary" id="sync-create" type="button" hidden>Create pairing code</button>
-          <button id="sync-retry" type="button" hidden>Sync now</button>
-          <button id="sync-rotate" type="button" hidden>Replace pairing code</button>
-          <button id="sync-logout" type="button" hidden>Disconnect this device</button>
-        </div>
-        <form id="sync-pair-form" hidden>
-          <label>Pairing code<input type="password" id="sync-code-input" autocomplete="off" spellcheck="false" required maxlength="46"></label>
-          <button type="submit" class="primary">Pair this device</button>
-        </form>
-        <div id="sync-created-code" class="backup-preview" hidden></div>
-        <div id="sync-import" class="backup-preview" hidden></div>
+        <h2>Your account</h2>
+        <p id="sync-user"></p><p id="sync-status" class="context" role="status"></p>
+        <button id="sync-retry" type="button">Sync now</button>
+        <button id="sync-logout" type="button">Sign out</button>
+        <div id="sync-import" hidden></div>
         <div id="sync-conflicts" class="backup-preview" hidden></div>
       </article>
       <article class="card" id="backup-card">

@@ -38,7 +38,7 @@ export function backend(env,config){
  async function call(path,options={},publicKey=false){
    const apiKey=publicKey?config.publishableKey:key;
    const headers={'User-Agent':'WageWise-Account-Service/1.0',apikey:apiKey,'Content-Type':'application/json',...(!apiKey.startsWith('sb_')?{Authorization:'Bearer '+apiKey}:{}),...options.headers};
-   const response=await fetch(config.url+path,{...options,headers,redirect:'error'});
+   const response=await fetch(config.url+path,{...options,headers,redirect:'manual'});
    const result=await response.json().catch(()=>null);
    return {ok:response.ok,status:response.status,result};
  }
@@ -123,6 +123,14 @@ async function accounts(request,env,config){
    await db.rpc('logout',{},sid);return json({ok:true},200,{'Set-Cookie':cookie(admin,'',0)});
  }
  if(admin){
+   if(route==='reset-user'){
+     const username=normalizeUsername(data.username),code=random();
+     const r=await db.call('/rest/v1/rpc/ww_admin_reset',{method:'POST',body:JSON.stringify({
+       sid,username_input:username,code_digest:await digest(code)
+     })});
+     if(!r.ok)fail(r.result?.code==='42501'?401:409,'Could not issue a reset code. Refresh the dashboard and try again.');
+     return json({code,minutes:30});
+   }
    if(route==='dashboard')return json(await db.rpc('dashboard',{days:data.days,search:String(data.search||'').slice(0,32),
      offset:Math.max(0,Math.min(1e6,Number(data.offset)||0)),inboxOffset:Math.max(0,Math.min(1e6,Number(data.inboxOffset)||0))},sid));
    if(['approve','decline'].includes(route)&&uuid.test(data.request)){

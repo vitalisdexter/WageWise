@@ -1,6 +1,6 @@
 import {buildPushPayload} from '@block65/webcrypto-web-push';
 import client from './supabase/client.json';
-import {handleAccounts} from './accounts.mjs';
+import {handleAccounts,accountSession} from './accounts.mjs';
 import {nextReminder} from './app/reminder-time.mjs';
 
 const production = 'https://wagewise.vitalisdexter.workers.dev';
@@ -117,9 +117,15 @@ async function deliverDue(env, now) {
 export default {
   async fetch(request, env) {
     const {pathname} = new URL(request.url);
+    if(pathname==='/admin'||pathname==='/admin/')return env.ASSETS.fetch(new Request(new URL('/account',request.url),request));
     if (pathname.startsWith('/api/account/') || pathname.startsWith('/api/admin/')) return handleAccounts(request,env,client);
     if (!pathname.startsWith('/api/reminders/')) return env.ASSETS.fetch(request);
-    try { return await reminders(request, env, pathname); }
+    try {
+      if(pathname!=='/api/reminders/key'){
+        try{await accountSession(request,env,client);}catch{return reply({error:'Sign in to manage reminders.'},401);}
+      }
+      return await reminders(request, env, pathname);
+    }
     catch (error) {
       const detail = String(error?.message ?? '').replace(/https?:\/\/\S+/g, '[URL]').replace(/[\w-]{22,}/g, '[redacted]');
       console.error('Reminder request failed', error?.name, detail);

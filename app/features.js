@@ -46,6 +46,7 @@ function notice(text = '', error = false) {
 }
 
 function save(change, source = 'log') {
+  if(!window.WageWiseAccess.valid)return Promise.reject(Error('Reconnect to save changes.'));
   const key = workspace;
   const write = pending.then(async () => {
     const record = await storage.change(key, (stored, records) => {
@@ -89,6 +90,7 @@ async function useWorkspace(key) {
   if (!record) throw Error('This workspace has not been opened yet.');
   workspace = key;
   state = record.data;
+  deviceReminder = await storage.get(key+':reminder');
   editingCheck = false;
   closeEditor();
   plannerView.resetDrafts();
@@ -361,7 +363,7 @@ function offerRestore(backup) {
         reminder: {...Tracking.empty().reminder, weekdays: backup.log.reminder.weekdays}} : current.log}));
       if (native && backup.log) {
         const {enabled, time} = backup.log.reminder;
-        deviceReminder = await storage.change('device-reminder', () => ({enabled, time}));
+        deviceReminder = await storage.change(workspace+':reminder', () => ({enabled, time}));
         updateReminders();
       }
       window.dispatchEvent(new Event('wagewise-workspace'));
@@ -381,6 +383,7 @@ function offerRestore(backup) {
 }
 
 async function init() {
+  const identity=await window.WageWiseAccess.ready;
   if (isAndroid && !native) throw Error('Android storage is unavailable.');
   let local = await storage.get('guest');
   let legacy;
@@ -395,18 +398,28 @@ async function init() {
       calculator: legacy?.calculator ?? null, log: legacy?.log ?? Tracking.empty()
     }});
   }
-  state = local.data;
-  deviceReminder = await storage.get('device-reminder');
+  workspace='account:'+identity.workspace;
+  const snapshot=await window.WageWiseAccess.request('read',{workspace:identity.workspace});
+  const cloud=snapshot?Planner.readBackup(JSON.stringify(snapshot.data)):{calculator:null,log:Tracking.empty()};
+  let account=await storage.get(workspace);
+  if(account&&!account.originalsMigrated)await storage.adoptOriginals(workspace,account.data.calculator?.history);
+  if(!account)account=await storage.change(workspace,existing=>existing??{originalsMigrated:true,data:cloud,base:cloud,revision:snapshot?.revision??0});
+  state=account.data;
+
+  const reminderKey=workspace+':reminder';
+  deviceReminder = await storage.get(reminderKey);
   if (!deviceReminder) {
     const {enabled, time} = state.log.reminder;
-    deviceReminder = await storage.change('device-reminder', existing => existing ?? {enabled: Boolean(native && enabled), time});
+    const legacyReminder=(await storage.get('active-account'))?.id===identity.workspace?await storage.get('device-reminder'):null;
+    deviceReminder = await storage.change(reminderKey, existing => existing ?? legacyReminder ?? {enabled: Boolean(native && enabled), time});
   }
   if (state.log.reminder.enabled || state.log.reminder.time !== Tracking.empty().reminder.time) {
-    await storage.change('guest', current => ({...current, data: {...current.data,
+    await storage.change(workspace, current => ({...current, data: {...current.data,
       log: {...current.data.log, reminder: {...Tracking.empty().reminder, weekdays: current.data.log.reminder.weekdays}}}}));
-    state = (await storage.get('guest')).data;
+    state = (await storage.get(workspace)).data;
   }
   Object.assign(api, {
+    flush: () => pending,
     readCalculator: () => structuredClone(state.calculator),
     readLogDays: () => structuredClone(state.log.days),
     dayStatus: date => Tracking.dayStatus(state.log, date, Tracking.localDate()),
@@ -432,7 +445,7 @@ async function init() {
         if(planner.anchor?.date>entry.date)throw Error('A newer YTD starting point already exists.');
         log.planner={...planner,anchor:{date:entry.date,gross:entry.imported.ytdGross,tax:entry.imported.ytdTax}};
       }
-      records.put(file,'payslip-file:'+entry.imported.hash);
+      records.put(file,workspace+':payslip-file:'+entry.imported.hash);
       if(mapping)records.put(mapping.rules,mapping.key);
       return {...current,calculator:{...current.calculator,history:updated},log};
     },'payslip-import'),
@@ -530,7 +543,7 @@ async function init() {
       if (native) await native.requestNotifications();
       else await window.WageWiseWebReminders.enable({...reminderSettings(), time, weekdays});
     } else if (!native && deviceReminder.enabled) await window.WageWiseWebReminders.disable();
-    deviceReminder = await storage.change('device-reminder', () => ({enabled, time}));
+    deviceReminder = await storage.change(workspace+':reminder', () => ({enabled, time,configured:true}));
     await save(current => ({...current, log: {...current.log, reminder: {...Tracking.empty().reminder, weekdays}}}));
     await reminderStatus();
     notice(enabled ? 'Reminder schedule saved' : 'Working days saved');

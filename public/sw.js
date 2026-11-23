@@ -1,5 +1,5 @@
 // The HTML includes its matching payroll engine, avoiding mixed-version calculations.
-const CACHE='wagewise-v12-payslip-import';
+const CACHE='wagewise-v13-accounts';
 const READER='wagewise-reader-v1';
 const ASSETS=['/','/index.html','/icon.svg','/manifest.webmanifest','/sync-config.json'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
@@ -40,7 +40,7 @@ self.addEventListener('notificationclick',event=>{
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
   event.waitUntil((async()=>{
     const pages=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-    const page=pages.find(client=>new URL(client.url).origin===self.location.origin);
+    const page=pages.find(client=>new URL(client.url).origin===self.location.origin&&['/','/index','/index.html'].includes(new URL(client.url).pathname));
     if(page){
       await page.focus();
       page.postMessage({type:'wagewise-reminder',date});

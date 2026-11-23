@@ -41,7 +41,8 @@ References:
 
 ## Data and history
 
-Records are saved in IndexedDB and available offline. Version 2 imports the
+WageWise requires an online account session to open records. A device keeps an
+account-specific IndexedDB cache for sync. Version 2 imports the
 existing browser data under `wagewise-v5` and the Android installation's private
 store. Calendar is the work log, and Dashboard shows logged overtime alongside
 saved pay entries. Set a known weekly cutoff in Settings to link the log to
@@ -53,16 +54,26 @@ recalculating with today's settings. Old entries are retained as-is, not migrate
 into supposedly accurate records. Manual and legacy entries are read-only apart
 from deletion; add a corrected replacement when needed.
 
-**Settings → Device pairing and sync** creates a private code for use on another
-device. Creating or entering a code opens a workspace, and the first upload
-requires a review of the local records. Keep the code private. A paired device
-can replace it. Settings also imports and exports backups on both platforms.
+Choose **Create account**, select an available username and set a password.
+To keep a paired workspace, choose **Use this paired device** or enter its
+previous pairing code during account setup. Review the counts and confirm.
+People with device-only records can start a workspace and review **Move my
+local records** in Settings on the original browser. Sign in with the same
+username on other devices. Original uploaded payslip files stay on the device
+where they were saved. Settings also supports JSON backups.
 
-The Supabase installation uses the schema in `supabase/migrations/` and
-anonymous device sessions. Configure the public URL and publishable key in
-`supabase/client.json`. The database stores a hash of the code and checks
-device-to-workspace membership on each read and write. Each workspace has
-its own revision so concurrent saves can be merged or reviewed.
+**Forgot password** adds a request to the administrator's recovery inbox.
+After verifying the account holder privately, the administrator issues a
+single-use code, valid for 30 minutes. Approval closes existing sessions.
+Choose **I have a reset code** to set a new password and sign back in.
+
+The Worker uses the Supabase project in `supabase/client.json`, the database
+functions in `supabase/migrations/` and the `WAGEWISE_SUPABASE_SECRET`
+Worker secret. Account cookies are HttpOnly and each workspace has its own
+sync revision. To enable the administrator, sign in to the Supabase CLI
+on the owner's computer and run `.\scripts\provision-admin.ps1` in PowerShell.
+The script prompts privately for the password. Open `/admin` to review
+registrations, activity, sign-ins and password recovery.
 
 ## Development and checks
 
@@ -76,9 +87,9 @@ npm run check
 ```
 
 - `wagewise.html` is the shared UI, `app/` contains browser modules and styles, and `payroll.js` is the calculation engine.
-- `scripts/build.js` produces identical `index.html` and `public/index.html`. Android packages the shared output for offline use.
+- `scripts/build.js` produces identical `index.html` and `public/index.html` and bundles the account screen.
 - `public/` is the **only** Cloudflare asset directory.
-- `public/sw.js` caches the self-contained app for offline use, using
+- `public/sw.js` caches the app shell and payslip-reader assets, using
   network-first HTML requests. Keep its cache version current for asset changes.
 - `tests/` contains synthetic payroll and app regression tests.
 - Private payslip fixtures/images stay in ignored `payslips/` and must never be

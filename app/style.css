@@ -128,3 +128,6 @@ summary { cursor: pointer; font-weight: 650; }
 @media (prefers-reduced-motion: reduce) {
   .pulse { animation: none !important; }
 }
+#account-lock { display:none; padding:2rem; text-align:center; }
+.account-locked body > :not(#account-lock), .account-locked dialog { display:none !important; }
+.account-locked #account-lock { display:block; }

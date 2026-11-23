@@ -5,7 +5,7 @@ const {buildSync} = require('esbuild');
 const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const script = contents => '<script>\n' + contents.replace(/<\/script/gi, '<\\/script') + '\n</script>';
-const files = ['app/payslip-import.js', 'app/tracking.js', 'app/planner.js', 'app/planner-view.js', 'app/data.js', 'app/merge.js', 'app/features.js', 'app/payslip-reader.js', 'app/payslip-review.js'];
+const files = ['app/access.js', 'app/payslip-import.js', 'app/tracking.js', 'app/planner.js', 'app/planner-view.js', 'app/data.js', 'app/merge.js', 'app/features.js', 'app/payslip-reader.js', 'app/payslip-review.js'];
 const auth = buildSync({
   absWorkingDir: root,
   entryPoints: ['app/cloud.js'],
@@ -18,6 +18,11 @@ const html = read('wagewise.html')
   .replace('/* SHARED_STYLE */', () => read('app/style.css'))
   .replace('<script src="payroll.js"></script><!-- PAYROLL_ENGINE -->', () => script(read('payroll.js')))
   .replace('<!-- SHARED_APP -->', () => script(files.map(read).join('\n')) + script(auth));
+
+const accountUI=buildSync({absWorkingDir:root,entryPoints:['app/account-ui.js'],bundle:true,minify:true,write:false}).outputFiles[0].text;
+if(process.argv.includes('--check')){
+  if(read('public/account-ui.js')!==accountUI)throw Error('Stale account UI');
+}else fs.writeFileSync(path.join(root,'public/account-ui.js'),accountUI);
 
 function syncConfig() {
   const local = path.join(root, '.wagewise-sync.json');
