@@ -13,10 +13,14 @@ test('account registration, workspace migration, isolation and admin recovery',a
  const sql=(query,params)=>db.query(query,params);
  t.after(()=>db.close());
  await db.exec("create role authenticated;create role anon;create role service_role;create schema auth;create table auth.users(id uuid primary key,email text,raw_app_meta_data jsonb);create function auth.uid() returns uuid language sql as 'select null::uuid';");
- for(const migration of ['202611180001_wagewise_sync','202611220001_wagewise_accounts','202611230001_retire_pairing','202611230002_admin_reset'])
+ for(const migration of ['202611180001_wagewise_sync','202611220001_wagewise_accounts','202611230001_retire_pairing','202611230002_admin_reset','202611230003_register_updated_credentials'])
    await db.exec(readFileSync('supabase/migrations/'+migration+'.sql','utf8'));
  async function create({email,password,app_metadata}){
-   const id=crypto.randomUUID();await sql('insert into auth.users values($1,$2,$3)',[id,email,JSON.stringify(app_metadata)]);
+   const id=crypto.randomUUID();
+   await db.transaction(async tx=>{
+     await tx.query("insert into auth.users values($1,$2,'{}')",[id,email]);
+     await tx.query('update auth.users set raw_app_meta_data=$2 where id=$1',[id,JSON.stringify(app_metadata)]);
+   });
    identity.set(id,{id,email,password});return id;
  }
  t.mock.method(global,'fetch',async(url,options)=>{
