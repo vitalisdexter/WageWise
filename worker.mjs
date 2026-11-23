@@ -1,5 +1,6 @@
 import {buildPushPayload} from '@block65/webcrypto-web-push';
 import client from './supabase/client.json';
+import {handleAccounts} from './accounts.mjs';
 import {nextReminder} from './app/reminder-time.mjs';
 
 const production = 'https://wagewise.vitalisdexter.workers.dev';
@@ -116,6 +117,7 @@ async function deliverDue(env, now) {
 export default {
   async fetch(request, env) {
     const {pathname} = new URL(request.url);
+    if (pathname.startsWith('/api/account/') || pathname.startsWith('/api/admin/')) return handleAccounts(request,env,client);
     if (!pathname.startsWith('/api/reminders/')) return env.ASSETS.fetch(request);
     try { return await reminders(request, env, pathname); }
     catch (error) {
