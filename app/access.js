@@ -25,7 +25,9 @@
  async function verify(){
    const s=await request('session');
    if(!s.workspace||s.admin||identity&&s.id!==identity.id){login();throw Error('Sign in to this account.');}
-   identity=s;valid=true;reveal();return s;
+   identity=s;
+   document.getElementById('admin-link').hidden=s.canAdmin!==true;
+   valid=true;reveal();return s;
  }
  const ready=verify().catch(e=>{
    cover('Reconnect or reload to open WageWise.');

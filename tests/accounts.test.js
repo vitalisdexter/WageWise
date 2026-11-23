@@ -13,7 +13,7 @@ test('account registration, workspace migration, isolation and admin recovery',a
  const sql=(query,params)=>db.query(query,params);
  t.after(()=>db.close());
  await db.exec("create role authenticated;create role anon;create role service_role;create schema auth;create table auth.users(id uuid primary key,email text,raw_app_meta_data jsonb);create function auth.uid() returns uuid language sql as 'select null::uuid';");
- for(const migration of ['202611180001_wagewise_sync','202611220001_wagewise_accounts','202611230001_retire_pairing','202611230002_admin_reset','202611230003_register_updated_credentials'])
+ for(const migration of ['202611180001_wagewise_sync','202611220001_wagewise_accounts','202611230001_retire_pairing','202611230002_admin_reset','202611230003_register_updated_credentials','202611230004_link_admin_account'])
    await db.exec(readFileSync('supabase/migrations/'+migration+'.sql','utf8'));
  async function create({email,password,app_metadata}){
    const id=crypto.randomUUID();
@@ -87,4 +87,17 @@ test('account registration, workspace migration, isolation and admin recovery',a
  assert.ok((await call('admin/reset-user',{username:'other-user'},admin)).value.code);
  assert.equal((await call('account/session',{},peer.cookie)).status,401);
  await db.exec(readFileSync('tests/account-db.sql','utf8'));
+ const linked=await call('account/login',next);
+ assert.equal(linked.value.canAdmin,false);
+ await sql('insert into wagewise_private.accounts(id,username,admin,admin_source) values(gen_random_uuid(),$1,true,$2)',
+   [user.username.toLowerCase(),linked.value.id]);
+ assert.equal((await call('account/session',{},linked.cookie)).value.canAdmin,true);
+ assert.equal((await call('admin/dashboard',{},linked.cookie)).status,401);
+ const operator=await call('admin/login',next);
+ assert.equal(operator.value.admin,true);
+ assert.equal((await call('admin/dashboard',{},operator.cookie)).status,200);
+ assert.equal((await call('account/read',{workspace:ws},operator.cookie)).status,401);
+ assert.equal((await call('admin/reset-user',{username:user.username},operator.cookie)).status,409);
+ await sql('update wagewise_private.accounts set generation=generation+1 where id=$1',[linked.value.id]);
+ assert.equal((await call('admin/session',{},operator.cookie)).status,401);
 });
