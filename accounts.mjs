@@ -37,7 +37,7 @@ export function backend(env,config){
  if(!key)fail(503,'Account access is being configured. Try again shortly.');
  async function call(path,options={},publicKey=false){
    const apiKey=publicKey?config.publishableKey:key;
-   const headers={apikey:apiKey,'Content-Type':'application/json',...(!apiKey.startsWith('sb_')?{Authorization:'Bearer '+apiKey}:{}),...options.headers};
+   const headers={'User-Agent':'WageWise-Account-Service/1.0',apikey:apiKey,'Content-Type':'application/json',...(!apiKey.startsWith('sb_')?{Authorization:'Bearer '+apiKey}:{}),...options.headers};
    const response=await fetch(config.url+path,{...options,headers,redirect:'error'});
    const result=await response.json().catch(()=>null);
    return {ok:response.ok,status:response.status,result};
