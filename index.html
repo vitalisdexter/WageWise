@@ -331,17 +331,19 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .ps-hitem.selected .ps-hi-net{color:var(--on-accent);}
 .ps-hi-det{font-size:11px;color:var(--ink-soft);margin-top:2px;}
 .ps-preview{border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;background:var(--paper);}
-.psl-header{background:var(--pine);color:var(--on-accent);padding:16px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start;}
-.psl-wordmark{font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:-.01em;}
+.psl-header{background:var(--pine);color:var(--on-accent);padding:16px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.psl-wordmark{font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:-.01em;overflow-wrap:anywhere;}
+.psl-hdr-right{text-align:right;flex:0 0 auto;}
+.psl-hdr-sub{font-size:11px;opacity:.8;margin-top:4px;}
 .psl-badge{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;background:rgba(251,252,247,.18);border-radius:4px;padding:3px 8px;margin-top:4px;}
 .psl-meta{padding:12px 18px;border-bottom:1px solid var(--rule);}
-.psl-meta-row{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;}
+.psl-meta-row{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;gap:12px;}
 .psl-meta-label{color:var(--ink-soft);}
-.psl-meta-value{font-weight:600;font-family:var(--mono);}
+.psl-meta-value{font-weight:600;font-family:var(--mono);text-align:right;min-width:0;overflow-wrap:anywhere;}
 .psl-section-hdr{padding:10px 18px 4px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-ink);background:var(--stripe);border-bottom:1px solid var(--rule);}
 .psl-ot-group-hdr{padding:7px 18px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent-ink);background:var(--stripe);border-bottom:1px dotted var(--rule);}
 .psl-row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 18px;border-bottom:1px dotted var(--rule);font-size:13px;}
-.psl-row-label{color:var(--ink-soft);flex:1;min-width:0;padding-right:8px;line-height:1.3;}
+.psl-row-label{color:var(--ink-soft);flex:1;min-width:0;padding-right:8px;line-height:1.3;overflow-wrap:anywhere;}
 .psl-row-sub{display:block;font-size:10.5px;font-family:var(--mono);color:var(--ink-soft);opacity:.8;margin-top:1px;}
 .psl-row-val{font-family:var(--mono);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap;}
 .psl-ot-shift .psl-row-label{padding-left:6px;font-size:12.5px;}
@@ -356,6 +358,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .psl-net-label{font-size:14px;font-weight:700;}
 .psl-net-val{font-family:var(--mono);font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;}
 .psl-footer{padding:10px 18px;font-size:10.5px;color:var(--ink-soft);line-height:1.55;border-top:1px solid var(--rule);}
+.psl-powered{font-weight:700;margin-top:4px;}
 /* ── Toast ── */
 .toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--paper);font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:20px;white-space:nowrap;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:20;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -367,11 +370,12 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
   .shell,.sheet-overlay,.sheet,.dsheet-overlay,.dsheet,.toast,nav{display:none !important;}
   #print-payslip{display:block !important;font-family:'IBM Plex Sans',-apple-system,sans-serif;padding:24px 32px;max-width:640px;margin:0 auto;color:#1a1a1a;}
   @page{margin:1.2cm;}
-  .prn-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1f5c43;padding-bottom:14px;margin-bottom:16px;}
-  .prn-company{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:20px;color:#1a1a1a;}
-  .prn-powered{font-size:10px;color:#888;margin-top:4px;}
+  .prn-payslip + .prn-payslip{break-before:page;}
+  .prn-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:3px solid #1f5c43;padding-bottom:14px;margin-bottom:16px;}
+  .prn-company{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:20px;color:#1a1a1a;overflow-wrap:anywhere;}
+  .prn-powered{font-weight:700;margin-top:4px;}
   .prn-badge{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#1f5c43;border:1.5px solid #1f5c43;border-radius:4px;padding:3px 8px;}
-  .prn-hdr-right{text-align:right;}
+  .prn-hdr-right{text-align:right;flex:0 0 auto;}
   .prn-hdr-sub{font-size:10px;color:#666;margin-top:6px;}
   .prn-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;margin-bottom:20px;font-size:12px;}
   .prn-meta-row{display:flex;gap:6px;}
@@ -380,7 +384,7 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
   .prn-section{margin-bottom:16px;}
   .prn-section-hdr{background:none !important;color:#1a1a1a !important;padding:6px 0 5px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;border-bottom:2px solid #1a1a1a;margin-bottom:0;}
   .prn-table{width:100%;border-collapse:collapse;font-size:12.5px;}
-  .prn-table td{padding:7px 10px;border-bottom:1px solid #e0e0e0;color:#1a1a1a !important;}
+  .prn-table td{padding:7px 10px;border-bottom:1px solid #e0e0e0;color:#1a1a1a !important;overflow-wrap:anywhere;}
   .prn-table td:last-child{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;}
   .prn-table .prn-sub{font-size:10px;color:#555 !important;display:block;margin-top:1px;}
   .prn-total td{border-top:2px solid #1a1a1a !important;border-bottom:none;font-weight:700;font-size:13px;}
@@ -544,7 +548,7 @@ summary { cursor: pointer; font-weight: 650; }
 #projection-pot { flex: 1 1 140px; }
 #import-review, #import-result { margin: 12px 22px; overflow-wrap:anywhere; }
 #import-review { padding:16px; border:1px solid var(--rule); border-radius:12px; background:var(--paper); }
-#import-review h2, #import-review h3, .import-summary h3 { margin:8px 0; }
+#import-review h2, #import-review h3 { margin:8px 0; }
 .import-form,.import-layout,.import-fields,.import-line { display:grid; gap:10px; min-width:0; }
 .import-fields,.import-line { grid-template-columns:repeat(auto-fit,minmax(min(135px,100%),1fr)); }
 .import-line { margin:10px 0; padding:12px; border:1px solid var(--rule); border-radius:10px; }
@@ -558,9 +562,6 @@ summary { cursor: pointer; font-weight: 650; }
 .import-source img,.import-source canvas,#import-original :is(img,canvas) { display:block; width:100%; height:auto; }
 #import-original { width:min(92vw,850px); max-height:88vh; padding:16px; border:1px solid var(--rule); border-radius:12px; background:var(--paper); color:var(--ink); }
 #import-original::backdrop { background:#102820aa; }
-.import-summary { padding:12px; }
-.import-summary-row { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dotted var(--rule); overflow-wrap:anywhere; }
-.import-summary-row strong { text-align:right; }
 @media (min-width:760px) { .import-layout { grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); align-items:start; } }
 @media (prefers-reduced-motion: no-preference) {
   .screen.active { animation: wagewise-screen-in .16s ease-out; }
@@ -3176,21 +3177,6 @@ api.ready.catch(error => notice('WageWise could not open its saved data. ' + err
       ((!d.employer||!e.imported.employer||P.textKey(e.imported.employer)===P.textKey(d.employer)) &&
         e.imported.frequency===d.frequency && (!e.imported.period||!d.period||e.imported.period===d.period)))));
   }
-  function summary(entry){
-    const d=entry.imported, html=document.createElement('article');html.className='import-summary';
-    html.append(el('h3',d.employer||'Actual payslip'),el('p',entry.date+' · '+description({...d,employer:''})));
-    function row(label,value){
-      const r=el('div');r.className='import-summary-row';r.append(el('span',label),el('strong',value));html.append(r);
-    }
-    for(const line of d.lines){
-      const info=line.hours!=null?' · '+line.hours+'h'+(line.rate!=null?' at '+gbp.format(line.rate)+'/hr':''):'';
-      row(line.label+info,money(line.pence)+' · '+P.categories[line.kind]);
-    }
-    row(labels.gross,money(d.gross));row(labels.net,money(d.net));
-    for(const key of P.moneyFields.slice(2))if(d[key]!=null)row(labels[key],money(d[key]));
-    const diff=P.differences(d);if(diff.gross||diff.net||!d.lines.length)html.append(el('small','Partially itemised · recorded payslip totals'));
-    return html.outerHTML;
-  }
   function input(type,value,attrs={}){
     const i=el('input');i.type=type;i.value=value??'';Object.assign(i,attrs);return i;
   }
@@ -3371,7 +3357,7 @@ api.ready.catch(error => notice('WageWise could not open its saved data. ' + err
       }catch(e){error.textContent=e.message;save.disabled=false;skip.disabled=false;}
     };
   }
-  window.PayslipReview={matches,summary,originalButton:(entry,host)=>{host.dataset.originalFor=String(entry.id);return originalButton(entry,host);}};
+  window.PayslipReview={matches,originalButton:(entry,host)=>{host.dataset.originalFor=String(entry.id);return originalButton(entry,host);}};
   window.addEventListener('wagewise-ready',()=>{
     const result=el('p');result.id='import-result';result.setAttribute('role','status');$('import-review').before(result);
     $('import-choose').onclick=()=>$('import-files').click();
@@ -4047,26 +4033,10 @@ $('cal-next').addEventListener('click',function(){
   renderCalendarScreen();
 });
 $('cal-print-btn').addEventListener('click',function(){
-  var pfx=_calYear+'-'+p2(_calMonth+1);
-  var entries=state.history.filter(function(e){return e.date&&e.date.startsWith(pfx);});
+  const prefix=_calYear+'-'+p2(_calMonth+1);
+  const entries=state.history.filter(entry=>entry.date?.startsWith(prefix)).sort((a,b)=>a.date.localeCompare(b.date));
   if(!entries.length){showToast('No entries for this month');return;}
-  var tG=0,tN=0,tT=0,tI=0,tO=0;
-  entries.forEach(function(e){tG+=e.gross;tN+=e.net;tT+=(e.tax||0);tI+=(e.ni||0);tO+=(e.otTotal||0);});
-  var ml=MNAMES[_calMonth]+' '+_calYear,name=escapeHTML(state.employeeName)||'&mdash;';
-  if(entries.some(e=>e.imported)){
-    var parts=entries.map(e=>e.imported?PayslipReview.summary(e):'<p>'+fmtISO(e.date)+' · '+(e.manual?'Recorded pay':'Saved estimate')+' · Gross '+money(e.gross)+' · Net '+money(e.net)+'</p>');
-    $('print-payslip').innerHTML='<h1>'+ml+' earnings</h1>'+parts.join('')+'<p>Total gross '+money(tG)+' · Total take-home '+money(tN)+'</p>';
-    window.print();return;
-  }
-  var calEmpName=escapeHTML(state.employerName)||'WageWise';
-  var calPBy=state.employerName?'<div class="prn-powered">Powered by WageWise</div>':'';
-  $('print-payslip').innerHTML='<div class="prn-header"><div><div class="prn-company">'+calEmpName+'</div>'+calPBy+'</div><div class="prn-hdr-right"><div class="prn-badge">MONTHLY PAYSLIP</div><div class="prn-hdr-sub">'+TE.YEAR+'</div></div></div>'+
-    '<div class="prn-meta"><div class="prn-meta-row"><span class="prn-ml">Employee</span><span class="prn-mv">'+name+'</span></div><div class="prn-meta-row"><span class="prn-ml">Period</span><span class="prn-mv">'+ml+'</span></div><div class="prn-meta-row"><span class="prn-ml">Pay entries</span><span class="prn-mv">'+entries.length+' weeks</span></div><div class="prn-meta-row"><span class="prn-ml">Tax year</span><span class="prn-mv">'+TE.YEAR+'</span></div></div>'+
-    '<div class="prn-section"><div class="prn-section-hdr">Earnings</div><table class="prn-table"><tbody><tr><td>Basic Pay ('+entries.length+' weeks)</td><td>'+money(tG-tO)+'</td></tr><tr><td>Overtime</td><td>'+money(tO)+'</td></tr></tbody><tfoot><tr class="prn-total"><td>Gross Pay</td><td>'+money(tG)+'</td></tr></tfoot></table></div>'+
-    '<div class="prn-section"><div class="prn-section-hdr">Deductions</div><table class="prn-table"><tbody><tr class="prn-deduction"><td>Income Tax</td><td>\u2212 '+money(tT)+'</td></tr><tr class="prn-deduction"><td>National Insurance</td><td>\u2212 '+money(tI)+'</td></tr></tbody><tfoot><tr class="prn-total prn-deduction"><td>Total Deductions</td><td>\u2212 '+money(tG-tN)+'</td></tr></tfoot></table></div>'+
-    '<div class="prn-section"><div class="prn-section-hdr">Other / unitemised deductions</div>'+money(roundPence(tG-tN-tT-tI))+'</div>'+
-    '<div class="prn-net"><span class="prn-net-label">MONTHLY NET PAY</span><span class="prn-net-val">'+money(tN)+'</span></div>'+
-    '<div class="prn-footer">Monthly summary: '+ml+'. Aggregated from '+entries.length+' weekly entr'+(entries.length===1?'y':'ies')+'. Tax year '+TE.YEAR+'. Estimate only.</div>';
+  $('print-payslip').innerHTML=buildMonthlyPayslipHTML(entries,MNAMES[_calMonth]+' '+_calYear);
   window.print();
 });
 
@@ -4132,7 +4102,7 @@ function openDetailSheet(id){
 }
 function closeDetailSheet(){var ov=$('dsheet-overlay'),sh=$('dsheet');ov.classList.remove('open');sh.classList.remove('open');setTimeout(function(){ov.setAttribute('hidden','');sh.setAttribute('hidden','');},300);}
 function renderDetailView(entry){
-  if(entry.imported){$('dv-body').innerHTML=PayslipReview.summary(entry);return;}
+  if(entry.imported){$('dv-body').innerHTML=buildPayslipHTML(savedPayslipData(entry),false);return;}
   var h='<div class="dv-eyebrow">This Week</div><div class="dv-divider"></div><div class="dv-row"><span class="dv-label">Basic Pay</span><span class="dv-value">'+money(entry.basic||0)+'</span></div>';
   if(entry.otEntries&&entry.otEntries.length){
     h+='<div class="dv-divider"></div><div class="dv-section-title">Overtime Shifts</div>';
@@ -4208,75 +4178,198 @@ $('dsheet-close').addEventListener('click',closeDetailSheet);$('dsheet-overlay')
 /* ── PAYSLIP ── */
 var _psSource='current';
 function getPayslipData(){
-  if(_psSource==='current'){var r=guardedCalc(calc);if(!r)return null;return{date:state.payDate||todayISO(),employeeName:state.employeeName||'',employerName:state.employerName||'',customDedRes:r.customDedRes,basic:state.basic,otEntries:JSON.parse(JSON.stringify(state.otEntries)),otTotal:r.otTotal,gross:r.gross,taxW:r.taxW,taxBreakdown:r.taxRes.breakdown,niW:r.niRes.ni,niBreakdown:r.niRes.breakdown,net:r.net,allowance:state.allowance,taxWeek:r.taxWeek,ytdGross:r.cumulativeGross,ytdTax:r.cumulativeTaxToDate,ytdNi:r.cumulativeNiToDate};}
-  var entry=findEntry(_psSource);if(!entry)return null;
-  if(entry.imported)return entry;
-  var ot=entry.otEntries&&entry.otEntries.length?entry.otEntries:[];
-  var snap=entry.snapshot||{},other=roundPence(entry.gross-entry.net-(entry.tax||0)-(entry.ni||0));
-  return {date:entry.date,employeeName:state.employeeName||'',employerName:state.employerName||'',basic:entry.manual?entry.gross:entry.basic||0,otEntries:ot,otTotal:entry.otTotal||0,gross:entry.gross,taxW:entry.tax,niW:entry.ni,net:entry.net,
-    customDedRes:snap.customDedRes||{total:other,breakdown:other?[{name:'Other / unitemised deductions',amount:other,type:'amount'}]:[]},
-    taxBreakdown:[],niBreakdown:[],allowance:entry.allowance==null?null:entry.allowance,taxWeek:getTaxWeek(entry.date),ytdGross:snap.cumulativeGross,ytdTax:snap.cumulativeTaxToDate,ytdNi:snap.cumulativeNiToDate};
+  if(_psSource!=='current'){
+    const entry=findEntry(_psSource);
+    return entry ? savedPayslipData(entry) : null;
+  }
+  const result=guardedCalc(calc);
+  if(!result)return null;
+  return {
+    date:state.payDate||todayISO(), employeeName:state.employeeName, employerName:state.employerName,
+    customDedRes:result.customDedRes, basic:state.basic, otEntries:state.otEntries, otTotal:result.otTotal,
+    gross:result.gross, taxW:result.taxW, niW:result.niRes.ni, net:result.net, allowance:state.allowance,
+    ytdGross:result.cumulativeGross, ytdTax:result.cumulativeTaxToDate, ytdNi:result.cumulativeNiToDate
+  };
 }
 
+function savedPayslipData(entry){
+  if(entry.imported)return {...entry,employeeName:state.employeeName};
+  const snapshot=entry.snapshot||{};
+  const other=roundPence(entry.gross-entry.net-(entry.tax||0)-(entry.ni||0));
+  return {
+    date:entry.date, employeeName:state.employeeName, employerName:state.employerName,
+    basic:entry.manual?null:entry.basic, otEntries:entry.otEntries||[], otTotal:entry.otTotal||0,
+    gross:entry.gross, taxW:entry.tax, niW:entry.ni, net:entry.net, allowance:entry.allowance,
+    manual:entry.manual, note:entry.note,
+    customDedRes:snapshot.customDedRes||{total:other,breakdown:other?[{name:'Other / unitemised deductions',amount:other,type:'amount'}]:[]},
+    ytdGross:snapshot.cumulativeGross, ytdTax:snapshot.cumulativeTaxToDate, ytdNi:snapshot.cumulativeNiToDate
+  };
+}
 
-function buildPayslipHTML(d,forPrint){
-  if(d?.imported)return PayslipReview.summary(d);
-  if(!d)return'<p style="text-align:center;padding:24px;color:var(--ink-soft);">No data available.</p>';
-  var name=escapeHTML(d.employeeName)||'&mdash;',dateStr=fmtISO(d.date)||'&mdash;';
-  var tw=getTaxWeek(d.date),twStr=tw?'Tax Week '+tw:'&mdash;';
-  var year=Payroll.year(d.date),yearLabel=year+'/'+String(year+1).slice(2);
-  var totalDed=roundPence(d.gross-d.net);
-  // Payslip deductions are THIS period, never cumulative liability.
-  d.taxBreakdown=d.taxW==null?[]:[{name:'this period',rate:0,amount:d.gross,tax:d.taxW}];
-  d.niBreakdown=d.niW==null?[]:[{name:'this period',ni:d.niW}];
-  var groups=groupOtByRate(d.otEntries);
-  if(forPrint){
-    var eRows='<tr><td>Basic Pay</td><td>'+money(d.basic)+'</td></tr>';
-    groups.forEach(function(g){
-      eRows+='<tr class="prn-ot-group-hdr"><td colspan="2">Overtime @ '+money(g.rate)+'/hr &ndash; '+fmtHrsShort(g.totalHours)+' total</td></tr>';
-      g.shifts.forEach(function(s){eRows+='<tr class="prn-ot-shift"><td>'+s.label+'<span class="prn-sub">'+fmtHrs(s.hours)+'</span></td><td>'+money(s.pay)+'</td></tr>';});
-      if(g.shifts.length>1)eRows+='<tr class="prn-ot-subtotal"><td>'+fmtHrsShort(g.totalHours)+' @ '+money(g.rate)+'/hr</td><td>'+money(g.totalPay)+'</td></tr>';
-    });
-    var dRows='';
-    (d.customDedRes&&d.customDedRes.breakdown||[]).forEach(function(cd){dRows+='<tr class="prn-deduction"><td>'+escapeHTML(cd.name)+(cd.type==='percent'?' ('+cd.value+'%)':' (fixed)')+'</td><td>\u2212 '+money(cd.amount)+'</td></tr>';});
-    d.taxBreakdown.forEach(function(b){dRows+='<tr class="prn-deduction"><td>Income Tax \u2013 '+b.name+'<span class="prn-sub">Current period gross: '+money(b.amount)+'</span></td><td>'+moneySgn(-b.tax)+'</td></tr>';});
-    d.niBreakdown.forEach(function(b){dRows+='<tr class="prn-deduction"><td>National Insurance \u2013 '+b.name+'</td><td>'+moneySgn(-b.ni)+'</td></tr>';});
-    if(!dRows)dRows='<tr><td>No deductions at this income</td><td>'+money(0)+'</td></tr>';
-    var empName=escapeHTML(d.employerName)||'WageWise';
-    var poweredBy=d.employerName?'<div class="prn-powered">Powered by WageWise</div>':'';
-    return'<div class="prn-header"><div><div class="prn-company">'+empName+'</div>'+poweredBy+'</div><div class="prn-hdr-right"><div class="prn-badge">PAYSLIP</div><div class="prn-hdr-sub">'+yearLabel+' \u00b7 '+twStr+'</div></div></div>'+
-      '<div class="prn-meta"><div class="prn-meta-row"><span class="prn-ml">Employee</span><span class="prn-mv">'+name+'</span></div><div class="prn-meta-row"><span class="prn-ml">Pay period</span><span class="prn-mv">'+dateStr+'</span></div><div class="prn-meta-row"><span class="prn-ml">Tax week</span><span class="prn-mv">'+twStr+'</span></div><div class="prn-meta-row"><span class="prn-ml">Personal allowance</span><span class="prn-mv">'+money(d.allowance)+'</span></div></div>'+
-      '<div class="prn-section"><div class="prn-section-hdr">Earnings</div><table class="prn-table"><tbody>'+eRows+'</tbody><tfoot><tr class="prn-total"><td>Gross Pay</td><td>'+money(d.gross)+'</td></tr></tfoot></table></div>'+
-      '<div class="prn-section"><div class="prn-section-hdr">Deductions</div><table class="prn-table"><tbody>'+dRows+'</tbody><tfoot><tr class="prn-total prn-deduction"><td>Total Deductions</td><td>\u2212 '+money(totalDed)+'</td></tr></tfoot></table></div>'+
-      '<div class="prn-net"><span class="prn-net-label">NET PAY</span><span class="prn-net-val">'+money(d.net)+'</span></div>'+
-      '<div class="prn-section"><div class="prn-section-hdr">To-date totals (tax year '+yearLabel+')</div><table class="prn-table"><tbody><tr><td>Gross pay t/d</td><td>'+money(d.ytdGross)+'</td></tr><tr><td>Tax paid t/d</td><td>'+money(d.ytdTax)+'</td></tr><tr><td>Employee NI t/d</td><td>'+money(d.ytdNi)+'</td></tr></tbody></table></div>'+
-      '<div class="prn-footer">Scottish Income Tax rates apply \u00b7 Tax year '+yearLabel+' \u00b7 '+twStr+' \u00b7 Personal allowance '+money(d.allowance)+'<br>NI calculated on weekly gross using Class 1 thresholds. Estimate only. Not an official payslip.</div>';
-  }else{
-    var empDisp=escapeHTML(d.employerName)||'WageWise';
-    var viaBadge=d.employerName?'<div style="font-size:10px;opacity:.6;margin-top:2px;">via WageWise</div>':'';
-    var h='<div class="psl-header"><div><div class="psl-wordmark">'+empDisp+'</div><div style="font-size:11px;opacity:.8;margin-top:3px;">'+dateStr+'</div>'+viaBadge+'</div><div style="text-align:right;"><div class="psl-badge">PAYSLIP</div><div style="font-size:10px;opacity:.7;margin-top:4px;">'+twStr+'</div></div></div>';
-    h+='<div class="psl-meta"><div class="psl-meta-row"><span class="psl-meta-label">Employee</span><span class="psl-meta-value">'+name+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Tax week</span><span class="psl-meta-value">'+twStr+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Tax year</span><span class="psl-meta-value">'+yearLabel+'</span></div><div class="psl-meta-row"><span class="psl-meta-label">Personal allowance</span><span class="psl-meta-value">'+money(d.allowance)+'</span></div></div>';
-    h+='<div class="psl-section-hdr">Earnings</div><div class="psl-row"><span class="psl-row-label">Basic Pay</span><span class="psl-row-val">'+money(d.basic)+'</span></div>';
-    groups.forEach(function(g){
-      h+='<div class="psl-ot-group-hdr">Overtime @ '+money(g.rate)+'/hr</div>';
-      g.shifts.forEach(function(s){h+='<div class="psl-row psl-ot-shift"><span class="psl-row-label">'+s.label+'<span class="psl-row-sub">'+fmtHrs(s.hours)+'</span></span><span class="psl-row-val">'+money(s.pay)+'</span></div>';});
-      h+='<div class="psl-total-row psl-ot-subtotal"><span class="psl-total-label">'+fmtHrsShort(g.totalHours)+' @ '+money(g.rate)+'/hr</span><span class="psl-total-val">'+money(g.totalPay)+'</span></div>';
-    });
-    h+='<div class="psl-total-row"><span class="psl-total-label">Gross Pay</span><span class="psl-total-val">'+money(d.gross)+'</span></div>';
-    h+='<div class="psl-section-hdr">Deductions</div>';
-    (d.customDedRes&&d.customDedRes.breakdown||[]).forEach(function(cd){h+='<div class="psl-row deduction"><span class="psl-row-label">'+escapeHTML(cd.name)+(cd.type==='percent'?' ('+cd.value+'%)':'')+'</span><span class="psl-row-val">\u2212 '+money(cd.amount)+'</span></div>';});
-    d.taxBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">Tax \u2013 '+b.name+'<span class="psl-row-sub">Current period gross: '+money(b.amount)+'</span></span><span class="psl-row-val">'+moneySgn(-b.tax)+'</span></div>';});
-    d.niBreakdown.forEach(function(b){h+='<div class="psl-row deduction"><span class="psl-row-label">NI \u2013 '+b.name+'</span><span class="psl-row-val">'+moneySgn(-b.ni)+'</span></div>';});
-    if(!d.taxBreakdown.length&&!d.niBreakdown.length)h+='<div class="psl-row"><span class="psl-row-label">No deductions at this income</span><span class="psl-row-val">'+money(0)+'</span></div>';
-h+='<div class="psl-total-row deduction-total"><span class="psl-total-label">Total Deductions</span><span class="psl-total-val">\u2212 '+money(totalDed)+'</span></div>';
-    h+='<div class="psl-net"><span class="psl-net-label">NET PAY</span><span class="psl-net-val">'+money(d.net)+'</span></div>';
-    h+='<div class="psl-section-hdr">To-date totals (tax year '+yearLabel+')</div>';
-    h+='<div class="psl-row"><span class="psl-row-label">Gross pay t/d</span><span class="psl-row-val">'+money(d.ytdGross)+'</span></div>';
-    h+='<div class="psl-row"><span class="psl-row-label">Tax paid t/d</span><span class="psl-row-val">'+money(d.ytdTax)+'</span></div>';
-    h+='<div class="psl-row"><span class="psl-row-label">Employee NI t/d</span><span class="psl-row-val">'+money(d.ytdNi)+'</span></div>';
-    h+='<div class="psl-footer">Scottish IT \u00b7 '+yearLabel+' \u00b7 '+twStr+' \u00b7 Allowance '+money(d.allowance)+' \u2014 Estimate only.</div>';
-    return h;
+function importedPayslipDetails(imported,details){
+  const earnings=[],deductions=[],reimbursements=[];
+  for(const line of imported.lines){
+    const row={label:line.label, amount:line.pence/100, detail:PayslipImport.categories[line.kind]};
+    if(line.hours!=null)row.detail+=' · '+fmtHrsShort(line.hours);
+    if(line.rate!=null)row.detail+=' @ '+money(line.rate)+'/hr';
+    switch(line.kind){
+      case 'reimbursement':
+        reimbursements.push(row);
+        break;
+      case 'tax': case 'ni': case 'deduction': case 'refund':
+        row.amount=line.kind==='refund'?Math.abs(row.amount):-row.amount;
+        deductions.push(row);
+        break;
+      default:
+        earnings.push(row);
+    }
   }
+  const {gross,net}=PayslipImport.differences(imported);
+  const periodLabel={weekly:'Tax week',monthly:'Tax month',other:'Pay period'}[imported.frequency];
+  return {
+    ...details, employerName:imported.employer, period:imported.period?periodLabel+' '+imported.period:'',
+    meta:[[periodLabel,imported.period],['Tax code',imported.taxCode],['NI category',imported.niCode]],
+    gross:imported.gross/100, net:imported.net/100, earnings,deductions,reimbursements,
+    deductionTotal:deductions.length?{
+      label:'Itemised deductions',amount:-PayslipImport.totals(imported.lines).deductions/100
+    }:null,
+    ytd:[
+      {label:'Taxable pay to date', cents:imported.ytdGross},
+      {label:'Gross pay to date', cents:imported.ytdTotal},
+      {label:'PAYE paid to date', cents:imported.ytdTax},
+      {label:'Employee NI to date', cents:imported.ytdNi}
+    ].filter(row=>row.cents!=null).map(row=>({label:row.label,amount:row.cents/100})),
+    note:gross||net||!imported.lines.length?
+      'Recorded pay · Partially itemised. Gross and net use the confirmed payslip totals.':
+      'Recorded pay · Figures transcribed from your payslip.'
+  };
+}
+
+function buildPayslipHTML(data,forPrint){
+  if(!data)return '<p class="note">No payslip data available.</p>';
+  const year=Payroll.year(data.date),yearLabel=year+'/'+String(year+1).slice(2);
+  const details={
+    badge:'Payslip', date:fmtISO(data.date), yearLabel, employeeName:data.employeeName
+  };
+  if(data.imported)return renderPayslipTemplate(importedPayslipDetails(data.imported,details),forPrint);
+
+  const week=getTaxWeek(data.date);
+  const earnings=[];
+  if(data.basic!=null)earnings.push({label:'Basic Pay',amount:data.basic});
+  const groups=groupOtByRate(data.otEntries);
+  if(!groups.length&&data.otTotal)earnings.push({label:'Overtime',amount:data.otTotal});
+  for(const group of groups){
+    earnings.push({label:'Overtime @ '+money(group.rate)+'/hr',kind:'heading'});
+    for(const shift of group.shifts){
+      earnings.push({label:shift.label,detail:fmtHrs(shift.hours),amount:shift.pay,kind:'shift'});
+    }
+    if(!forPrint||group.shifts.length>1){
+      earnings.push({label:fmtHrsShort(group.totalHours)+' @ '+money(group.rate)+'/hr',amount:group.totalPay,kind:'subtotal'});
+    }
+  }
+
+  const deductions=(data.customDedRes?.breakdown||[]).map(deduction=>({
+    label:deduction.name+(deduction.type==='percent'?' ('+deduction.value+'%)':''), amount:-deduction.amount
+  }));
+  // Use the current payment's deductions rather than the year-to-date liability.
+  deductions.push(
+    {label:'Income Tax',amount:data.taxW==null?null:-data.taxW},
+    {label:'National Insurance',amount:data.niW==null?null:-data.niW}
+  );
+  return renderPayslipTemplate({
+    ...details, employerName:data.employerName, period:week?'Tax week '+week:'',
+    meta:[['Personal allowance',data.allowance==null?null:money(data.allowance)]],
+    earnings,deductions,gross:data.gross,net:data.net,
+    deductionTotal:{label:'Total Deductions',amount:roundPence(data.net-data.gross)},
+    ytd:[
+      {label:'Gross pay t/d',amount:data.ytdGross},
+      {label:'Tax paid t/d',amount:data.ytdTax},
+      {label:'Employee NI t/d',amount:data.ytdNi}
+    ].filter(row=>row.amount!=null),
+    note:data.manual?'Recorded pay. '+(data.note||''):'Scottish Income Tax · Weekly Class 1 NI · Estimate only.'
+  },forPrint);
+}
+
+function renderPayslipTemplate(data,forPrint){
+  const prefix=forPrint?'prn':'psl';
+  const employer=escapeHTML(data.employerName)||'WageWise';
+  const metadata=[['Employee',data.employeeName||'—'],['Pay period',data.date],['Tax year',data.yearLabel],...data.meta];
+  const meta=metadata.filter(([,value])=>value!=null&&value!=='').map(([label,value])=>forPrint?
+    '<div class="prn-meta-row"><span class="prn-ml">'+escapeHTML(label)+'</span><span class="prn-mv">'+escapeHTML(value)+'</span></div>':
+    '<div class="psl-meta-row"><span class="psl-meta-label">'+escapeHTML(label)+'</span><span class="psl-meta-value">'+escapeHTML(value)+'</span></div>'
+  ).join('');
+
+  function section(title,rows,total,deduction){
+    const heading='<div class="'+prefix+'-section-hdr">'+escapeHTML(title)+'</div>';
+    const body=rows.map(row=>renderRow(row,deduction)).join('');
+    const totalRow=total?renderRow({...total,kind:'total'},deduction):'';
+    if(forPrint)return '<div class="prn-section">'+heading+'<table class="prn-table"><tbody>'+body+'</tbody>'+
+      (totalRow?'<tfoot>'+totalRow+'</tfoot>':'')+'</table></div>';
+    return heading+body+totalRow;
+  }
+
+  function renderRow(row,deduction){
+    const label=escapeHTML(row.label);
+    if(row.kind==='heading')return forPrint?
+      '<tr class="prn-ot-group-hdr"><td colspan="2">'+label+'</td></tr>':
+      '<div class="psl-ot-group-hdr">'+label+'</div>';
+    const modifier={shift:'-ot-shift',subtotal:'-ot-subtotal',total:forPrint?'-total':'-total-row'}[row.kind];
+    const total=row.kind==='total'||row.kind==='subtotal';
+    const amount=deduction&&row.amount!=null?moneySgn(row.amount):money(row.amount);
+    const detail=row.detail?'<span class="'+(forPrint?'prn-sub':'psl-row-sub')+'">'+escapeHTML(row.detail)+'</span>':'';
+    if(forPrint){
+      const classes=[modifier?prefix+modifier:'',deduction?'prn-deduction':''].join(' ');
+      return '<tr class="'+classes+'"><td>'+label+detail+'</td><td>'+amount+'</td></tr>';
+    }
+    const stem=total?'psl-total':'psl-row';
+    const classes=[total?'psl-total-row':'psl-row',modifier&&row.kind!=='total'?prefix+modifier:'',
+      deduction?(total?'deduction-total':'deduction'):''].join(' ');
+    return '<div class="'+classes+'"><span class="'+stem+'-label">'+label+detail+'</span><span class="'+stem+'-val">'+amount+'</span></div>';
+  }
+
+  const period=escapeHTML([forPrint?data.yearLabel:null,data.period].filter(Boolean).join(' · '));
+  const header='<div class="'+prefix+'-header"><div><div class="'+(forPrint?'prn-company':'psl-wordmark')+'">'+employer+'</div>'+
+    (forPrint?'':'<div class="psl-hdr-sub">'+escapeHTML(data.date)+'</div>')+'</div>'+
+    '<div class="'+prefix+'-hdr-right"><div class="'+prefix+'-badge">'+escapeHTML(data.badge)+'</div>'+
+    (period?'<div class="'+prefix+'-hdr-sub">'+period+'</div>':'')+'</div></div>';
+  const gross=section('Earnings',data.earnings,{label:'Gross Pay',amount:data.gross});
+  const deductions=data.deductions.length?section('Deductions',data.deductions,data.deductionTotal,true):'';
+  const credits=data.reimbursements?.length?section('Reimbursements after tax',data.reimbursements):'';
+  const net='<div class="'+prefix+'-net"><span class="'+prefix+'-net-label">NET PAY</span><span class="'+prefix+'-net-val">'+money(data.net)+'</span></div>';
+  const ytd=data.ytd?.length?section('To-date totals (tax year '+data.yearLabel+')',data.ytd):'';
+  return '<article class="'+prefix+'-payslip">'+header+'<div class="'+prefix+'-meta">'+meta+'</div>'+
+    gross+deductions+credits+net+ytd+'<div class="'+prefix+'-footer">'+escapeHTML(data.note)+
+    '<div class="'+prefix+'-powered">Powered by WageWise</div></div></article>';
+}
+
+function buildMonthlyPayslipHTML(entries,month){
+  const sum=key=>roundPence(entries.reduce((total,entry)=>total+(entry[key]??0),0));
+  const totalIfComplete=key=>entries.every(entry=>entry[key]!=null)?-sum(key):null;
+  const overtime=sum('otTotal');
+  const employers=[...new Set(entries.map(entry=>entry.imported?entry.imported.employer:state.employerName).filter(Boolean))];
+  const imported=entries.filter(entry=>entry.imported);
+  const gross=sum('gross'),net=sum('net');
+  const deductions=[
+    {label:'Income Tax',amount:totalIfComplete('tax')},
+    {label:'National Insurance',amount:totalIfComplete('ni')}
+  ];
+  const deductionTotal=imported.length?null:{label:'Total Deductions',amount:roundPence(net-gross)};
+  if(deductionTotal){
+    const other=roundPence(deductionTotal.amount+sum('tax')+sum('ni'));
+    if(other)deductions.push({label:'Other / unitemised deductions',amount:other});
+  }
+  const summary=renderPayslipTemplate({
+    badge:'Monthly payslip', date:month, employeeName:state.employeeName,
+    employerName:employers.length===1?employers[0]:'',
+    meta:[['Pay entries',entries.length],['Overtime recorded',overtime?money(overtime):null]],
+    earnings:entries.map(entry=>({
+      label:fmtISO(entry.date),amount:entry.gross,
+      detail:(entry.manual||entry.imported?'Recorded pay':'Saved estimate')+' · Net '+money(entry.net)
+    })),
+    deductions,deductionTotal,gross,net,
+    note:'Monthly summary of saved pay entries.'
+  },true);
+  return summary+imported.map(entry=>buildPayslipHTML(savedPayslipData(entry),true)).join('');
 }
 function renderPayslipScreen(){
   if(state.history.length){

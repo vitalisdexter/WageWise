@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const Payroll=require('../payroll');
+const PayslipImport=require('../app/payslip-import');
 // A minimal DOM test double runs the actual app script, not a duplicate implementation.
 function app(saved){
   const elements=new Map();
@@ -13,7 +14,7 @@ function app(saved){
   });return elements.get(id);}
   const storage=new Map(saved?[['wagewise-v5',JSON.stringify(saved)]]:[]);
   const TestDate=class extends Date{constructor(...args){super(...(args.length?args:['2026-10-13T12:00:00Z']));}static now(){return Date.parse('2026-10-13T12:00:00Z');}};
-  const ctx={Payroll,console,Intl,Date:TestDate,Number,JSON,Math,URL,Blob,setTimeout(){},clearTimeout(){},confirm(){return true;},location:{protocol:'http:'},navigator:{userAgent:'test'},
+  const ctx={Payroll,PayslipImport,console,Intl,Date:TestDate,Number,JSON,Math,URL,Blob,setTimeout(){},clearTimeout(){},confirm(){return true;},location:{protocol:'http:'},navigator:{userAgent:'test'},
     document:{getElementById:element,createElement:()=>element('created'),head:{appendChild(){}},documentElement:element('root'),querySelectorAll:()=>[],querySelector:()=>null},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},addEventListener(){},print(){}};
   ctx.window=ctx;
@@ -55,12 +56,48 @@ test('shift rollover, equal times and break handling',()=>{const a=app();assert.
 test('saved manual payslip does not recalculate with current settings',()=>{
  const a=app({history:[{id:1,date:'2026-06-05',manual:true,gross:700,net:555,tax:100,ni:35}],basic:900});a.api.setSource(1);
  const d=a.api.getPayslipData();assert.equal(d.gross,700);assert.equal(d.net,555);assert.equal(d.customDedRes.total,10);assert.equal(d.taxW,100);
- const html=a.api.buildPayslipHTML(d,false);assert.match(html,/£555.00/);assert.match(html,/£100.00/);assert.doesNotMatch(html,/NaN|undefined/);
+ const html=a.api.buildPayslipHTML(d,false);assert.match(html,/£555.00/);assert.match(html,/£100.00/);
+ assert.match(html,/Powered by WageWise/);assert.doesNotMatch(html,/NaN|undefined/);
 });
 test('payslip uses current tax deduction, not cumulative liability',()=>{
  const a=app({payDate:'2026-09-18',basic:800,otEntries:[],ytd:{enabled:true,gross:'12000',tax:'1450',ni:'600',week:'23',year:2026}});
  const d=a.api.getPayslipData(),r=a.api.calc(),html=a.api.buildPayslipHTML(d,true);
- assert.match(html,new RegExp('£'+Math.abs(r.taxW).toFixed(2).replace('.','\\.')));assert.equal(d.taxBreakdown[0].tax,r.taxW);
+ const taxDisplay=(r.taxW>0?'− ':'')+'£'+Math.abs(r.taxW).toFixed(2);
+ assert.ok(html.includes('Income Tax</td><td>'+taxDisplay));
+ assert.match(html,/Powered by WageWise/);
+});
+test('saved imported payslips use the same branded preview and print without recalculating',()=>{
+ const date='2026-10-09';
+ const imported={...PayslipImport.blank(), date, employer:'Example & Co', frequency:'monthly', period:'7',
+   taxCode:'1257L', niCode:'C', gross:70000, net:62525, ytdTotal:420000, lines:[
+     {kind:'basic',label:'Salary',pence:70000,hours:null,rate:null},
+     {kind:'deduction',label:'Service charge',pence:10000,hours:null,rate:null},
+     {kind:'refund',label:'Tax refund',pence:-2500,hours:null,rate:null},
+     {kind:'reimbursement',label:'<Mileage>',pence:25,hours:null,rate:null}
+   ]};
+ const a=app({history:[{id:1,date,manual:true,imported,gross:700,net:625.25,tax:-25,ni:null},
+   {id:2,date:'2026-10-02',manual:true,gross:500,net:400,tax:80,ni:20}]});
+ a.api.setSource(1);
+ for(const [forPrint,prefix] of [[false,'psl'],[true,'prn']]){
+   const html=a.api.buildPayslipHTML(a.api.getPayslipData(),forPrint);
+   assert.match(html,new RegExp(prefix+'-powered">Powered by WageWise'));
+   assert.match(html,/Example &amp; Co/);
+   assert.match(html,/Tax month 7/);
+   assert.match(html,/£625\.25/);
+   assert.match(html,/£4,200\.00/);
+   assert.match(html,/Service charge.*− £100\.00/);
+   assert.match(html,/Tax refund.*£25\.00/);
+   assert.match(html,/&lt;Mileage&gt;.*£0\.25/);
+   assert.match(html,/Figures transcribed from your payslip/);
+   assert.doesNotMatch(html,/Estimate only|− £25\.00|<Mileage>|import-summary/);
+ }
+ a.fire('cal-print-btn');
+ const monthly=a.element('print-payslip').innerHTML;
+ assert.match(monthly,/Monthly payslip/);
+ assert.match(monthly,/£1,200\.00/);
+ assert.match(monthly,/£1,025\.25/);
+ assert.match(monthly,/Service charge/);
+ assert.equal(monthly.match(/Powered by WageWise/g)?.length,2);
 });
 test('names and deduction names are escaped, not executable HTML',()=>{
  const a=app({employeeName:'<img src=x onerror=alert(1)>',employerName:'<script>bad</script>',customDeductions:[{name:'<img src=x>',type:'amount',value:5}]});

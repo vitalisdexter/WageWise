@@ -16,21 +16,6 @@
       ((!d.employer||!e.imported.employer||P.textKey(e.imported.employer)===P.textKey(d.employer)) &&
         e.imported.frequency===d.frequency && (!e.imported.period||!d.period||e.imported.period===d.period)))));
   }
-  function summary(entry){
-    const d=entry.imported, html=document.createElement('article');html.className='import-summary';
-    html.append(el('h3',d.employer||'Actual payslip'),el('p',entry.date+' · '+description({...d,employer:''})));
-    function row(label,value){
-      const r=el('div');r.className='import-summary-row';r.append(el('span',label),el('strong',value));html.append(r);
-    }
-    for(const line of d.lines){
-      const info=line.hours!=null?' · '+line.hours+'h'+(line.rate!=null?' at '+gbp.format(line.rate)+'/hr':''):'';
-      row(line.label+info,money(line.pence)+' · '+P.categories[line.kind]);
-    }
-    row(labels.gross,money(d.gross));row(labels.net,money(d.net));
-    for(const key of P.moneyFields.slice(2))if(d[key]!=null)row(labels[key],money(d[key]));
-    const diff=P.differences(d);if(diff.gross||diff.net||!d.lines.length)html.append(el('small','Partially itemised · recorded payslip totals'));
-    return html.outerHTML;
-  }
   function input(type,value,attrs={}){
     const i=el('input');i.type=type;i.value=value??'';Object.assign(i,attrs);return i;
   }
@@ -211,7 +196,7 @@
       }catch(e){error.textContent=e.message;save.disabled=false;skip.disabled=false;}
     };
   }
-  window.PayslipReview={matches,summary,originalButton:(entry,host)=>{host.dataset.originalFor=String(entry.id);return originalButton(entry,host);}};
+  window.PayslipReview={matches,originalButton:(entry,host)=>{host.dataset.originalFor=String(entry.id);return originalButton(entry,host);}};
   window.addEventListener('wagewise-ready',()=>{
     const result=el('p');result.id='import-result';result.setAttribute('role','status');$('import-review').before(result);
     $('import-choose').onclick=()=>$('import-files').click();
